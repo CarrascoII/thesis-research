@@ -69,8 +69,8 @@ int main() {
     //      0x6c, 0x70, 0xed, 0x50, 0xfd, 0xed, 0xb9, 0xda,
     //      0x51, 0xa3, 0x40, 0xbd, 0x92, 0x9d, 0x38, 0x9d};
 
-    int ret;
     // int i;
+    int ret;
     unsigned char output[32], decipher[32];
     unsigned char key[32], iv1[16], iv2[16];
     char *pers = "aes generate key", *pers_iv = "aes generate iv";
@@ -165,10 +165,12 @@ int main() {
     // }
     // printf("nr -> %d\n", (&aes)->nr);
 
+    printf("Arrays are......... ");
+
     if(arrays_equal(input, decipher, sizeof(input), sizeof(decipher)) == 0) {
-        printf("Not same\n");
+        printf("Different\n");
     } else {
-        printf("Same\n");
+        printf("Equal\n");
     }
 
 exit:
