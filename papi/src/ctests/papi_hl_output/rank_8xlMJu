@@ -1,0 +1,20 @@
+{
+  "cpu in mhz":"2592",
+  "event_definitions":{
+    "perf::TASK-CLOCK":"delta"
+  },
+  "threads":[
+    {
+      "id":"25833",
+      "regions":[
+        {
+          "do_flops":{
+            "region_count":"4",
+            "cycles":"1426602698",
+            "perf::TASK-CLOCK":"286545749"
+          }
+        }
+      ]
+    }
+  ]
+}
