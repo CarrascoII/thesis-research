@@ -7,6 +7,8 @@
 #include "mbedtls/platform_util.h"
 #include "config_alt.h"
 
+#include "papi.h"
+
 void sort(unsigned char arr[], int n) {
     int i,j;
     for (i = 0; i < n-1; i++) {
@@ -75,12 +77,29 @@ int main() {
     unsigned char key[32], iv1[16], iv2[16];
     char *pers = "aes generate key", *pers_iv = "aes generate iv";
 
+//    float real_time, proc_time, mflips;
+//    long long flpins;
+    long long start_cycles, end_cycles, start_usec, end_usec;
+    int EventSet = PAPI_NULL;
+
+
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_aes_init(&aes);
 
     memset(output, 0, 32);
     memset(decipher, 0, 32);
+
+    if((ret = PAPI_library_init(PAPI_VER_CURRENT)) != PAPI_VER_CURRENT) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        goto exit;
+    }
+
+    if ((ret = PAPI_create_eventset(&EventSet)) != PAPI_OK) {
+        printf("PAPI_create_eventset returned -0x%04x\n", -ret);
+        goto exit;
+    }
+
 
     // Generate the key
     if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) pers, strlen(pers))) != 0) {
@@ -121,10 +140,31 @@ int main() {
         goto exit;
     }
 
+//    if((ret = PAPI_flips_rate(PAPI_VEC_SP, &real_time, &proc_time, &flpins, &mflips)) < PAPI_OK) {
+//        printf("Could not initialise PAPI_flips\n ! PAPI_flips_rate returned -0x%04x: %s\n", -ret, PAPI_strerror(ret));
+//        goto exit;
+//    }
+
+
+    /* Gets the starting time in clock cycles */
+    start_cycles = PAPI_get_real_cyc();
+    /* Gets the starting time in microseconds */
+    start_usec = PAPI_get_real_usec();
+
     if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, 32, iv1, input, output)) != 0) {
         printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
         goto exit;
     }
+
+    /* Gets the ending time in clock cycles */
+    end_cycles = PAPI_get_real_cyc();
+    /* Gets the ending time in microseconds */
+    end_usec = PAPI_get_real_usec();
+
+//    if((ret = PAPI_flips_rate(PAPI_VEC_SP, &real_time, &proc_time, &flpins, &mflips)) < PAPI_OK) {
+//        printf("PAPI error: -0x%04x: %s\n", -ret, PAPI_strerror(ret));
+//        goto exit;
+//    }    
 
     // printf("Input:\n"); print_hex(input, sizeof(input));
     printf("Output:\n"); print_hex(output, sizeof(output));
@@ -172,6 +212,12 @@ int main() {
     } else {
         printf("Equal\n");
     }
+
+//    printf("Encription values:\n");
+//    printf("Real_time: %f Proc_time: %f flpins: %lld MFLIPS: %f\n", real_time, proc_time, flpins, mflips);
+
+    printf("Wall clock cycles: %lld\n", end_cycles - start_cycles);
+    printf("Wall clock time in microseconds: %lld\n", end_usec - start_usec);
 
 exit:
     mbedtls_aes_free(&aes);

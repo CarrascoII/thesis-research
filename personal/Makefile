@@ -1,12 +1,13 @@
 MBEDTLS_DIR = ../mbedtls
-LIBS = -L$(MBEDTLS_DIR)/library -lmbedx509 -lmbedtls -lmbedcrypto
+PAPI_DIR = ../papi/src/install
+LIBS = -L$(MBEDTLS_DIR)/library -lmbedx509 -lmbedtls -lmbedcrypto -L${PAPI_DIR}/lib -lpapi
 LIBS_MAKE = $(MAKE) -C $(MBEDTLS_DIR)/library
 PROGS_MAKE = $(MAKE) -C $(MBEDTLS_DIR)/programs
 
 MY_SHA256 = sha256/sha256_alt
 MY_AES = aes/aes_alt
 
-LOCAL_CFLAGS = -Wall -W -Wdeclaration-after-statement -I$(MBEDTLS_DIR)/include -D_FILE_OFFSET_BITS=64
+LOCAL_CFLAGS = -Wall -W -Wdeclaration-after-statement -I$(MBEDTLS_DIR)/include -I${PAPI_DIR}/include -D_FILE_OFFSET_BITS=64
 CFLAGS = -I$(CURDIR) -DMBEDTLS_CONFIG_FILE='<config_alt.h>'
 
 .PHONY: all lib mbedtls server_obj server client_obj client cipher_obj cipher all clean_progs clean
