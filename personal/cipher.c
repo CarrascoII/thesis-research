@@ -77,11 +77,10 @@ int main() {
     unsigned char key[32], iv1[16], iv2[16];
     char *pers = "aes generate key", *pers_iv = "aes generate iv";
 
-//    float real_time, proc_time, mflips;
-//    long long flpins;
-    long long start_cycles, end_cycles, start_usec, end_usec;
-    int EventSet = PAPI_NULL;
-
+    long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall,
+              cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec,
+              start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu,
+              cycles_cpu_enc, usec_cpu_enc, cycles_cpu_dec, usec_cpu_dec;
 
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -90,16 +89,17 @@ int main() {
     memset(output, 0, 32);
     memset(decipher, 0, 32);
 
-    if((ret = PAPI_library_init(PAPI_VER_CURRENT)) != PAPI_VER_CURRENT) {
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        goto exit;
+    }
+
+    if(ret < PAPI_OK) {
         printf("PAPI_library_init returned -0x%04x\n", -ret);
         goto exit;
     }
-
-    if ((ret = PAPI_create_eventset(&EventSet)) != PAPI_OK) {
-        printf("PAPI_create_eventset returned -0x%04x\n", -ret);
-        goto exit;
-    }
-
 
     // Generate the key
     if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) pers, strlen(pers))) != 0) {
@@ -126,13 +126,8 @@ int main() {
     memcpy(iv2, iv1, 16);
 
     // Actual test
-    printf("Input:\n"); print_hex(input, sizeof(input));
-    // printf("Output:\n"); print_hex(output, sizeof(output));
-    // printf("Decipher:\n"); print_hex(decipher, sizeof(decipher));
-    // printf("Key: \n"); print_hex(key, sizeof(key));
-    // printf("IV1: \n"); print_hex(iv1, sizeof(iv1));
-    // printf("IV2: \n"); print_hex(iv2, sizeof(iv2));
-    printf("\n");
+    printf("Input:\n");
+    print_hex(input, sizeof(input)); printf("\n");
 
     // Cipher the input into output
     if((ret = mbedtls_aes_setkey_enc(&aes, key, 256)) != 0) {
@@ -140,45 +135,30 @@ int main() {
         goto exit;
     }
 
-//    if((ret = PAPI_flips_rate(PAPI_VEC_SP, &real_time, &proc_time, &flpins, &mflips)) < PAPI_OK) {
-//        printf("Could not initialise PAPI_flips\n ! PAPI_flips_rate returned -0x%04x: %s\n", -ret, PAPI_strerror(ret));
-//        goto exit;
-//    }
-
-
-    /* Gets the starting time in clock cycles */
-    start_cycles = PAPI_get_real_cyc();
-    /* Gets the starting time in microseconds */
-    start_usec = PAPI_get_real_usec();
+    /* Gets the starting time in clock cycles and microseconds */
+    start_cycles_wall = PAPI_get_real_cyc();
+    start_usec_wall = PAPI_get_real_usec();
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
 
     if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, 32, iv1, input, output)) != 0) {
         printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
         goto exit;
     }
 
-    /* Gets the ending time in clock cycles */
-    end_cycles = PAPI_get_real_cyc();
-    /* Gets the ending time in microseconds */
-    end_usec = PAPI_get_real_usec();
+    /* Gets the ending time in clock cycles and microseconds */
+    end_cycles_wall = PAPI_get_real_cyc();
+    end_usec_wall = PAPI_get_real_usec();
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
 
-//    if((ret = PAPI_flips_rate(PAPI_VEC_SP, &real_time, &proc_time, &flpins, &mflips)) < PAPI_OK) {
-//        printf("PAPI error: -0x%04x: %s\n", -ret, PAPI_strerror(ret));
-//        goto exit;
-//    }    
+    cycles_wall_enc = end_cycles_wall - start_cycles_wall;
+    usec_wall_enc = end_usec_wall - start_usec_wall;
+    cycles_cpu_enc = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu_enc = end_usec_cpu - start_usec_cpu;
 
-    // printf("Input:\n"); print_hex(input, sizeof(input));
-    printf("Output:\n"); print_hex(output, sizeof(output));
-    // printf("Decipher:\n"); print_hex(decipher, sizeof(decipher));
-    // printf("Key: \n"); print_hex(key, sizeof(key));
-    // printf("IV1: \n"); print_hex(iv1, sizeof(iv1));
-    // printf("IV2: \n"); print_hex(iv2, sizeof(iv2));
-    printf("\n");
-
-    // printf("N(rk) -> %lu\n", sizeof((&aes)->rk));
-    // for(i = 0; i < (int) sizeof((&aes)->rk); i++) {
-    //     printf("rk[%d] -> %u\n", i, (&aes)->rk[i]);
-    // }
-    // printf("nr -> %d\n", (&aes)->nr);
+    printf("Output:\n");
+    print_hex(output, sizeof(output)); printf("\n");
 
     // Decipher output into decipher
     if((ret = mbedtls_aes_setkey_dec(&aes, key, 256)) != 0) {
@@ -186,38 +166,51 @@ int main() {
         goto exit;
     }
 
+    /* Gets the starting time in clock cycles and microseconds */
+    start_cycles_wall = PAPI_get_real_cyc();
+    start_usec_wall = PAPI_get_real_usec();
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
+
     if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, 32, iv2, output, decipher)) != 0) {
         printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
         goto exit;
     }
 
-    // printf("Input:\n"); print_hex(input, sizeof(input));
-    // printf("Output:\n"); print_hex(output, sizeof(output));
-    printf("Decipher:\n"); print_hex(decipher, sizeof(decipher));
-    // printf("Key: \n"); print_hex(key, sizeof(key));
-    // printf("IV1: \n"); print_hex(iv1, sizeof(iv1));
-    // printf("IV2: \n"); print_hex(iv2, sizeof(iv2));
-    printf("\n");
+    /* Gets the ending time in clock cycles and microseconds */
+    end_cycles_wall = PAPI_get_real_cyc();
+    end_usec_wall = PAPI_get_real_usec();
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
 
-    // printf("N(rk) -> %lu\n", sizeof((&aes)->rk));
-    // for(i = 0; i < (int) sizeof((&aes)->rk); i++) {
-    //     printf("rk[%d] -> %u\n", i, (&aes)->rk[i]);
-    // }
-    // printf("nr -> %d\n", (&aes)->nr);
+    cycles_wall_dec = end_cycles_wall - start_cycles_wall;
+    usec_wall_dec = end_usec_wall - start_usec_wall;
+    cycles_cpu_dec = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu_dec = end_usec_cpu - start_usec_cpu;
+
+    printf("Decipher:\n");
+    print_hex(decipher, sizeof(decipher)); printf("\n");
 
     printf("Arrays are......... ");
-
     if(arrays_equal(input, decipher, sizeof(input), sizeof(decipher)) == 0) {
         printf("Different\n");
     } else {
         printf("Equal\n");
     }
 
-//    printf("Encription values:\n");
-//    printf("Real_time: %f Proc_time: %f flpins: %lld MFLIPS: %f\n", real_time, proc_time, flpins, mflips);
+    printf("\n-----Encryption-----\n");
+    printf("Wall cycles: %lld\n", cycles_wall_enc);
+    printf("Wall time (usec): %lld\n", usec_wall_enc);
+    printf("--------------------\n");
+    printf("CPU cycles: %lld\n", cycles_cpu_enc);
+    printf("CPU time (usec): %lld\n", usec_cpu_enc);
 
-    printf("Wall clock cycles: %lld\n", end_cycles - start_cycles);
-    printf("Wall clock time in microseconds: %lld\n", end_usec - start_usec);
+    printf("\n-----Decryption-----\n");
+    printf("Wall cycles: %lld\n", cycles_wall_dec);
+    printf("Wall time (usec): %lld\n", usec_wall_dec);
+    printf("--------------------\n");
+    printf("CPU cycles: %lld\n", cycles_cpu_dec);
+    printf("CPU time (usec): %lld\n", usec_cpu_dec);
 
 exit:
     mbedtls_aes_free(&aes);

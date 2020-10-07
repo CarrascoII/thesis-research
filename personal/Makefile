@@ -38,6 +38,7 @@ cipher_obj: lib
 	$(CC) $(LOCAL_CFLAGS) cipher.c $(MY_SHA256).o $(MY_AES).o $(LIBS) -o cipher.out
 
 cipher: lib cipher_obj
+#	source init_papi.sh
 	./cipher.out
 
 all: lib server_obj client_obj cipher_obj
