@@ -1,7 +1,6 @@
 #ifndef MBEDTLS_CONFIG_H
 #define MBEDTLS_CONFIG_H
 
-
 /**
  * mbed TLS feature support
  */
@@ -99,5 +98,7 @@
         MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256
 
 #include "mbedtls/check_config.h"
+
+//#define USE_PAPI
 
 #endif /* MBEDTLS_CONFIG_H */
