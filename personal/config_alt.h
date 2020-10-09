@@ -23,9 +23,6 @@
 #define MBEDTLS_ECP_DP_CURVE25519_ENABLED
 #define MBEDTLS_ECP_DP_CURVE448_ENABLED
 
-/* Message authentication algorithms */
-#define MBEDTLS_CIPHER_MODE_CBC
-
 /* TLS protocol */
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
@@ -64,6 +61,12 @@
 // #define MBEDTLS_AES_DECRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_AES_C
+#define MBEDTLS_CIPHER_MODE_CBC
+// #define MBEDTLS_CIPHER_MODE_CFB
+// #define MBEDTLS_CIPHER_MODE_CTR
+// #define MBEDTLS_CIPHER_MODE_OFB
+// #define MBEDTLS_CIPHER_MODE_XTS
+#define MBEDTLS_CIPHER_PADDING_ZEROS
 
 /* Message authentication algorithms */
 #define MBEDTLS_SHA1_C
