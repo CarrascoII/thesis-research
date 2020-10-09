@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
             printf("To assign own debug level, run with debug_level=X\n");
             return 1;
         }
-        *q++ = '\0';
 
+        *q++ = '\0';
         if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
             if(debug < 0 || debug > 5) {

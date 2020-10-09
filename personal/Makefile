@@ -26,18 +26,21 @@ mbedtls: lib
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(MBEDTLS_CFLAGS) $(CURDIR)/$(MY_SHA256).o $(CURDIR)/$(MY_AES).o"
 
 server_obj: lib
+	rm -f server.out
 	$(CC) $(ALL_CFLAGS) server.c $(LOCAL_CFLAGS) -o server.out
 
 server: server_obj
 	./server.out
 
 client_obj: lib
+	rm -f client.out
 	$(CC) $(ALL_CFLAGS) client.c $(LOCAL_CFLAGS) -o client.out
 
 client: client_obj
 	./client.out
 
 cipher_obj: lib
+	rm -f cipher.out
 	$(CC) $(ALL_CFLAGS) cipher.c $(LOCAL_CFLAGS) -o cipher.out
 
 cipher: cipher_obj

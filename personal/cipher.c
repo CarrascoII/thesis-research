@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "mbedtls/entropy.h"
@@ -15,11 +16,6 @@
 #define KEY_SIZE	32
 #define IV_SIZE		16
 
-struct options {
-	int key_size;
-	int input_size;
-} opt;
-
 void sort(unsigned char arr[], int n) {
     int i, j;
     for (i = 0; i < n-1; i++) {
@@ -33,11 +29,11 @@ void sort(unsigned char arr[], int n) {
     }
 }
 
-int arrays_equal(unsigned char arr1[], unsigned char arr2[], int n, int m) {
+int arrays_equal(unsigned char arr1[], unsigned char arr2[], int n) {
     int i;
 
     sort(arr1, n);
-    sort(arr2, m);
+    sort(arr2, n);
 
     for(i = 0; i < n; i++) {
         if(arr1[i] != arr2[i]) {
@@ -57,36 +53,44 @@ void print_hex(unsigned char array[], int size) {
     printf("\n");
 }
 
-int main() {
+int main(int argc, char **argv) {
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_entropy_context entropy;
     mbedtls_aes_context aes;
-    int ret;
-    unsigned char input[INPUT_SIZE], output[INPUT_SIZE], decipher[INPUT_SIZE],
-    			  key[KEY_SIZE], iv1[IV_SIZE], iv2[IV_SIZE];
+
+    int i, ret, input_size = INPUT_SIZE, key_size = KEY_SIZE;
+    unsigned char *input, *output, *decipher,
+    			  *key, iv1[IV_SIZE], iv2[IV_SIZE];
     char *pers_input = "drbg generate input",
 		 *pers_key = "aes generate key",
-		 *pers_iv = "aes generate iv";
+		 *pers_iv = "aes generate iv",
+		 *p, *q;
 
-    // unsigned char input[32] = {
-    //     0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f,
-    //     0x72, 0x6c, 0x64, 0x21, 0x00, 0x00, 0x00, 0x00,
-    //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	for(i = 1; i < argc; i++) {
+        p = argv[i];
+        if((q = strchr(p, '=')) == NULL) {
+            printf("To assign own variables, run with <variable>=X\n");
+            return 1;
+        }
 
-    //  unsigned char key[32] =  {
-    //      0xa5, 0x84, 0x99, 0x8d, 0x0d, 0xbd, 0xb1, 0x54,
-    //      0xbb, 0xc5, 0x4f, 0xed, 0x86, 0x9a, 0x66, 0x11,
-    //      0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda,
-    //      0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5};
-
-    //  unsigned char iv1[16] = {
-    //      0x6c, 0x70, 0xed, 0x50, 0xfd, 0xed, 0xb9, 0xda,
-    //      0x51, 0xa3, 0x40, 0xbd, 0x92, 0x9d, 0x38, 0x9d};
-
-    //  unsigned char iv2[16] = {
-    //      0x6c, 0x70, 0xed, 0x50, 0xfd, 0xed, 0xb9, 0xda,
-    //      0x51, 0xa3, 0x40, 0xbd, 0x92, 0x9d, 0x38, 0x9d};
+        *q++ = '\0';
+        if(strcmp(p, "input_size") == 0) {
+            input_size = atoi(q);
+            if(input_size > 0 && input_size < MBEDTLS_CTR_DRBG_MAX_REQUEST && input_size % 16 != 0) {
+                printf("Input size must be multiple of 16, between 0 and 1024 \n");
+                return 1;
+            }
+        } else if(strcmp(p, "key_size") == 0) {
+			key_size = atoi(q);
+            if(key_size != 16 && key_size != 24 && key_size != 32) {
+                printf("Key size must be 16, 24 or 32\n");
+                return 1;
+            }
+		} else {
+			printf("Available options are input_size and key_size\n");
+			return 1;
+		}
+	}
 
 #if defined(USE_PAPI)
     long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall,
@@ -99,8 +103,13 @@ int main() {
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_aes_init(&aes);
 
-    memset(output, 0, INPUT_SIZE);
-    memset(decipher, 0, INPUT_SIZE);
+	input = (unsigned char *) malloc(input_size*sizeof(unsigned char));
+	output = (unsigned char *) malloc(input_size*sizeof(unsigned char));
+	decipher = (unsigned char *) malloc(input_size*sizeof(unsigned char));
+	key = (unsigned char *) malloc(key_size*sizeof(unsigned char));
+
+    memset(output, 0, input_size);
+    memset(decipher, 0, input_size);
 
 #if defined(USE_PAPI)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -122,7 +131,7 @@ int main() {
         goto exit;
     }
 
-    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, input, INPUT_SIZE)) != 0) {
+    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, input, input_size)) != 0) {
         printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -133,7 +142,7 @@ int main() {
         goto exit;
     }
 
-    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, key, KEY_SIZE)) != 0) {
+    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, key, key_size)) != 0) {
         printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -153,10 +162,10 @@ int main() {
 
     // Actual test
     printf("Input:\n");
-	print_hex(input, sizeof(input)); printf("\n");
+	print_hex(input, input_size); printf("\n");
 
     // Cipher the input into output
-    if((ret = mbedtls_aes_setkey_enc(&aes, key, 256)) != 0) {
+    if((ret = mbedtls_aes_setkey_enc(&aes, key, key_size*8)) != 0) {
         printf(" failed\n ! mbedtls_aes_setkey_enc returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -169,7 +178,7 @@ int main() {
     start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
-    if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, INPUT_SIZE, iv1, input, output)) != 0) {
+    if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, input_size, iv1, input, output)) != 0) {
         printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -188,10 +197,10 @@ int main() {
 #endif
 
     printf("Output:\n");
-	print_hex(output, sizeof(output)); printf("\n");
+	print_hex(output, input_size); printf("\n");
 
     // Decipher output into decipher
-    if((ret = mbedtls_aes_setkey_dec(&aes, key, 256)) != 0) {
+    if((ret = mbedtls_aes_setkey_dec(&aes, key, key_size*8)) != 0) {
         printf(" failed\n ! mbedtls_aes_setkey_dec returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -204,7 +213,7 @@ int main() {
     start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
-    if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, INPUT_SIZE, iv2, output, decipher)) != 0) {
+    if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, input_size, iv2, output, decipher)) != 0) {
         printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -223,10 +232,10 @@ int main() {
 #endif
 
     printf("Decipher:\n");
-	print_hex(decipher, sizeof(decipher)); printf("\n");
+	print_hex(decipher, input_size); printf("\n");
 
     printf("Arrays are......... ");
-    if(arrays_equal(input, decipher, sizeof(input), sizeof(decipher)) == 0) {
+    if(arrays_equal(input, decipher, input_size) == 0) {
         printf("Different\n");
     } else {
         printf("Equal\n");
@@ -249,6 +258,11 @@ int main() {
 #endif
 
 exit:
+	free(key);
+	free(decipher);
+	free(output);
+	free(input);
+
     mbedtls_aes_free(&aes);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
