@@ -40,7 +40,7 @@ int arrays_equal(unsigned char arr1[], unsigned char arr2[], int n) {
 
     sort(arr1, n);
     sort(arr2, n);
-
+    
     for(i = 0; i < n; i++) {
         if(arr1[i] != arr2[i]) {
             return 0;
@@ -62,7 +62,6 @@ void print_hex(unsigned char array[], int size) {
 int main(int argc, char **argv) {
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_entropy_context entropy;
-
 #if !defined(MBEDTLS_CIPHER_MODE_XTS)
     mbedtls_aes_context aes;
 #else
@@ -120,19 +119,15 @@ int main(int argc, char **argv) {
             }
         } else if(strcmp(p, "key_size") == 0) {
 			key_size = atoi(q);
-
 #if !defined(MBEDTLS_CIPHER_MODE_XTS)
             if(key_size != 16 && key_size != 24 && key_size != 32) {
                 printf("Key size must be 16, 24 or 32\n");
-                return 1;
-            }
 #else
             if(key_size != 32 && key_size != 64) {
                 printf("Key size must be 32 or 64\n");
+#endif
                 return 1;
             }
-#endif
-
 		} else if(strcmp(p, "n_tests") == 0) {
 			n_tests = atoi(q);
             if(n_tests < 1 || n_tests > 1000) {
@@ -147,7 +142,6 @@ int main(int argc, char **argv) {
 
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
-
 #if !defined(MBEDTLS_CIPHER_MODE_XTS)
     mbedtls_aes_init(&aes);
 #else
@@ -261,7 +255,6 @@ int main(int argc, char **argv) {
             goto exit;
         }
 #endif
-
 
 #if !defined(USE_PAPI)
         printf("Input:\n");
@@ -419,7 +412,6 @@ int main(int argc, char **argv) {
         printf("CPU cycles: %lld\n", cycles_cpu_dec);
         printf("CPU time (usec): %lld\n", usec_cpu_dec);
 #endif
-
         printf("\n");
     }
 
@@ -434,7 +426,6 @@ exit:
 #else
     mbedtls_aes_xts_free(&aes);
 #endif
-
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
 
