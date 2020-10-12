@@ -258,8 +258,6 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 	                  0xab000000,0x4d000000,0x9a000000};
 	WORD *w;
 
-	w = (WORD*) malloc(sizeof(WORD)*sizeof(key));
-
 	switch (keybits) {
 		case 128: Nr = 10; Nk = 4; break;
 		case 192: Nr = 12; Nk = 6; break;
@@ -267,6 +265,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 		default: return (MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 	}
 
+	w = (WORD*) malloc(sizeof(WORD)*(4*(Nr+1)));
 	ctx->nr = Nr;
 
 	for (idx=0; idx < Nk; ++idx) {
@@ -284,6 +283,7 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 	}
 
 	ctx->rk = w;
+	free(w);
 
 	return 0;
 }
@@ -299,8 +299,6 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key, 
 	                  0xab000000,0x4d000000,0x9a000000};
 	WORD *w;
 
-	w = (WORD*) malloc(sizeof(WORD)*sizeof(key));
-
 	switch (keybits) {
 		case 128: Nr = 10; Nk = 4; break;
 		case 192: Nr = 12; Nk = 6; break;
@@ -308,6 +306,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key, 
 		default: return (MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 	}
 
+	w = (WORD*) malloc(sizeof(WORD)*(4*(Nr+1)));
 	ctx->nr = Nr;
 
 	for (idx=0; idx < Nk; ++idx) {
@@ -325,6 +324,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key, 
 	}
 
 	ctx->rk = w;
+	free(w);
 
 	return 0;
 }

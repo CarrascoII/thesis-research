@@ -80,6 +80,13 @@ int main(int argc, char **argv) {
     unsigned long offset;
 #endif
 
+#if defined(USE_PAPI)
+    long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall,
+              cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec,
+              start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu,
+              cycles_cpu_enc, usec_cpu_enc, cycles_cpu_dec, usec_cpu_dec;
+#endif
+
 	for(i = 1; i < argc; i++) {
         p = argv[i];
         if((q = strchr(p, '=')) == NULL) {
@@ -111,13 +118,6 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 	}
-
-#if defined(USE_PAPI)
-    long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall,
-              cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec,
-              start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu,
-              cycles_cpu_enc, usec_cpu_enc, cycles_cpu_dec, usec_cpu_dec;
-#endif
 
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -184,6 +184,7 @@ int main(int argc, char **argv) {
     
     // Actual test
     for(i = 0; i < n_tests; i++) {
+        printf("\n-------TEST %02d-------\n", i+1);
 
         // Cipher the input into output
         if((ret = mbedtls_aes_setkey_enc(&aes, key, key_size*8)) != 0) {
@@ -285,7 +286,6 @@ int main(int argc, char **argv) {
         } else {
             printf("Equal\n");
         }
-        printf("\n");
 #else
         /* Gets the ending time in clock cycles and microseconds */
         end_cycles_wall = PAPI_get_real_cyc();
@@ -312,6 +312,8 @@ int main(int argc, char **argv) {
         printf("CPU cycles: %lld\n", cycles_cpu_dec);
         printf("CPU time (usec): %lld\n", usec_cpu_dec);
 #endif
+
+        printf("\n");
     }
 
 exit:
