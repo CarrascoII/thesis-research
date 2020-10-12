@@ -1,11 +1,16 @@
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/certs.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/debug.h"
 
-#include "config_alt.h"
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

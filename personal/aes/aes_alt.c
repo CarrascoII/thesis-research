@@ -4,7 +4,8 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) || defined(MBEDTLS_AES_SETKEY_ENC_ALT) || defined(MBEDTLS_AES_DECRYPT_ALT) || defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) || defined(MBEDTLS_AES_SETKEY_ENC_ALT) || \
+	defined(MBEDTLS_AES_DECRYPT_ALT) || defined(MBEDTLS_AES_SETKEY_DEC_ALT)
 
 #include <string.h>
 #include <stdlib.h>

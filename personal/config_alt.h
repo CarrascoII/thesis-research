@@ -66,7 +66,6 @@
 // #define MBEDTLS_CIPHER_MODE_CTR
 // #define MBEDTLS_CIPHER_MODE_OFB
 // #define MBEDTLS_CIPHER_MODE_XTS
-#define MBEDTLS_CIPHER_PADDING_ZEROS
 
 /* Message authentication algorithms */
 #define MBEDTLS_SHA1_C
