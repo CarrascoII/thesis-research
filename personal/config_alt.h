@@ -40,9 +40,9 @@
 #define MBEDTLS_OID_C
 #define MBEDTLS_RSA_C
 
- #define MBEDTLS_ASN1_PARSE_C
- #define MBEDTLS_ASN1_WRITE_C
- #define MBEDTLS_ECDSA_C
+#define MBEDTLS_ASN1_PARSE_C
+#define MBEDTLS_ASN1_WRITE_C
+#define MBEDTLS_ECDSA_C
 
 #define MBEDTLS_PKCS1_V15
 
@@ -62,14 +62,10 @@
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_AES_C
 #define MBEDTLS_CIPHER_MODE_CBC
-// #define MBEDTLS_CIPHER_MODE_CFB
-// #define MBEDTLS_CIPHER_MODE_CTR
-// #define MBEDTLS_CIPHER_MODE_OFB
-// #define MBEDTLS_CIPHER_MODE_XTS
 
 /* Message authentication algorithms */
 #define MBEDTLS_SHA1_C
-//#define MBEDTLS_SHA256_PROCESS_ALT
+// #define MBEDTLS_SHA256_PROCESS_ALT
 #define MBEDTLS_SHA256_C
 #define MBEDTLS_SHA512_C
 
@@ -100,7 +96,5 @@
         MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256
 
 #include "mbedtls/check_config.h"
-
-//#define USE_PAPI
 
 #endif /* MBEDTLS_CONFIG_H */

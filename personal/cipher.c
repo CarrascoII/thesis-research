@@ -20,7 +20,7 @@
 #define INPUT_SIZE  16
 #define KEY_SIZE	32
 #define IV_SIZE		16
-#define N_TESTS     10
+#define N_TESTS     1
 
 void sort(unsigned char arr[], int n) {
     int i, j;
@@ -62,7 +62,12 @@ void print_hex(unsigned char array[], int size) {
 int main(int argc, char **argv) {
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_entropy_context entropy;
+
+#if !defined(MBEDTLS_CIPHER_MODE_XTS)
     mbedtls_aes_context aes;
+#else
+    mbedtls_aes_xts_context aes;
+#endif
 
     int i, ret, n_tests = N_TESTS,
         input_size = INPUT_SIZE, key_size = KEY_SIZE;
@@ -71,13 +76,25 @@ int main(int argc, char **argv) {
 		 *pers_key = "aes generate key",
 		 *p, *q;
 
-#if defined(MBEDTLS_CIPHER_MODE_CBC)    
+#if defined(MBEDTLS_CIPHER_MODE_CBC) || defined(MBEDTLS_CIPHER_MODE_CFB) || \
+    defined(MBEDTLS_CIPHER_MODE_OFB)
     unsigned char iv1[IV_SIZE], iv2[IV_SIZE];
 	char *pers_iv = "aes generate iv";
 #endif
 
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
-    unsigned long offset;
+#if defined(MBEDTLS_CIPHER_MODE_CFB) || defined(MBEDTLS_CIPHER_MODE_CTR) || \
+    defined(MBEDTLS_CIPHER_MODE_OFB)
+    unsigned long offset = 0;
+#endif
+
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+    unsigned char nonce_counter1[IV_SIZE], nonce_counter2[IV_SIZE], stream_block[IV_SIZE];
+    char *pers_nonce = "drbg generate nonce";
+#endif
+
+#if defined(MBEDTLS_CIPHER_MODE_XTS)
+    unsigned char data_unit1[IV_SIZE], data_unit2[IV_SIZE];
+    char *pers_data = "drbg generate data_unit";
 #endif
 
 #if defined(USE_PAPI)
@@ -97,19 +114,28 @@ int main(int argc, char **argv) {
         *q++ = '\0';
         if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
-            if(input_size > 0 && input_size < MBEDTLS_CTR_DRBG_MAX_REQUEST && input_size % 16 != 0) {
+            if(input_size < 0 || input_size > MBEDTLS_CTR_DRBG_MAX_REQUEST || input_size % 16 != 0) {
                 printf("Input size must be multiple of 16, between 16 and 1024 \n");
                 return 1;
             }
         } else if(strcmp(p, "key_size") == 0) {
 			key_size = atoi(q);
+
+#if !defined(MBEDTLS_CIPHER_MODE_XTS)
             if(key_size != 16 && key_size != 24 && key_size != 32) {
                 printf("Key size must be 16, 24 or 32\n");
                 return 1;
             }
+#else
+            if(key_size != 32 && key_size != 64) {
+                printf("Key size must be 32 or 64\n");
+                return 1;
+            }
+#endif
+
 		} else if(strcmp(p, "n_tests") == 0) {
 			n_tests = atoi(q);
-            if(n_tests > 0 && n_tests <= 1000) {
+            if(n_tests < 1 || n_tests > 1000) {
                 printf("Number of tests must be between 1 and 1000\n");
                 return 1;
             }
@@ -121,7 +147,12 @@ int main(int argc, char **argv) {
 
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
+
+#if !defined(MBEDTLS_CIPHER_MODE_XTS)
     mbedtls_aes_init(&aes);
+#else
+    mbedtls_aes_xts_init(&aes);
+#endif
 
 	input = (unsigned char *) malloc(input_size*sizeof(unsigned char));
 	output = (unsigned char *) malloc(input_size*sizeof(unsigned char));
@@ -167,7 +198,8 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-#if defined(MBEDTLS_CIPHER_MODE_CBC)    
+#if defined(MBEDTLS_CIPHER_MODE_CBC) || defined(MBEDTLS_CIPHER_MODE_CFB) || \
+    defined(MBEDTLS_CIPHER_MODE_OFB)
     // Generate the ivs
     if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) pers_iv, strlen(pers_iv))) != 0) {
         printf(" failed\n ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
@@ -182,19 +214,54 @@ int main(int argc, char **argv) {
     memcpy(iv2, iv1, IV_SIZE);
 #endif
     
+#if defined(MBEDTLS_CIPHER_MODE_CTR)
+    // Generate the nonce
+    if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) pers_nonce, strlen(pers_nonce))) != 0) {
+        printf(" failed\n ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
+        goto exit;
+    }
+
+    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, nonce_counter1, IV_SIZE)) != 0) {
+        printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+        goto exit;
+    }
+
+    memcpy(nonce_counter2, nonce_counter1, IV_SIZE);
+#endif
+
+#if defined(MBEDTLS_CIPHER_MODE_XTS)
+    // Generate the data_unit
+    if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) pers_data, strlen(pers_data))) != 0) {
+        printf(" failed\n ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
+        goto exit;
+    }
+
+    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, data_unit1, IV_SIZE)) != 0) {
+        printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+        goto exit;
+    }
+
+    memcpy(data_unit2, data_unit1, IV_SIZE);
+#endif
+
     // Actual test
     for(i = 0; i < n_tests; i++) {
         printf("\n-------TEST %02d-------\n", i+1);
 
+#if !defined(MBEDTLS_CIPHER_MODE_XTS)
         // Cipher the input into output
         if((ret = mbedtls_aes_setkey_enc(&aes, key, key_size*8)) != 0) {
             printf(" failed\n ! mbedtls_aes_setkey_enc returned -0x%04x\n", -ret);
             goto exit;
         }
-
-#if defined(MBEDTLS_CIPHER_MODE_CFB)
-        offset = 0;
+#else
+        // Cipher the input into output
+        if((ret = mbedtls_aes_xts_setkey_enc(&aes, key, key_size*8)) != 0) {
+            printf(" failed\n ! mbedtls_aes_xts_setkey_enc returned -0x%04x\n", -ret);
+            goto exit;
+        }
 #endif
+
 
 #if !defined(USE_PAPI)
         printf("Input:\n");
@@ -217,6 +284,24 @@ int main(int argc, char **argv) {
         printf("Using CFB\n");
         if((ret = mbedtls_aes_crypt_cfb128(&aes, MBEDTLS_AES_ENCRYPT, input_size, &offset, iv1, input, output)) != 0) {
             printf(" failed\n ! mbedtls_aes_crypt_cfb128 returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_CTR)
+        printf("Using CTR\n");
+        if((ret = mbedtls_aes_crypt_ctr(&aes, input_size, &offset, nonce_counter1, stream_block, input, output)) != 0) {
+            printf(" failed\n ! mbedtls_aes_crypt_ctr returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_OFB)
+        printf("Using OFB\n");
+        if((ret = mbedtls_aes_crypt_ofb(&aes, input_size, &offset, iv1, input, output)) != 0) {
+            printf(" failed\n ! mbedtls_aes_crypt_ofb returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_XTS)
+        printf("Using XTS\n");
+        if((ret = mbedtls_aes_crypt_xts(&aes, MBEDTLS_AES_ENCRYPT, input_size, data_unit1, input, output)) != 0) {
+            printf(" failed\n ! mbedtls_aes_crypt_xts returned -0x%04x\n", -ret);
             goto exit;
         }
 #else 
@@ -243,10 +328,17 @@ int main(int argc, char **argv) {
         usec_cpu_enc = end_usec_cpu - start_usec_cpu;
 #endif
 
-#if !defined(MBEDTLS_CIPHER_MODE_CFB)
+#if !defined(MBEDTLS_CIPHER_MODE_CFB) && !defined(MBEDTLS_CIPHER_MODE_CTR) && \
+    !defined(MBEDTLS_CIPHER_MODE_OFB) && !defined(MBEDTLS_CIPHER_MODE_XTS)
         // Decipher output into decipher
         if((ret = mbedtls_aes_setkey_dec(&aes, key, key_size*8)) != 0) {
             printf(" failed\n ! mbedtls_aes_setkey_dec returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_XTS)
+        // Decipher output into decipher
+        if((ret = mbedtls_aes_xts_setkey_dec(&aes, key, key_size*8)) != 0) {
+            printf(" failed\n ! mbedtls_aes_xts_setkey_dec returned -0x%04x\n", -ret);
             goto exit;
         }
 #endif
@@ -267,6 +359,21 @@ int main(int argc, char **argv) {
 #elif defined(MBEDTLS_CIPHER_MODE_CFB)
         if((ret = mbedtls_aes_crypt_cfb128(&aes, MBEDTLS_AES_DECRYPT, input_size, &offset, iv2, output, decipher)) != 0) {
             printf(" failed\n ! mbedtls_aes_crypt_cfb128 returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_CTR)
+        if((ret = mbedtls_aes_crypt_ctr(&aes, input_size, &offset, nonce_counter2, stream_block, output, decipher)) != 0) {
+            printf(" failed\n ! mbedtls_aes_crypt_ctr returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_OFB)
+        if((ret = mbedtls_aes_crypt_ofb(&aes, input_size, &offset, iv2, output, decipher)) != 0) {
+            printf(" failed\n ! mbedtls_aes_crypt_ofb returned -0x%04x\n", -ret);
+            goto exit;
+        }
+#elif defined(MBEDTLS_CIPHER_MODE_XTS)
+        if((ret = mbedtls_aes_crypt_xts(&aes, MBEDTLS_AES_DECRYPT, input_size, data_unit2, output, decipher)) != 0) {
+            printf(" failed\n ! mbedtls_aes_crypt_xts returned -0x%04x\n", -ret);
             goto exit;
         }
 #else
@@ -322,7 +429,12 @@ exit:
 	free(output);
 	free(input);
 
+#if !defined(MBEDTLS_CIPHER_MODE_XTS)
     mbedtls_aes_free(&aes);
+#else
+    mbedtls_aes_xts_free(&aes);
+#endif
+
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
 
