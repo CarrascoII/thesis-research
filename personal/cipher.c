@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/entropy.h"
@@ -74,6 +75,8 @@ int main(int argc, char **argv) {
     char *pers_input = "drbg generate input",
 		 *pers_key = "aes generate key",
 		 *p, *q;
+    struct timespec start, end;
+    long cpu_time_enc, cpu_time_dec;
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC) || defined(MBEDTLS_CIPHER_MODE_CFB) || \
     defined(MBEDTLS_CIPHER_MODE_OFB)
@@ -267,6 +270,8 @@ int main(int argc, char **argv) {
         start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
         printf("Using CBC\n");
         if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, input_size, iv1, input, output)) != 0) {
@@ -304,6 +309,9 @@ int main(int argc, char **argv) {
             goto exit;
         }
 #endif
+
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        cpu_time_enc = (end.tv_sec - start.tv_sec) + ((end.tv_nsec - start.tv_nsec)*1e-9);
 
 #if !defined(USE_PAPI)
         printf("Output:\n");
@@ -344,6 +352,8 @@ int main(int argc, char **argv) {
         start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
         if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, input_size, iv2, output, decipher)) != 0) {
             printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
@@ -375,6 +385,9 @@ int main(int argc, char **argv) {
             goto exit;
         }
 #endif
+
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        cpu_time_dec = (end.tv_sec - start.tv_sec) + ((end.tv_nsec - start.tv_nsec)*1e-9);
 
 #if !defined(USE_PAPI)
         printf("Decipher:\n");
@@ -412,6 +425,8 @@ int main(int argc, char **argv) {
         printf("CPU cycles: %lld\n", cycles_cpu_dec);
         printf("CPU time (usec): %lld\n", usec_cpu_dec);
 #endif
+
+        printf("\ntime.h enc: %ld\ntime.h dec: %ld\n", cpu_time_enc, cpu_time_dec);
         printf("\n");
     }
 
