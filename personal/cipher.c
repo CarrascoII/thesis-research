@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_CIPHER_MODE_CFB) || defined(MBEDTLS_CIPHER_MODE_CTR) || \
     defined(MBEDTLS_CIPHER_MODE_OFB)
-    unsigned long offset = 0;
+    unsigned int offset = 0;
 #endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
 
     // Actual test
     for(i = 0; i < n_tests; i++) {
-        printf("\n-------TEST %02d-------\n", i+1);
+        printf("\n-----------TEST %02d-----------\n", i+1);
 
 #if !defined(MBEDTLS_CIPHER_MODE_XTS)
         // Cipher the input into output
@@ -288,9 +288,9 @@ int main(int argc, char **argv) {
         // start_usec_wall = PAPI_get_real_usec();
         start_cycles_cpu = PAPI_get_virt_cyc();
         start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
         // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+#endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
         printf("Using CBC\n");
@@ -330,9 +330,6 @@ int main(int argc, char **argv) {
         }
 #endif
 
-        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-        // cpu_time_enc = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
-
 #if !defined(USE_PAPI)
         printf("Output:\n");
         print_hex(output, input_size); printf("\n");
@@ -343,10 +340,14 @@ int main(int argc, char **argv) {
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
+        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
         // cycles_wall_enc = end_cycles_wall - start_cycles_wall;
         // usec_wall_enc = end_usec_wall - start_usec_wall;
         cycles_cpu_enc = end_cycles_cpu - start_cycles_cpu;
         usec_cpu_enc = end_usec_cpu - start_usec_cpu;
+
+        // cpu_time_enc = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
 
         avg_cycles_enc[i] = cycles_cpu_enc;
         avg_usec_enc[i] = usec_cpu_enc;
@@ -373,9 +374,9 @@ int main(int argc, char **argv) {
         // start_usec_wall = PAPI_get_real_usec();
         start_cycles_cpu = PAPI_get_virt_cyc();
         start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
         // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+#endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
         if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, input_size, iv2, output, decipher)) != 0) {
@@ -409,9 +410,6 @@ int main(int argc, char **argv) {
         }
 #endif
 
-        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-        // cpu_time_dec = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
-
 #if !defined(USE_PAPI)
         printf("Decipher:\n");
         print_hex(decipher, input_size); printf("\n");
@@ -429,10 +427,14 @@ int main(int argc, char **argv) {
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
+        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
         // cycles_wall_dec = end_cycles_wall - start_cycles_wall;
         // usec_wall_dec = end_usec_wall - start_usec_wall;
         cycles_cpu_dec = end_cycles_cpu - start_cycles_cpu;
         usec_cpu_dec = end_usec_cpu - start_usec_cpu;
+
+        // cpu_time_dec = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
 
         avg_cycles_dec[i] = cycles_cpu_dec;
         avg_usec_dec[i] = usec_cpu_dec;
@@ -450,9 +452,12 @@ int main(int argc, char **argv) {
         // printf("--------------------\n");
         printf("CPU cycles: %lld\n", cycles_cpu_dec);
         printf("CPU time (usec): %lld\n", usec_cpu_dec);
+
+        // printf("\n------time.h Measures------\n");^M
+        // printf("Encryption time (nsec): %ld\n", cpu_time_enc);
+        // printf("Decryption time (nsec): %ld\n", cpu_time_dec);
 #endif
 
-        // printf("\ntime.h enc: %ld\ntime.h dec: %ld\n", cpu_time_enc, cpu_time_dec);
         printf("\n");
     }
 
