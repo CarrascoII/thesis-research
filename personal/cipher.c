@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+// #include <time.h>
 
 #include "mbedtls/platform_util.h"
 #include "mbedtls/entropy.h"
@@ -60,6 +60,19 @@ void print_hex(unsigned char array[], int size) {
     printf("\n");
 }
 
+#if defined(USE_PAPI)
+long long calc_avg(long long *avg, int n_tests) {
+    int i;
+    long long sum = 0;
+
+    for(i = 0; i < n_tests; i++) {
+        sum += avg[i];
+    }
+
+    return (sum / n_tests);
+}
+#endif
+
 int main(int argc, char **argv) {
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_entropy_context entropy;
@@ -75,8 +88,8 @@ int main(int argc, char **argv) {
     char *pers_input = "drbg generate input",
 		 *pers_key = "aes generate key",
 		 *p, *q;
-    struct timespec start, end;
-    long cpu_time_enc, cpu_time_dec;
+    // struct timespec start, end;
+    // long cpu_time_enc, cpu_time_dec;
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC) || defined(MBEDTLS_CIPHER_MODE_CFB) || \
     defined(MBEDTLS_CIPHER_MODE_OFB)
@@ -100,10 +113,12 @@ int main(int argc, char **argv) {
 #endif
 
 #if defined(USE_PAPI)
-    long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall,
-              cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec,
-              start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu,
+    // long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall, cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec;
+
+    long long start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu,
               cycles_cpu_enc, usec_cpu_enc, cycles_cpu_dec, usec_cpu_dec;
+
+    long long *avg_cycles_enc, *avg_usec_enc, *avg_cycles_dec, *avg_usec_dec;
 #endif
 
 	for(i = 1; i < argc; i++) {
@@ -171,6 +186,11 @@ int main(int argc, char **argv) {
         printf("PAPI_library_init returned -0x%04x\n", -ret);
         goto exit;
     }
+
+    avg_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
+    avg_usec_enc = (long long *) malloc(n_tests*sizeof(long long));
+    avg_cycles_dec = (long long *) malloc(n_tests*sizeof(long long));
+    avg_usec_dec = (long long *) malloc(n_tests*sizeof(long long));
 #endif
 
     // Generate the input
@@ -264,13 +284,13 @@ int main(int argc, char **argv) {
         print_hex(input, input_size); printf("\n");
 #else
         /* Gets the starting time in clock cycles and microseconds */
-        start_cycles_wall = PAPI_get_real_cyc();
-        start_usec_wall = PAPI_get_real_usec();
+        // start_cycles_wall = PAPI_get_real_cyc();
+        // start_usec_wall = PAPI_get_real_usec();
         start_cycles_cpu = PAPI_get_virt_cyc();
         start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
         printf("Using CBC\n");
@@ -310,23 +330,26 @@ int main(int argc, char **argv) {
         }
 #endif
 
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-        cpu_time_enc = (end.tv_sec - start.tv_sec) + ((end.tv_nsec - start.tv_nsec)*1e-9);
+        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        // cpu_time_enc = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
 
 #if !defined(USE_PAPI)
         printf("Output:\n");
         print_hex(output, input_size); printf("\n");
 #else
         /* Gets the ending time in clock cycles and microseconds */
-        end_cycles_wall = PAPI_get_real_cyc();
-        end_usec_wall = PAPI_get_real_usec();
+        // end_cycles_wall = PAPI_get_real_cyc();
+        // end_usec_wall = PAPI_get_real_usec();
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
-        cycles_wall_enc = end_cycles_wall - start_cycles_wall;
-        usec_wall_enc = end_usec_wall - start_usec_wall;
+        // cycles_wall_enc = end_cycles_wall - start_cycles_wall;
+        // usec_wall_enc = end_usec_wall - start_usec_wall;
         cycles_cpu_enc = end_cycles_cpu - start_cycles_cpu;
         usec_cpu_enc = end_usec_cpu - start_usec_cpu;
+
+        avg_cycles_enc[i] = cycles_cpu_enc;
+        avg_usec_enc[i] = usec_cpu_enc;
 #endif
 
 #if !defined(MBEDTLS_CIPHER_MODE_CFB) && !defined(MBEDTLS_CIPHER_MODE_CTR) && \
@@ -346,13 +369,13 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI)
         /* Gets the starting time in clock cycles and microseconds */
-        start_cycles_wall = PAPI_get_real_cyc();
-        start_usec_wall = PAPI_get_real_usec();
+        // start_cycles_wall = PAPI_get_real_cyc();
+        // start_usec_wall = PAPI_get_real_usec();
         start_cycles_cpu = PAPI_get_virt_cyc();
         start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
         if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, input_size, iv2, output, decipher)) != 0) {
@@ -386,8 +409,8 @@ int main(int argc, char **argv) {
         }
 #endif
 
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-        cpu_time_dec = (end.tv_sec - start.tv_sec) + ((end.tv_nsec - start.tv_nsec)*1e-9);
+        // clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+        // cpu_time_dec = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
 
 #if !defined(USE_PAPI)
         printf("Decipher:\n");
@@ -401,36 +424,58 @@ int main(int argc, char **argv) {
         }
 #else
         /* Gets the ending time in clock cycles and microseconds */
-        end_cycles_wall = PAPI_get_real_cyc();
-        end_usec_wall = PAPI_get_real_usec();
+        // end_cycles_wall = PAPI_get_real_cyc();
+        // end_usec_wall = PAPI_get_real_usec();
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
-        cycles_wall_dec = end_cycles_wall - start_cycles_wall;
-        usec_wall_dec = end_usec_wall - start_usec_wall;
+        // cycles_wall_dec = end_cycles_wall - start_cycles_wall;
+        // usec_wall_dec = end_usec_wall - start_usec_wall;
         cycles_cpu_dec = end_cycles_cpu - start_cycles_cpu;
         usec_cpu_dec = end_usec_cpu - start_usec_cpu;
 
+        avg_cycles_dec[i] = cycles_cpu_dec;
+        avg_usec_dec[i] = usec_cpu_dec;
+
         printf("\n-----Encryption-----\n");
-        printf("Wall cycles: %lld\n", cycles_wall_enc);
-        printf("Wall time (usec): %lld\n", usec_wall_enc);
-        printf("--------------------\n");
+        // printf("Wall cycles: %lld\n", cycles_wall_enc);
+        // printf("Wall time (usec): %lld\n", usec_wall_enc);
+        // printf("--------------------\n");
         printf("CPU cycles: %lld\n", cycles_cpu_enc);
         printf("CPU time (usec): %lld\n", usec_cpu_enc);
 
         printf("\n-----Decryption-----\n");
-        printf("Wall cycles: %lld\n", cycles_wall_dec);
-        printf("Wall time (usec): %lld\n", usec_wall_dec);
-        printf("--------------------\n");
+        // printf("Wall cycles: %lld\n", cycles_wall_dec);
+        // printf("Wall time (usec): %lld\n", usec_wall_dec);
+        // printf("--------------------\n");
         printf("CPU cycles: %lld\n", cycles_cpu_dec);
         printf("CPU time (usec): %lld\n", usec_cpu_dec);
 #endif
 
-        printf("\ntime.h enc: %ld\ntime.h dec: %ld\n", cpu_time_enc, cpu_time_dec);
+        // printf("\ntime.h enc: %ld\ntime.h dec: %ld\n", cpu_time_enc, cpu_time_dec);
         printf("\n");
     }
 
+#if defined(USE_PAPI)
+        printf("\n--------FINAL--------\n");
+
+        printf("\n-----Encryption-----\n");
+        printf("CPU cycles: %lld\n", calc_avg(avg_cycles_enc, n_tests));
+        printf("CPU time (usec): %lld\n", calc_avg(avg_usec_enc, n_tests));
+
+        printf("\n-----Decryption-----\n");
+        printf("CPU cycles: %lld\n", calc_avg(avg_cycles_dec, n_tests));
+        printf("CPU time (usec): %lld\n", calc_avg(avg_usec_dec, n_tests));
+#endif
+
 exit:
+#if defined(USE_PAPI)
+    free(avg_cycles_enc);
+    free(avg_usec_enc);
+    free(avg_cycles_dec);
+    free(avg_usec_dec);
+#endif
+
 	free(key);
 	free(decipher);
 	free(output);
