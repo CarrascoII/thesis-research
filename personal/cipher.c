@@ -19,10 +19,11 @@
 #include "papi.h"
 #endif 
 
-#define INPUT_SIZE  16
-#define KEY_SIZE	32
-#define IV_SIZE		16
-#define N_TESTS     1
+#define MIN_INPUT_SIZE  16
+#define MAX_INPUT_SIZE  1024
+#define KEY_SIZE        32
+#define IV_SIZE         16
+#define N_TESTS         10
 
 void sort(unsigned char arr[], int n) {
     int i, j;
@@ -84,7 +85,7 @@ int main(int argc, char **argv) {
 #endif
 
     int i, j, ret, n_tests = N_TESTS,
-        input_size = INPUT_SIZE, key_size = KEY_SIZE;
+        input_size = MIN_INPUT_SIZE, key_size = KEY_SIZE;
     unsigned char *input, *output, *decipher, *key;
     char *pers_input = "drbg generate input",
 		 *pers_key = "aes generate key",
@@ -136,7 +137,7 @@ int main(int argc, char **argv) {
         if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
             if(input_size < 0 || input_size > MBEDTLS_CTR_DRBG_MAX_REQUEST || input_size % 16 != 0) {
-                printf("Input size must be multiple of 16, between 16 and 1024 \n");
+                printf("Input size must be multiple of 16, between %d and %d \n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
                 return 1;
             }
         } else if(strcmp(p, "key_size") == 0) {
@@ -185,12 +186,7 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-    avg_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
-    avg_usec_enc = (long long *) malloc(n_tests*sizeof(long long));
-    avg_cycles_dec = (long long *) malloc(n_tests*sizeof(long long));
-    avg_usec_dec = (long long *) malloc(n_tests*sizeof(long long));
-
-    n_inputs = log(1024)/log(input_size);
+    n_inputs = (log(MAX_INPUT_SIZE) - log(input_size))/log(2) + 1;
 
     inp_cycles_enc = (long long *) malloc(n_inputs*sizeof(long long));
     inp_usec_enc = (long long *) malloc(n_inputs*sizeof(long long));
@@ -255,7 +251,16 @@ int main(int argc, char **argv) {
     memcpy(data_unit2, data_unit1, IV_SIZE);
 #endif
 
-    for(j = 0; input_size < 1024; input_size *= 2, j++) {
+    for(j = 0; j < n_inputs; input_size *= 2, j++) {
+        printf("\n--------AVERAGE %04d--------\n", input_size);
+
+#if defined(USE_PAPI)
+        avg_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
+        avg_usec_enc = (long long *) malloc(n_tests*sizeof(long long));
+        avg_cycles_dec = (long long *) malloc(n_tests*sizeof(long long));
+        avg_usec_dec = (long long *) malloc(n_tests*sizeof(long long));
+#endif
+
         input = (unsigned char *) malloc(input_size*sizeof(unsigned char));
         output = (unsigned char *) malloc(input_size*sizeof(unsigned char));
         decipher = (unsigned char *) malloc(input_size*sizeof(unsigned char));
@@ -306,37 +311,31 @@ int main(int argc, char **argv) {
 #endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
-            printf("Using CBC\n");
             if((ret = mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, input_size, iv1, input, output)) != 0) {
                 printf(" failed\n ! mbedtls_aes_crypt_cbc returned -0x%04x\n", -ret);
                 goto exit;
             }
 #elif defined(MBEDTLS_CIPHER_MODE_CFB)
-            printf("Using CFB\n");
             if((ret = mbedtls_aes_crypt_cfb128(&aes, MBEDTLS_AES_ENCRYPT, input_size, &offset, iv1, input, output)) != 0) {
                 printf(" failed\n ! mbedtls_aes_crypt_cfb128 returned -0x%04x\n", -ret);
                 goto exit;
             }
 #elif defined(MBEDTLS_CIPHER_MODE_CTR)
-            printf("Using CTR\n");
             if((ret = mbedtls_aes_crypt_ctr(&aes, input_size, &offset, nonce_counter1, stream_block, input, output)) != 0) {
                 printf(" failed\n ! mbedtls_aes_crypt_ctr returned -0x%04x\n", -ret);
                 goto exit;
             }
 #elif defined(MBEDTLS_CIPHER_MODE_OFB)
-            printf("Using OFB\n");
             if((ret = mbedtls_aes_crypt_ofb(&aes, input_size, &offset, iv1, input, output)) != 0) {
                 printf(" failed\n ! mbedtls_aes_crypt_ofb returned -0x%04x\n", -ret);
                 goto exit;
             }
 #elif defined(MBEDTLS_CIPHER_MODE_XTS)
-            printf("Using XTS\n");
             if((ret = mbedtls_aes_crypt_xts(&aes, MBEDTLS_AES_ENCRYPT, input_size, data_unit1, input, output)) != 0) {
                 printf(" failed\n ! mbedtls_aes_crypt_xts returned -0x%04x\n", -ret);
                 goto exit;
             }
 #else 
-            printf("Using ECB\n");
             if((ret = mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, input, output)) != 0) {
                 printf(" failed\n ! mbedtls_aes_crypt_ecb returned -0x%04x\n", -ret);
                 goto exit;
@@ -480,16 +479,20 @@ int main(int argc, char **argv) {
         inp_cycles_dec[j] = calc_avg(avg_cycles_dec, n_tests);
         inp_usec_dec[j] = calc_avg(avg_usec_dec, n_tests);
 
-        printf("\n--------FINAL--------\n");
+        printf("\n-----Avg Encryption-----\n");
+        printf("CPU cycles: %lld\n", inp_cycles_enc[j]);
+        printf("CPU time (usec): %lld\n", inp_usec_enc[j]);
 
-        printf("\n-----Encryption-----\n");
-        printf("CPU cycles: %lld\n", calc_avg(avg_cycles_enc, n_tests));
-        printf("CPU time (usec): %lld\n", calc_avg(avg_usec_enc, n_tests));
+        printf("\n-----Avg Decryption-----\n");
+        printf("CPU cycles: %lld\n", inp_cycles_dec[j]);
+        printf("CPU time (usec): %lld\n", inp_usec_dec[j]);
 
-        printf("\n-----Decryption-----\n");
-        printf("CPU cycles: %lld\n", calc_avg(avg_cycles_dec, n_tests));
-        printf("CPU time (usec): %lld\n", calc_avg(avg_usec_dec, n_tests));
+        free(avg_cycles_enc);
+        free(avg_usec_enc);
+        free(avg_cycles_dec);
+        free(avg_usec_dec);
 #endif
+
         free(decipher);
         free(output);
         free(input);
@@ -498,25 +501,23 @@ int main(int argc, char **argv) {
 #if defined(USE_PAPI)
     printf("\n--------INPUT--------\n");
 
-    printf("\n-----Encryption -----\n");
     for(j = 0; j < n_inputs; j++) {
-        printf("CPU cycles(%d): %lld\n", 2**(4+j), inp_cycles_enc[j]);
-        printf("CPU time(%d): %lld\n", 2**(4+j), inp_usec_enc[j]);
-    }
+        printf("\n---Encryption (%d bytes)---\n", (int) pow(2, 4+j));
+        printf("CPU cycles: %lld\n", inp_cycles_enc[j]);
+        printf("CPU time (usec): %lld\n", inp_usec_enc[j]);
 
-    printf("\n-----Decryption -----\n");
-    for(j = 0; j < n_inputs; j++) {
-        printf("CPU cycles(%d): %lld\n", 2**(4+j), inp_cycles_dec[j]);
-        printf("CPU time(%d): %lld\n", 2**(4+j), inp_usec_dec[j]);
+        printf("\n---Decryption (%d bytes)---\n", (int) pow(2, 4+j));
+        printf("CPU cycles: %lld\n", inp_cycles_dec[j]);
+        printf("CPU time (usec): %lld\n", inp_usec_dec[j]);
     }
 #endif
 
 exit:
 #if defined(USE_PAPI)
-    free(avg_cycles_enc);
-    free(avg_usec_enc);
-    free(avg_cycles_dec);
-    free(avg_usec_dec);
+    free(inp_cycles_enc);
+    free(inp_usec_enc);
+    free(inp_cycles_dec);
+    free(inp_usec_dec);
 #endif
 
 	free(key);

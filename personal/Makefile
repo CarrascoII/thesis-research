@@ -49,14 +49,14 @@ tls: server_obj client_obj
 
 cipher_obj: lib_cipher
 	rm -f cipher.out
-	$(CC) $(ALL_CFLAGS) $(CIPHER_CONFIG) cipher.c $(LOCAL_CFLAGS) -o cipher.out
+	$(CC) $(ALL_CFLAGS) $(CIPHER_CONFIG) cipher.c -lm $(LOCAL_CFLAGS) -o cipher.out
 
 cipher: cipher_obj
 	./cipher.out
 
 cipher_papi_obj: lib_cipher
 	rm -f cipher.out
-	$(CC) $(ALL_CFLAGS) $(CIPHER_CONFIG) cipher.c $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher.out
+	$(CC) $(ALL_CFLAGS) $(CIPHER_CONFIG) cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher.out
 
 cipher_papi: cipher_papi_obj
 #	source init_papi.sh
