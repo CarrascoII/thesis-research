@@ -83,22 +83,23 @@ long long calc_avg(long long *avg, int n_tests) {
     return (sum / n_tests);
 }
 
-void print_csv(FILE *csv, long long *array, int input_size, int n_inputs, int key_size, int n_keys) {
+void print_csv(FILE *csv, long long *array, char* name, int input_size, int n_inputs, int key_size, int n_keys) {
     int i, j;
 
+    fprintf(csv, "\n%s", name);
     for(i = 0; i < n_inputs; i++) {
-        fprintf(csv, ",%d", (int) pow(2, (log(input_size)/log(2)) - n_inputs + i + 1));
+        fprintf(csv, ",%d", (int) pow(2, (log(input_size)/log(2)) - n_inputs + i));
     }
 
     for(j = 0; j < n_keys; j++) {
-        fprintf(csv, "\n%d", (key_size/KEY_JUMP - n_keys + j + 1)*KEY_JUMP);
+        fprintf(csv, "\n%d", (key_size/KEY_JUMP - n_keys + j)*KEY_JUMP);
 
         for(i = 0; i < n_inputs; i++) {
             fprintf(csv, ",%lld", array[j*n_inputs + i]);
         }
     }
 
-    fprintf(csv, "\n\n");
+    fprintf(csv, "\n");
 }
 
 #endif
@@ -113,7 +114,7 @@ int main(int argc, char **argv) {
 #endif
 
     int x, y, z, ret, n_tests = N_TESTS,
-        n_inputs, input_size = MIN_INPUT_SIZE,
+        n_inputs, input_size = MIN_INPUT_SIZE, initial_input_size,
         n_keys, key_size = MIN_KEY_SIZE;
     unsigned char *input, *output, *decipher, *key;
     char *pers_input = "drbg generate input",
@@ -195,6 +196,7 @@ int main(int argc, char **argv) {
 
     n_inputs = (log(MAX_INPUT_SIZE) - log(input_size))/log(2) + 1;
     n_keys = (MAX_KEY_SIZE - key_size)/KEY_JUMP + 1;
+    initial_input_size = input_size;
 
 #if defined(USE_PAPI)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -282,7 +284,6 @@ int main(int argc, char **argv) {
 #endif
 
     for(z = 0; z < n_keys; key_size += KEY_JUMP, z++) {
-        printf("\n--------KEY_SIZE=%04d--------\n", key_size);
 
 	    key = (unsigned char *) malloc(key_size*sizeof(unsigned char));
 
@@ -297,8 +298,9 @@ int main(int argc, char **argv) {
             goto exit;
         }
 
-        for(y = 0; y < n_inputs; input_size *= 2, y++) {
-            printf("\n--------INPUT_SIZE=%04d--------\n", input_size);
+        for(y = 0, input_size = initial_input_size; y < n_inputs; input_size *= 2, y++) {
+            printf("\n---------KEY_SIZE=%d---------\n", key_size);
+            printf("\n--------INPUT_SIZE=%d--------\n", input_size);
 
 #if defined(USE_PAPI)
             test_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
@@ -549,11 +551,11 @@ int main(int argc, char **argv) {
     printf("\n--------FINAL (input_size:key_size)--------\n");
 
     for(z = 0; z < n_keys; z++) {
-        mult = key_size/KEY_JUMP - n_keys + z + 1;
+        mult = key_size/KEY_JUMP - n_keys + z;
 
         for(y = 0; y < n_inputs; y++) {
             pos = z*n_inputs + y;
-            exp = (log(input_size)/log(2)) - n_inputs + y + 1;
+            exp = (log(input_size)/log(2)) - n_inputs + y;
 
             printf("\n---Encryption (%d:%d bytes)---\n", (int) pow(2, exp), mult*KEY_JUMP);
             printf("CPU cycles: %lld\n", avg_cycles_enc[pos]);
@@ -566,10 +568,10 @@ int main(int argc, char **argv) {
     }
     
     csv = fopen(filename, "w+");
-    print_csv(csv, avg_cycles_enc, input_size, n_inputs, key_size, n_keys);
-    print_csv(csv, avg_usec_enc, input_size, n_inputs, key_size, n_keys);
-    print_csv(csv, avg_cycles_dec, input_size, n_inputs, key_size, n_keys);
-    print_csv(csv, avg_usec_dec, input_size, n_inputs, key_size, n_keys);
+    print_csv(csv, avg_cycles_enc, "cycles_enc", input_size, n_inputs, key_size, n_keys);
+    print_csv(csv, avg_cycles_dec, "cycles_dec", input_size, n_inputs, key_size, n_keys);
+    print_csv(csv, avg_usec_enc, "usec_enc", input_size, n_inputs, key_size, n_keys);
+    print_csv(csv, avg_usec_dec, "usec_dec", input_size, n_inputs, key_size, n_keys);
     fclose(csv);
 #endif
 
