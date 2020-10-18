@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
               *avg_cycles_enc, *avg_usec_enc, *avg_cycles_dec, *avg_usec_dec;
 
     FILE *csv;
-    char *filename;
+    char filename[20] = "";
 #endif
 
 	for(i = 1; i < argc; i++) {
@@ -193,24 +193,28 @@ int main(int argc, char **argv) {
     avg_usec_dec = (long long *) malloc(n_inputs*sizeof(long long));
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
-    filename = "PAPI_CBC";
+    strcat(filename, "PAPI_CBC");
 #elif defined(MBEDTLS_CIPHER_MODE_CFB)
-    filename = "PAPI_CFB";
+    strcat(filename, "PAPI_CFB");
 #elif defined(MBEDTLS_CIPHER_MODE_CTR)
-    filename = "PAPI_CTR";
+    strcat(filename, "PAPI_CTR");
 #elif defined(MBEDTLS_CIPHER_MODE_CFB)
-    filename = "PAPI_OFB";
+    strcat(filename, "PAPI_OFB");
 #elif defined(MBEDTLS_CIPHER_MODE_CFB)
-    filename = "PAPI_XTS";
+    strcat(filename, "PAPI_XTS");
 #else
-    filename = "PAPI_ECB";
+    strcat(filename, "PAPI_ECB");
 #endif
+
+    printf("\n\ngot here\n");
+
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
     defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    filename = strcat(filename, "_alt.csv");
+    strcat(filename, "_alt.csv");
 #else
-    filename = strcat(filename, ".csv");
+    strcat(filename, ".csv");
 #endif
+    printf("\n\ngot here too\n");
 #endif
 
     // Generate the key
@@ -528,36 +532,35 @@ int main(int argc, char **argv) {
 
     csv = fopen(filename, "w+");
 
-    fprintf(csv, ",");
     for(j = 0; j < n_inputs; j++) {
-        fprintf(csv, "%d", (int) pow(2, 4+j));
+        fprintf(csv, ",%d", (int) pow(2, 4+j));
     }
     fprintf(csv, "\n%d", key_size);
     for(j = 0; j < n_inputs; j++) {
         fprintf(csv, ",%lld", avg_cycles_enc[j]);
     }
-    fprintf(csv, "\n\n,");
+    fprintf(csv, "\n\n");
 
     for(j = 0; j < n_inputs; j++) {
-        fprintf(csv, "%d", (int) pow(2, 4+j));
+        fprintf(csv, ",%d", (int) pow(2, 4+j));
     }
     fprintf(csv, "\n%d", key_size);
     for(j = 0; j < n_inputs; j++) {
         fprintf(csv, ",%lld", avg_usec_enc[j]);
     }
-    fprintf(csv, "\n\n,");
+    fprintf(csv, "\n\n");
     
     for(j = 0; j < n_inputs; j++) {
-        fprintf(csv, "%d", (int) pow(2, 4+j));
+        fprintf(csv, ",%d", (int) pow(2, 4+j));
     }
     fprintf(csv, "\n%d", key_size);
     for(j = 0; j < n_inputs; j++) {
         fprintf(csv, ",%lld", avg_cycles_dec[j]);
     }
-    fprintf(csv, "\n\n,");
+    fprintf(csv, "\n\n");
     
     for(j = 0; j < n_inputs; j++) {
-        fprintf(csv, "%d", (int) pow(2, 4+j));
+        fprintf(csv, ",%d", (int) pow(2, 4+j));
     }
     fprintf(csv, "\n%d", key_size);
     for(j = 0; j < n_inputs; j++) {
