@@ -21,10 +21,11 @@
 
 #define MIN_INPUT_SIZE  16
 #define MAX_INPUT_SIZE  1024
+#define N_TESTS         10
 #define KEY_SIZE        32
 #define IV_SIZE         16
-#define N_TESTS         10
 
+#if !defined(USE_PAPI)
 void sort(unsigned char arr[], int n) {
     int i, j;
     for (i = 0; i < n-1; i++) {
@@ -61,8 +62,7 @@ void print_hex(unsigned char array[], int size) {
     }
     printf("\n");
 }
-
-#if defined(USE_PAPI)
+#else
 long long calc_avg(long long *avg, int n_tests) {
     int i;
     long long sum = 0;
@@ -84,8 +84,8 @@ int main(int argc, char **argv) {
     mbedtls_aes_xts_context aes;
 #endif
 
-    int i, j, ret, n_tests = N_TESTS,
-        input_size = MIN_INPUT_SIZE, key_size = KEY_SIZE;
+    int i, j, ret, n_inputs,
+        n_tests = N_TESTS, input_size = MIN_INPUT_SIZE, key_size = KEY_SIZE;
     unsigned char *input, *output, *decipher, *key;
     char *pers_input = "drbg generate input",
 		 *pers_key = "aes generate key",
@@ -117,13 +117,10 @@ int main(int argc, char **argv) {
 #if defined(USE_PAPI)
     // long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall, cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec;
 
-    long long start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu,
-              cycles_cpu_enc, usec_cpu_enc, cycles_cpu_dec, usec_cpu_dec;
+    long long start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu;
 
-    long long *avg_cycles_enc, *avg_usec_enc, *avg_cycles_dec, *avg_usec_dec,
-              *inp_cycles_enc, *inp_usec_enc, *inp_cycles_dec, *inp_usec_dec;
-    
-    int n_inputs;
+    long long *test_cycles_enc, *test_usec_enc, *test_cycles_dec, *test_usec_dec,
+              *avg_cycles_enc, *avg_usec_enc, *avg_cycles_dec, *avg_usec_dec;
 #endif
 
 	for(i = 1; i < argc; i++) {
@@ -172,6 +169,7 @@ int main(int argc, char **argv) {
 #endif
 
 	key = (unsigned char *) malloc(key_size*sizeof(unsigned char));
+    n_inputs = (log(MAX_INPUT_SIZE) - log(input_size))/log(2) + 1;
 
 #if defined(USE_PAPI)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -186,12 +184,10 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-    n_inputs = (log(MAX_INPUT_SIZE) - log(input_size))/log(2) + 1;
-
-    inp_cycles_enc = (long long *) malloc(n_inputs*sizeof(long long));
-    inp_usec_enc = (long long *) malloc(n_inputs*sizeof(long long));
-    inp_cycles_dec = (long long *) malloc(n_inputs*sizeof(long long));
-    inp_usec_dec = (long long *) malloc(n_inputs*sizeof(long long));
+    avg_cycles_enc = (long long *) malloc(n_inputs*sizeof(long long));
+    avg_usec_enc = (long long *) malloc(n_inputs*sizeof(long long));
+    avg_cycles_dec = (long long *) malloc(n_inputs*sizeof(long long));
+    avg_usec_dec = (long long *) malloc(n_inputs*sizeof(long long));
 #endif
 
     // Generate the key
@@ -255,10 +251,10 @@ int main(int argc, char **argv) {
         printf("\n--------AVERAGE %04d--------\n", input_size);
 
 #if defined(USE_PAPI)
-        avg_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
-        avg_usec_enc = (long long *) malloc(n_tests*sizeof(long long));
-        avg_cycles_dec = (long long *) malloc(n_tests*sizeof(long long));
-        avg_usec_dec = (long long *) malloc(n_tests*sizeof(long long));
+        test_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
+        test_usec_enc = (long long *) malloc(n_tests*sizeof(long long));
+        test_cycles_dec = (long long *) malloc(n_tests*sizeof(long long));
+        test_usec_dec = (long long *) malloc(n_tests*sizeof(long long));
 #endif
 
         input = (unsigned char *) malloc(input_size*sizeof(unsigned char));
@@ -356,13 +352,11 @@ int main(int argc, char **argv) {
 
             // cycles_wall_enc = end_cycles_wall - start_cycles_wall;
             // usec_wall_enc = end_usec_wall - start_usec_wall;
-            cycles_cpu_enc = end_cycles_cpu - start_cycles_cpu;
-            usec_cpu_enc = end_usec_cpu - start_usec_cpu;
 
             // cpu_time_enc = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
 
-            avg_cycles_enc[i] = cycles_cpu_enc;
-            avg_usec_enc[i] = usec_cpu_enc;
+            test_cycles_enc[i] = end_cycles_cpu - start_cycles_cpu;
+            test_usec_enc[i] = end_usec_cpu - start_usec_cpu;
 #endif
 
 #if !defined(MBEDTLS_CIPHER_MODE_CFB) && !defined(MBEDTLS_CIPHER_MODE_CTR) && \
@@ -443,27 +437,25 @@ int main(int argc, char **argv) {
 
             // cycles_wall_dec = end_cycles_wall - start_cycles_wall;
             // usec_wall_dec = end_usec_wall - start_usec_wall;
-            cycles_cpu_dec = end_cycles_cpu - start_cycles_cpu;
-            usec_cpu_dec = end_usec_cpu - start_usec_cpu;
 
             // cpu_time_dec = (end.tv_sec - start.tv_sec)*1e9 + (end.tv_nsec - start.tv_nsec);
 
-            avg_cycles_dec[i] = cycles_cpu_dec;
-            avg_usec_dec[i] = usec_cpu_dec;
+            test_cycles_dec[i] = end_cycles_cpu - start_cycles_cpu;
+            test_usec_dec[i] = end_usec_cpu - start_usec_cpu;
 
             printf("\n-----Encryption-----\n");
             // printf("Wall cycles: %lld\n", cycles_wall_enc);
             // printf("Wall time (usec): %lld\n", usec_wall_enc);
             // printf("--------------------\n");
-            printf("CPU cycles: %lld\n", cycles_cpu_enc);
-            printf("CPU time (usec): %lld\n", usec_cpu_enc);
+            printf("CPU cycles: %lld\n", test_cycles_enc[i]);
+            printf("CPU time (usec): %lld\n", test_usec_enc[i]);
 
             printf("\n-----Decryption-----\n");
             // printf("Wall cycles: %lld\n", cycles_wall_dec);
             // printf("Wall time (usec): %lld\n", usec_wall_dec);
             // printf("--------------------\n");
-            printf("CPU cycles: %lld\n", cycles_cpu_dec);
-            printf("CPU time (usec): %lld\n", usec_cpu_dec);
+            printf("CPU cycles: %lld\n", test_cycles_dec[i]);
+            printf("CPU time (usec): %lld\n", test_usec_dec[i]);
 
             // printf("\n------time.h Measures------\n");^M
             // printf("Encryption time (nsec): %ld\n", cpu_time_enc);
@@ -474,23 +466,23 @@ int main(int argc, char **argv) {
         }
 
 #if defined(USE_PAPI)
-        inp_cycles_enc[j] = calc_avg(avg_cycles_enc, n_tests);
-        inp_usec_enc[j] = calc_avg(avg_usec_enc, n_tests);
-        inp_cycles_dec[j] = calc_avg(avg_cycles_dec, n_tests);
-        inp_usec_dec[j] = calc_avg(avg_usec_dec, n_tests);
+        avg_cycles_enc[j] = calc_avg(test_cycles_enc, n_tests);
+        avg_usec_enc[j] = calc_avg(test_usec_enc, n_tests);
+        avg_cycles_dec[j] = calc_avg(test_cycles_dec, n_tests);
+        avg_usec_dec[j] = calc_avg(test_usec_dec, n_tests);
 
         printf("\n-----Avg Encryption-----\n");
-        printf("CPU cycles: %lld\n", inp_cycles_enc[j]);
-        printf("CPU time (usec): %lld\n", inp_usec_enc[j]);
+        printf("CPU cycles: %lld\n", avg_cycles_enc[j]);
+        printf("CPU time (usec): %lld\n", avg_usec_enc[j]);
 
         printf("\n-----Avg Decryption-----\n");
-        printf("CPU cycles: %lld\n", inp_cycles_dec[j]);
-        printf("CPU time (usec): %lld\n", inp_usec_dec[j]);
+        printf("CPU cycles: %lld\n", avg_cycles_dec[j]);
+        printf("CPU time (usec): %lld\n", avg_usec_dec[j]);
 
-        free(avg_cycles_enc);
-        free(avg_usec_enc);
-        free(avg_cycles_dec);
-        free(avg_usec_dec);
+        free(test_cycles_enc);
+        free(test_usec_enc);
+        free(test_cycles_dec);
+        free(test_usec_dec);
 #endif
 
         free(decipher);
@@ -503,21 +495,21 @@ int main(int argc, char **argv) {
 
     for(j = 0; j < n_inputs; j++) {
         printf("\n---Encryption (%d bytes)---\n", (int) pow(2, 4+j));
-        printf("CPU cycles: %lld\n", inp_cycles_enc[j]);
-        printf("CPU time (usec): %lld\n", inp_usec_enc[j]);
+        printf("CPU cycles: %lld\n", avg_cycles_enc[j]);
+        printf("CPU time (usec): %lld\n", avg_usec_enc[j]);
 
         printf("\n---Decryption (%d bytes)---\n", (int) pow(2, 4+j));
-        printf("CPU cycles: %lld\n", inp_cycles_dec[j]);
-        printf("CPU time (usec): %lld\n", inp_usec_dec[j]);
+        printf("CPU cycles: %lld\n", avg_cycles_dec[j]);
+        printf("CPU time (usec): %lld\n", avg_usec_dec[j]);
     }
 #endif
 
 exit:
 #if defined(USE_PAPI)
-    free(inp_cycles_enc);
-    free(inp_usec_enc);
-    free(inp_cycles_dec);
-    free(inp_usec_dec);
+    free(avg_cycles_enc);
+    free(avg_usec_enc);
+    free(avg_cycles_dec);
+    free(avg_usec_dec);
 #endif
 
 	free(key);
