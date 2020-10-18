@@ -479,10 +479,10 @@ int main(int argc, char **argv) {
         printf("CPU cycles: %lld\n", avg_cycles_dec[j]);
         printf("CPU time (usec): %lld\n", avg_usec_dec[j]);
 
-        free(test_cycles_enc);
-        free(test_usec_enc);
-        free(test_cycles_dec);
         free(test_usec_dec);
+        free(test_cycles_dec);
+        free(test_usec_enc);
+        free(test_cycles_enc);
 #endif
 
         free(decipher);
@@ -506,13 +506,15 @@ int main(int argc, char **argv) {
 
 exit:
 #if defined(USE_PAPI)
-    free(avg_cycles_enc);
-    free(avg_usec_enc);
-    free(avg_cycles_dec);
     free(avg_usec_dec);
+    free(avg_cycles_dec);
+    free(avg_usec_enc);
+    free(avg_cycles_enc);
+
+    PAPI_shutdown();
 #endif
 
-	free(key);
+    free(key);
 
 #if !defined(MBEDTLS_CIPHER_MODE_XTS)
     mbedtls_aes_free(&aes);
