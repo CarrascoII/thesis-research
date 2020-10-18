@@ -21,7 +21,7 @@
 
 #define MIN_INPUT_SIZE  16
 #define MAX_INPUT_SIZE  1024
-#define N_TESTS         10
+#define N_TESTS         1000
 #define IV_SIZE         16
 #if !defined(MBEDTLS_CIPHER_MODE_XTS)
 #define MIN_KEY_SIZE    16
