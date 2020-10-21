@@ -24,6 +24,6 @@
 
 #include "mbedtls/check_config.h"
 
-#define USE_PAPI
+// #define USE_PAPI
 
 #endif /* MBEDTLS_CONFIG_H */
