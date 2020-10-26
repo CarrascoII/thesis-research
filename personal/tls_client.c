@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     printf(" ok");
 
     // Create socket and connect to server
-    printf("\nConnecting to tcp/%s/%s.........", SERVER_IP, SERVER_PORT );
+    printf("\nConnecting to tcp/%s/%s.......", SERVER_IP, SERVER_PORT);
     fflush(stdout);
     
     if((ret = mbedtls_net_connect(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
@@ -281,6 +281,10 @@ int main(int argc, char **argv) {
         printf(" %d bytes\n", ret);
         fflush(stdout);
     }
+
+#if defined(USE_PAPI)
+    sleep(1);
+#endif
 
     // Close connection
     printf("Closing the connection...");

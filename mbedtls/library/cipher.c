@@ -1063,7 +1063,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     fprintf(csv, ",%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
-//    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
     *olen += finish_olen;

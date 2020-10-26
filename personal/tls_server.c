@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #if defined(USE_PAPI)
@@ -25,6 +26,13 @@ void print_hex(unsigned char array[], int size) {
         printf("%.2x", array[i]);
     }
     printf("\n");
+}
+
+const char* get_cipher_name(mbedtls_ssl_context *tls) {
+    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
+    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
+    
+    return info->name;
 }
 #endif
 
@@ -156,7 +164,7 @@ int main(int argc, char **argv) {
     printf(" ok");
 
     // Create and bind socket
-    printf("\nBinding server to tcp/%s/%s.....", SERVER_IP, SERVER_PORT);
+    printf("\nBinding server to tcp/%s/%s...", SERVER_IP, SERVER_PORT);
     fflush(stdout);
 
     if((ret = mbedtls_net_bind(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
@@ -295,6 +303,13 @@ int main(int argc, char **argv) {
         printf(" %d bytes\n", ret);
         fflush(stdout);
     }
+
+#if defined(USE_PAPI)
+    sleep(1);
+    csv = fopen(filename, "a+");    
+    fprintf(csv, "\nserver,close");
+    fclose(csv);
+#endif
 
     // Close connection
     printf("Closing the connection...");
