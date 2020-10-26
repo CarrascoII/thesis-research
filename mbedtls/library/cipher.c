@@ -1003,10 +1003,11 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     int ret;
     size_t finish_olen;
 #if defined(USE_PAPI)
-        long long start_cycles_cpu, end_cycles_cpu,
-                  start_usec_cpu, end_usec_cpu;
-        FILE *csv;
-        char filename[30] = "";
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+    char filename[30] = "../docs/";
 #endif
 
     CIPHER_VALIDATE_RET( ctx != NULL );
@@ -1026,12 +1027,12 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
         printf("PAPI library version mismatch 0x%08x\n", ret);
-        goto exit;
+        return ret;
     }
 
     if(ret < PAPI_OK) {
         printf("PAPI_library_init returned -0x%04x\n", -ret);
-        goto exit;
+        return ret;
     }
     
     start_cycles_cpu = PAPI_get_virt_cyc();
@@ -1048,6 +1049,9 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
+    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu = end_usec_cpu - start_usec_cpu;
+
     strcat(filename, mbedtls_cipher_get_name(ctx));
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
     defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
@@ -1056,8 +1060,10 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     strcat(filename, ".csv");
 #endif
     csv = fopen(filename, "a+");    
-    fprintf(csv, ",%lld, %lld", end_cycles_cpu - start_cycles_cpu, end_usec_cpu - start_usec_cpu);
+    fprintf(csv, ",%lld, %lld", cycles_cpu, usec_cpu);
     fclose(csv);
+
+    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
     *olen += finish_olen;

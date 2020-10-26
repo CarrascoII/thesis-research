@@ -52,9 +52,9 @@ tls: server_obj client_obj
 tls_papi:
 	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
 	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_CONFIG) $(PAPI_CFLAGS)"
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o server.out
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o client.out
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_CONFIG) -I../../papi/src/install/include -L../../papi/src/install/lib -lpapi"
+	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o server.out
+	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o client.out
 
 cipher_obj: lib_cipher
 	rm -f cipher.out

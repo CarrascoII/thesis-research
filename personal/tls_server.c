@@ -14,15 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-#define SERVER_IP   "localhost"
-#define SERVER_PORT "80"
 #define RESPONSE    "Hello Client!"
-#define DEBUG_LEVEL 0
 
-#define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  2048
-#define N_TESTS         10
 
 #if defined(USE_PAPI)
 /*
@@ -270,7 +263,7 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI)
         csv = fopen(filename, "a+");    
-        fprintf(csv, "\n%d,", input_size);
+        fprintf(csv, "\n%d", input_size);
         fclose(csv);
 #endif        
 

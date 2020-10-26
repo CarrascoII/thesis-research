@@ -101,7 +101,6 @@ void print_csv(FILE *csv, long long *array, char* name, int input_size, int n_in
 
     fprintf(csv, "\n");
 }
-
 #endif
 
 int main(int argc, char **argv) {

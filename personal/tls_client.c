@@ -15,15 +15,7 @@
 #include <unistd.h>
 #include <string.h>
 
-
-#define SERVER_IP   "localhost"
-#define SERVER_PORT "80"
 #define REQUEST     "Hello Server!"
-#define DEBUG_LEVEL 0
-
-#define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  2048
-#define N_TESTS         10
 
 #if defined(USE_PAPI)
 /*
