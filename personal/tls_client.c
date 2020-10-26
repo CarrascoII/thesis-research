@@ -11,6 +11,7 @@
 #include "mbedtls/debug.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -19,6 +20,24 @@
 #define SERVER_PORT "80"
 #define REQUEST     "Hello Server!"
 #define DEBUG_LEVEL 0
+
+#define MIN_INPUT_SIZE  16
+#define MAX_INPUT_SIZE  2048
+#define N_TESTS         10
+
+#if defined(USE_PAPI)
+/*
+ *  Print for the generated inputs
+ */
+void print_hex(unsigned char array[], int size) {
+    int i;
+
+    for(i = 0; i < size; i++) {
+        printf("%.2x", array[i]);
+    }
+    printf("\n");
+}
+#endif
 
 /*
  *  Debug callback to be used in mbedtls_ssl_conf_dbg
@@ -36,7 +55,7 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 }
 
 
-int main() {
+int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
     mbedtls_x509_crt cacert, clicert;
@@ -45,12 +64,48 @@ int main() {
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
 
-    int ret, len, i;
-    unsigned char buffer[1024];
-    const char *pers = "tls_client";
+    int ret, debug = DEBUG_LEVEL,
+        i, n_tests = N_TESTS,
+        input_size = MIN_INPUT_SIZE;
+    unsigned char *buffer;
+    const char *pers = "tls_client",
+               *request = "drbg generate request";
+    char *p, *q;
     uint32_t flags;
 
-    mbedtls_debug_set_threshold( DEBUG_LEVEL );
+    for(i = 1; i < argc; i++) {
+        p = argv[i];
+        if((q = strchr(p, '=')) == NULL) {
+            printf("To assign own variables, run with <variable>=X\n");
+            return 1;
+        }
+
+        *q++ = '\0';
+        if(strcmp(p, "input_size") == 0) {
+            input_size = atoi(q);
+            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
+                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                return 1;
+            }
+        } else if(strcmp(p, "debug_level") == 0) {
+            debug = atoi(q);
+            if(debug < 0 || debug > 5) {
+                printf("Debug level must be int between 0 and 5\n");
+                return 1;
+            }
+        } else if(strcmp(p, "n_tests") == 0) {
+			n_tests = atoi(q);
+            if(n_tests < 1 || n_tests > 1000) {
+                printf("Number of tests must be between 1 and 1000\n");
+                return 1;
+            }
+		} else {
+			printf("Available options are input_size, key_size and n_tests\n");
+			return 1;
+		}
+	}
+
+    mbedtls_debug_set_threshold(debug);
 
     mbedtls_net_init(&server);
     mbedtls_x509_crt_init(&cacert);
@@ -161,35 +216,50 @@ int main() {
 
     sleep(1); // sleep 1 sec in order to differentiate the handshake and data transmission in Wireshark
 
-    // Send request
-    printf("\n\n< Write to server:");
-    fflush(stdout);
+    for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
+        buffer = (unsigned char*) malloc(input_size*sizeof(unsigned char));
+    
+        // Generate the request
+        memset(buffer, 0, input_size);
 
-    len = sprintf((char *) buffer, REQUEST);
+        if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) request, strlen(request))) != 0) {
+                printf(" failed\n ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
+                goto exit;
+            }
 
-    if((ret = mbedtls_ssl_write(&tls, buffer, len)) < 0) {
-        printf( " mbedtls_net_send returned -0x%x\n", -ret );
-        goto exit;
+        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, buffer, input_size)) != 0) {
+            printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+            goto exit;
+        }
+
+        // Send request
+        printf("\n\n< Write to server:");
+        fflush(stdout);
+
+        if((ret = mbedtls_ssl_write(&tls, buffer, input_size)) < 0) {
+            printf( " mbedtls_net_send returned -0x%x\n", -ret );
+            goto exit;
+        }
+
+//        printf(" %d bytes\n%s\n", ret, (char *) buffer);
+        printf(" %d bytes\n", ret);
+        fflush(stdout);
+
+        // Receive response
+        printf("\n> Read from server:");
+        fflush(stdout);
+
+        memset(buffer, 0, input_size);
+
+        if((ret = mbedtls_ssl_read(&tls, buffer, input_size)) < 0) {
+            printf( " mbedtls_net_recv returned -0x%x\n", -ret );
+            goto exit;
+        }
+
+//        printf(" %d bytes\n%s\n", ret, (char *) buffer);
+        printf(" %d bytes\n", ret);
+        fflush(stdout);
     }
-
-    printf(" %d bytes\n%s\n", len, (char *) buffer);
-    fflush(stdout);
-
-    // Receive response
-    printf("\n> Read from server:");
-    fflush(stdout);
-
-    len = sizeof(buffer);
-    memset(buffer, 0, len);
-
-    if((ret = mbedtls_ssl_read(&tls, buffer, len)) < 0) {
-        printf( " mbedtls_net_recv returned -0x%x\n", -ret );
-        goto exit;
-    }
-
-    len = ret;
-    printf(" %d bytes\n%s\n\n", len, (char *) buffer);
-    fflush(stdout);
 
     // Close connection
     printf("Closing the connection...");

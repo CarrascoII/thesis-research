@@ -65,6 +65,10 @@
 #define mbedtls_free   free
 #endif
 
+#if defined(USE_PAPI)
+#include "papi.h"
+#endif
+
 #define CIPHER_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA )
 #define CIPHER_VALIDATE( cond )        \
@@ -998,6 +1002,12 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 {
     int ret;
     size_t finish_olen;
+#if defined(USE_PAPI)
+        long long start_cycles_cpu, end_cycles_cpu,
+                  start_usec_cpu, end_usec_cpu;
+        FILE *csv;
+        char filename[30] = "";
+#endif
 
     CIPHER_VALIDATE_RET( ctx != NULL );
     CIPHER_VALIDATE_RET( iv_len == 0 || iv != NULL );
@@ -1011,11 +1021,32 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     if( ( ret = mbedtls_cipher_reset( ctx ) ) != 0 )
         return( ret );
 
+#if defined(USE_PAPI)
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
     if( ( ret = mbedtls_cipher_update( ctx, input, ilen, output, olen ) ) != 0 )
         return( ret );
 
     if( ( ret = mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
         return( ret );
+
+#if defined(USE_PAPI)
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
+
+    strcat(filename, mbedtls_cipher_get_name(ctx));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "a+");    
+    fprintf(csv, ",%lld, %lld", end_cycles_cpu - start_cycles_cpu, end_usec_cpu - start_usec_cpu);
+    fclose(csv);
+#endif
 
     *olen += finish_olen;
 

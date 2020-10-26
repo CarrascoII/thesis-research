@@ -20,6 +20,31 @@
 #define RESPONSE    "Hello Client!"
 #define DEBUG_LEVEL 0
 
+#define MIN_INPUT_SIZE  16
+#define MAX_INPUT_SIZE  2048
+#define N_TESTS         10
+
+#if defined(USE_PAPI)
+/*
+ *  Print for the generated inputs
+ */
+void print_hex(unsigned char array[], int size) {
+    int i;
+
+    for(i = 0; i < size; i++) {
+        printf("%.2x", array[i]);
+    }
+    printf("\n");
+}
+
+const char* get_cipher_name(mbedtls_ssl_context *tls) {
+    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
+    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
+    
+    return info->name;
+}
+#endif
+
 /*
  *  Debug callback to be used in mbedtls_ssl_conf_dbg
  */
@@ -39,39 +64,56 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server, client;
-    mbedtls_x509_crt cacert;
-    mbedtls_x509_crt srvcert;
-    mbedtls_pk_context privkey;
-    mbedtls_x509_crt srvcert2;
-    mbedtls_pk_context privkey2;    
+    mbedtls_x509_crt cacert, srvcert, srvcert2;
+    mbedtls_pk_context privkey, privkey2;    
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
 
-    int ret, len, debug, i;
-    unsigned char buffer[1024];
-    const char *pers = "tls_server";
+    int ret, debug = DEBUG_LEVEL,
+        i, n_tests = N_TESTS,
+        input_size = MIN_INPUT_SIZE;
+    unsigned char *buffer;
+    const char *pers = "tls_server",
+               *response = "drbg generate response";
     char *p, *q;
-
-    if(argc == 2) {
-        p = argv[1];
+#if defined(USE_PAPI)
+    char filename[30] = "../docs/";
+    FILE *csv;
+#endif
+    
+    for(i = 1; i < argc; i++) {
+        p = argv[i];
         if((q = strchr(p, '=')) == NULL) {
-            printf("To assign own debug level, run with debug_level=X\n");
+            printf("To assign own variables, run with <variable>=X\n");
             return 1;
         }
 
         *q++ = '\0';
-        if(strcmp(p, "debug_level") == 0) {
+        if(strcmp(p, "input_size") == 0) {
+            input_size = atoi(q);
+            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
+                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                return 1;
+            }
+        } else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
             if(debug < 0 || debug > 5) {
                 printf("Debug level must be int between 0 and 5\n");
                 return 1;
             }
-        }
-    } else {
-        debug = DEBUG_LEVEL;
-    }
+        } else if(strcmp(p, "n_tests") == 0) {
+			n_tests = atoi(q);
+            if(n_tests < 1 || n_tests > 1000) {
+                printf("Number of tests must be between 1 and 1000\n");
+                return 1;
+            }
+		} else {
+			printf("Available options are input_size, key_size and n_tests\n");
+			return 1;
+		}
+	}
 
     mbedtls_debug_set_threshold(debug);
 
@@ -209,35 +251,70 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-    // Get client message
-    printf("\n\n> Read from client:");
-    fflush(stdout);
+#if defined(USE_PAPI)
+    // Create the csv file for symmetric cipher alg
+    strcat(filename, get_cipher_name(&tls));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "w");    
+    fprintf(csv, "input_size, dec_cycles, dec_usec, enc_cycles, enc_usec");
+    fclose(csv);
+#endif
 
-    len = sizeof(buffer);
-    memset(buffer, 0, len);
+    for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
+        buffer = (unsigned char*) malloc(input_size*sizeof(unsigned char));
 
-    if((ret = mbedtls_ssl_read(&tls, buffer, len)) < 0) {
-        printf(" failed! mbedtls_ssl_read returned -0x%x\n", -ret);
-        goto exit;
+#if defined(USE_PAPI)
+        csv = fopen(filename, "a+");    
+        fprintf(csv, "\n%d,", input_size);
+        fclose(csv);
+#endif        
+
+        // Receive request
+        printf("\n\n> Read from client:");
+        fflush(stdout);
+
+        memset(buffer, 0, input_size);
+
+        if((ret = mbedtls_ssl_read(&tls, buffer, input_size)) < 0) {
+            printf(" failed! mbedtls_ssl_read returned -0x%x\n", -ret);
+            goto exit;
+        }
+
+//        printf(" %d bytes\n%s\n", ret, (char *) buffer);
+        printf(" %d bytes\n", ret);
+        fflush(stdout);
+
+        // Generate the response
+        memset(buffer, 0, input_size);
+
+        if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) response, strlen(response))) != 0) {
+                printf(" failed\n ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
+                goto exit;
+            }
+
+        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, buffer, input_size)) != 0) {
+            printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+            goto exit;
+        }
+
+        // Send response
+        printf("\n< Write to client:");
+        fflush(stdout);
+
+        if((ret = mbedtls_ssl_write(&tls, buffer, input_size)) < 0) {
+            printf(" failed! mbedtls_ssl_write returned -0x%x\n", -ret);
+            goto exit;
+        }
+
+//        printf(" %d bytes\n%s\n", ret, (char *) buffer);
+        printf(" %d bytes\n", ret);
+        fflush(stdout);
     }
-
-    len = ret;
-    printf(" %d bytes\n%s\n", len, (char *) buffer);
-    fflush(stdout);
-
-    // Send response
-    printf("\n< Write to client:");
-    fflush(stdout);
-
-    len = sprintf((char *) buffer, RESPONSE);
-
-    if((ret = mbedtls_ssl_write(&tls, buffer, len)) < 0) {
-        printf(" failed! mbedtls_ssl_write returned -0x%x\n", -ret);
-        goto exit;
-    }
-
-    printf(" %d bytes\n%s\n\n", len, (char *) buffer);
-    fflush(stdout);
 
     // Close connection
     printf("Closing the connection...");
