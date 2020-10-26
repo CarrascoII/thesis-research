@@ -14,9 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define RESPONSE    "Hello Client!"
-
-
 #if defined(USE_PAPI)
 /*
  *  Print for the generated inputs
@@ -28,13 +25,6 @@ void print_hex(unsigned char array[], int size) {
         printf("%.2x", array[i]);
     }
     printf("\n");
-}
-
-const char* get_cipher_name(mbedtls_ssl_context *tls) {
-    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
-    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
-    
-    return info->name;
 }
 #endif
 
@@ -244,28 +234,8 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI)
-    // Create the csv file for symmetric cipher alg
-    strcat(filename, get_cipher_name(&tls));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(filename, "-ALT.csv");
-#else
-    strcat(filename, ".csv");
-#endif
-    csv = fopen(filename, "w");    
-    fprintf(csv, "input_size, dec_cycles, dec_usec, enc_cycles, enc_usec");
-    fclose(csv);
-#endif
-
     for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
         buffer = (unsigned char*) malloc(input_size*sizeof(unsigned char));
-
-#if defined(USE_PAPI)
-        csv = fopen(filename, "a+");    
-        fprintf(csv, "\n%d", input_size);
-        fclose(csv);
-#endif        
 
         // Receive request
         printf("\n\n> Read from client:");
@@ -281,6 +251,12 @@ int main(int argc, char **argv) {
 //        printf(" %d bytes\n%s\n", ret, (char *) buffer);
         printf(" %d bytes\n", ret);
         fflush(stdout);
+
+#if defined(USE_PAPI)
+        csv = fopen(filename, "a+");    
+        fprintf(csv, "\nserver,%d", input_size);
+        fclose(csv);
+#endif
 
         // Generate the response
         memset(buffer, 0, input_size);

@@ -15,8 +15,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#define REQUEST     "Hello Server!"
-
 #if defined(USE_PAPI)
 /*
  *  Print for the generated inputs
@@ -28,6 +26,13 @@ void print_hex(unsigned char array[], int size) {
         printf("%.2x", array[i]);
     }
     printf("\n");
+}
+
+const char* get_cipher_name(mbedtls_ssl_context *tls) {
+    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
+    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
+    
+    return info->name;
 }
 #endif
 
@@ -64,6 +69,10 @@ int main(int argc, char **argv) {
                *request = "drbg generate request";
     char *p, *q;
     uint32_t flags;
+#if defined(USE_PAPI)
+    char filename[30] = "../docs/";
+    FILE *csv;
+#endif
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
@@ -208,9 +217,29 @@ int main(int argc, char **argv) {
 
     sleep(1); // sleep 1 sec in order to differentiate the handshake and data transmission in Wireshark
 
+#if defined(USE_PAPI)
+    // Create the csv file for symmetric cipher alg
+    strcat(filename, get_cipher_name(&tls));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "w");    
+    fprintf(csv, "endpoint,input_size,enc_cycles,enc_usec,dec_cycles,dec_usec");
+    fclose(csv);
+#endif
+
     for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
         buffer = (unsigned char*) malloc(input_size*sizeof(unsigned char));
-    
+
+#if defined(USE_PAPI)
+        csv = fopen(filename, "a+");    
+        fprintf(csv, "\nclient,%d", input_size);
+        fclose(csv);
+#endif
+
         // Generate the request
         memset(buffer, 0, input_size);
 
