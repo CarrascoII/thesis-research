@@ -1022,6 +1022,18 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
         return( ret );
 
 #if defined(USE_PAPI)
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        goto exit;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        goto exit;
+    }
+    
     start_cycles_cpu = PAPI_get_virt_cyc();
     start_usec_cpu = PAPI_get_virt_usec();
 #endif
