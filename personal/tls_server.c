@@ -228,17 +228,6 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI)
-    // Create the csv file for symmetric cipher alg
-    strcat(filename, get_cipher_name(&tls));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(filename, "-ALT.csv");
-#else
-    strcat(filename, ".csv");
-#endif
-#endif
-
     // Handshake
     printf("\nPerforming TLS handshake...............");
     fflush(stdout);
@@ -251,6 +240,17 @@ int main(int argc, char **argv) {
     }
 
     printf(" ok");
+
+#if defined(USE_PAPI)
+    // Create the csv file for symmetric cipher alg
+    strcat(filename, get_cipher_name(&tls));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+#endif
 
     for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
 #if defined(USE_PAPI)
     sleep(1);
     csv = fopen(filename, "a+");    
-    fprintf(csv, "\nclient,close");
+    fprintf(csv, "\nserver,close");
     fclose(csv);
 #endif
 
