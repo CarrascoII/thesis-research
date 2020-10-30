@@ -1,5 +1,5 @@
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "config_tls.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -16,6 +16,14 @@
 #include <string.h>
 
 #if defined(USE_PAPI)
+const char* get_cipher_name(mbedtls_ssl_context *tls) {
+    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
+    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
+    
+    return info->name;
+}
+#endif
+
 /*
  *  Print for the generated inputs
  */
@@ -27,14 +35,6 @@ void print_hex(unsigned char array[], int size) {
     }
     printf("\n");
 }
-
-const char* get_cipher_name(mbedtls_ssl_context *tls) {
-    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
-    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
-    
-    return info->name;
-}
-#endif
 
 /*
  *  Debug callback to be used in mbedtls_ssl_conf_dbg
@@ -65,9 +65,8 @@ int main(int argc, char **argv) {
     int ret, debug = DEBUG_LEVEL,
         i, n_tests = N_TESTS,
         input_size = MIN_INPUT_SIZE;
-    unsigned char *buffer;
-    const char *pers = "tls_server",
-               *response = "drbg generate response";
+    unsigned char *request, *response;
+    const char *pers = "tls_server generates response";
     char *p, *q;
 #if defined(USE_PAPI)
     char filename[30] = "../docs/";
@@ -106,19 +105,19 @@ int main(int argc, char **argv) {
 		}
 	}
 
-    mbedtls_debug_set_threshold(debug);
-
     mbedtls_net_init(&server);
     mbedtls_net_init(&client);
     mbedtls_x509_crt_init(&cacert);
     mbedtls_x509_crt_init(&srvcert);
-    mbedtls_pk_init(&privkey);
     mbedtls_x509_crt_init(&srvcert2);
+    mbedtls_pk_init(&privkey);
     mbedtls_pk_init(&privkey2);
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
     mbedtls_ssl_init(&tls);
+
+    mbedtls_debug_set_threshold(debug);
 
     // Load certificates and key
     printf("\nLoading the ca cert....................");
@@ -229,6 +228,17 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
+#if defined(USE_PAPI)
+    // Create the csv file for symmetric cipher alg
+    strcat(filename, get_cipher_name(&tls));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+#endif
+
     // Handshake
     printf("\nPerforming TLS handshake...............");
     fflush(stdout);
@@ -242,72 +252,62 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI)
-    // Create the csv file for symmetric cipher alg
-    strcat(filename, get_cipher_name(&tls));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(filename, "-ALT.csv");
-#else
-    strcat(filename, ".csv");
-#endif
-#endif
-
     for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
-        buffer = (unsigned char*) malloc(input_size*sizeof(unsigned char));
-
-        // Receive request
-        printf("\n\n> Read from client:");
-        fflush(stdout);
-
-        memset(buffer, 0, input_size);
-
-        if((ret = mbedtls_ssl_read(&tls, buffer, input_size)) < 0) {
-            printf(" failed! mbedtls_ssl_read returned -0x%x\n", -ret);
-            goto exit;
-        }
-
-//        printf(" %d bytes\n%s\n", ret, (char *) buffer);
-        printf(" %d bytes\n", ret);
-        fflush(stdout);
-
-#if defined(USE_PAPI)
-        csv = fopen(filename, "a+");    
-        fprintf(csv, "\nserver,%d", input_size);
-        fclose(csv);
-#endif
+        request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
+        response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
 
         // Generate the response
-        memset(buffer, 0, input_size);
+        memset(response, 0, input_size);
 
-        if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (unsigned char *) response, strlen(response))) != 0) {
-                printf(" failed\n ! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
-                goto exit;
-            }
-
-        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, buffer, input_size)) != 0) {
+        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, response, input_size)) != 0) {
             printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
             goto exit;
         }
 
-        // Send response
-        printf("\n< Write to client:");
-        fflush(stdout);
+        for(i = 0; i < N_TESTS; i++) {
+            // Receive request
+            printf("\n\n> Read from client:");
+            fflush(stdout);
 
-        if((ret = mbedtls_ssl_write(&tls, buffer, input_size)) < 0) {
-            printf(" failed! mbedtls_ssl_write returned -0x%x\n", -ret);
-            goto exit;
+            memset(request, 0, input_size);
+
+            if((ret = mbedtls_ssl_read(&tls, request, input_size)) < 0) {
+                printf(" failed! mbedtls_ssl_read returned -0x%x\n", -ret);
+                goto exit;
+            }
+
+            printf(" %d bytes\n", ret);
+            print_hex(request, input_size);
+            fflush(stdout);
+
+#if defined(USE_PAPI)
+            csv = fopen(filename, "a+");    
+            fprintf(csv, "\nserver,%d", input_size);
+            fclose(csv);
+#endif
+
+            // Send response
+            printf("\n< Write to client:");
+            fflush(stdout);
+
+            if((ret = mbedtls_ssl_write(&tls, response, input_size)) < 0) {
+                printf(" failed! mbedtls_ssl_write returned -0x%x\n", -ret);
+                goto exit;
+            }
+
+            printf(" %d bytes\n", ret);
+            print_hex(request, input_size);
+            fflush(stdout);
         }
 
-//        printf(" %d bytes\n%s\n", ret, (char *) buffer);
-        printf(" %d bytes\n", ret);
-        fflush(stdout);
+        free(request);
+        free(response);
     }
 
 #if defined(USE_PAPI)
     sleep(1);
     csv = fopen(filename, "a+");    
-    fprintf(csv, "\nserver,close");
+    fprintf(csv, "\nclient,close");
     fclose(csv);
 #endif
 
@@ -326,8 +326,6 @@ int main(int argc, char **argv) {
     printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
     printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
     printf("\n");
-    
-    ret = 0;
 
 exit:
     mbedtls_ssl_free(&tls);
@@ -335,8 +333,8 @@ exit:
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_pk_free(&privkey2);
-    mbedtls_x509_crt_free(&srvcert2);
     mbedtls_pk_free(&privkey);
+    mbedtls_x509_crt_free(&srvcert2);
     mbedtls_x509_crt_free(&srvcert);
     mbedtls_x509_crt_free(&cacert);
     mbedtls_net_free(&client);

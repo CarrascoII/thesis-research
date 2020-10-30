@@ -1,4 +1,5 @@
 MBEDTLS_DIR = ../mbedtls
+PERSONAL_DIR = ../personal
 MY_SHA256 = sha256/sha256_alt
 MY_AES = aes/aes_alt
 PAPI_DIR = ../papi/src/install
@@ -13,11 +14,18 @@ PAPI_CFLAGS = -I${PAPI_DIR}/include -L${PAPI_DIR}/lib -lpapi
 TLS_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_tls.h>'
 CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_cipher.h>'
 
-.PHONY: all local lib_tls lib_cipher progs server_obj server client_obj client tls cipher_obj cipher cipher_papi_obj cipher_papi clean_progs clean
+.PHONY: lib_mbedtls lib_tls lib_cipher lib_papi progs server_obj server client_obj client tls cipher_obj cipher server_papi_obj server_papi client_papi_obj client_papi tls_papi cipher_papi_obj cipher_papi clean_local clean
 
 # all: mbedtls server_obj client_obj cipher_obj
 
 # local: server_obj client_obj cipher_obj
+
+### MAKE MBEDTLS LIBRARY ###
+lib_mbedtls:
+	gcc $(ALL_CFLAGS) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	gcc $(ALL_CFLAGS) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	export DEBUG=1
+	$(MBEDTLS_LIB_MAKE)
 
 lib_tls:
 	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
@@ -30,31 +38,31 @@ lib_cipher:
 	export DEBUG=1
 	$(MBEDTLS_LIB_MAKE) CFLAGS="$(CIPHER_CONFIG)"
 
-progs: lib_tls
-	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(TLS_CONFIG) ../../personal/$(MY_SHA256).o ../../personal/$(MY_AES).o"
-
-server_obj: lib_tls
-	rm -f server.out
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o server.out
-
-server: server_obj
-	./server.out
-
-client_obj: lib_tls
-	rm -f client.out
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o client.out
-
-client: client_obj
-	./client.out
-
-tls: server_obj client_obj
-
-tls_papi:
+lib_papi:
 	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
 	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_CONFIG) -I../../papi/src/install/include -L../../papi/src/install/lib -lpapi"
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o server.out
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o client.out
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_CONFIG) -I../$(PAPI_DIR)/include -L../$(PAPI_DIR)/lib -lpapi"
+
+### MAKE MBEDTLS PROGRAMS ###
+progs: lib_mbedtls
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="../$(PERSONAL_DIR)/$(MY_SHA256).o ../$(PERSONAL_DIR)/$(MY_AES).o"
+
+### MAKE PERSONAL ###
+server_obj: lib_tls
+	rm -f tls_server.out
+	gcc $(ALL_CFLAGS) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_server.out
+
+server: server_obj
+	./tls_server.out
+
+client_obj: lib_tls
+	rm -f tls_client.out
+	gcc $(ALL_CFLAGS) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_client.out
+
+client: client_obj
+	./tls_client.out
+
+tls: server_obj client_obj
 
 cipher_obj: lib_cipher
 	rm -f cipher.out
@@ -62,6 +70,25 @@ cipher_obj: lib_cipher
 
 cipher: cipher_obj
 	./cipher.out
+
+### MAKE PERSONAL PAPI ###
+server_papi_obj: lib_papi
+	rm -f tls_server.out
+	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_server.out
+
+server_papi: server_papi_obj
+#	source init_papi.sh
+	./tls_server.out
+
+client_papi_obj: lib_papi
+	rm -f tls_client.out
+	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_client.out
+
+client_papi: client_papi_obj
+#	source init_papi.sh
+	./tls_client.out
+
+tls_papi: server_papi_obj client_papi_obj
 
 cipher_papi_obj: lib_cipher
 	rm -f cipher.out
@@ -71,12 +98,13 @@ cipher_papi: cipher_papi_obj
 #	source init_papi.sh
 	./cipher.out
 
-clean_progs:
-	rm -f server.out
-	rm -f client.out
+### CLEAN ###
+clean_local:
+	rm -f tls_server.out
+	rm -f tls_client.out
 	rm -f cipher.out
 	
-clean: clean_progs
+clean: clean_local
 	$(MBEDTLS_PROGS_MAKE) clean
 	$(MBEDTLS_LIB_MAKE) clean
 	rm -f $(MY_SHA256).o

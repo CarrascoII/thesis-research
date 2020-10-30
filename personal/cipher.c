@@ -69,7 +69,7 @@ void print_hex(unsigned char array[], int size) {
     for(i = 0; i < size; i++) {
         printf("%.2x", array[i]);
     }
-    printf("\n");
+    printf("\n\n");
 }
 #else
 long long calc_avg(long long *avg, int n_tests) {
@@ -346,7 +346,7 @@ int main(int argc, char **argv) {
 
 #if !defined(USE_PAPI)
                 printf("Input:\n");
-                print_hex(input, input_size); printf("\n");
+                print_hex(input, input_size);
 #else
                 /* Gets the starting time in clock cycles and microseconds */
                 // start_cycles_wall = PAPI_get_real_cyc();
@@ -391,7 +391,7 @@ int main(int argc, char **argv) {
 
 #if !defined(USE_PAPI)
                 printf("Output:\n");
-                print_hex(output, input_size); printf("\n");
+                print_hex(output, input_size);
 #else
                 /* Gets the ending time in clock cycles and microseconds */
                 // end_cycles_wall = PAPI_get_real_cyc();
@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
 
 #if !defined(USE_PAPI)
                 printf("Decipher:\n");
-                print_hex(decipher, input_size); printf("\n");
+                print_hex(decipher, input_size);
 
                 printf("Arrays are......... ");
                 if(arrays_equal(input, decipher, input_size) == 0) {
