@@ -193,7 +193,6 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-//    mbedtls_ssl_conf_ciphersuites(&tls_conf, ciphersuites);
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
@@ -277,7 +276,9 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
+#if !defined(USE_PAPI)
             print_hex(request, input_size);
+#endif
             fflush(stdout);
 
 #if defined(USE_PAPI)
@@ -296,7 +297,9 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-            print_hex(request, input_size);
+#if !defined(USE_PAPI)
+            print_hex(response, input_size);
+#endif
             fflush(stdout);
         }
 

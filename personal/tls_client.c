@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
     for(i = 0; mbedtls_test_cas[i] != NULL; i++) {        
         if((ret = mbedtls_x509_crt_parse(&cacert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
-            printf(" failed! mbedtls_x509_crt_parse returned %d\n", ret);
+            printf(" failed! mbedtls_x509_crt_parse returned -0x%x\n", -ret);
             goto exit;
         }
     }
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
 
     if((ret = mbedtls_x509_crt_parse(&clicert, (const unsigned char *) mbedtls_test_cli_crt, mbedtls_test_cli_crt_len)) != 0) {
-        printf(" failed! mbedtls_x509_crt_parse returned %d\n", ret);
+        printf(" failed! mbedtls_x509_crt_parse returned -0x%x\n", -ret);
         goto exit;
     }
 
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
     
     if((ret = mbedtls_net_connect(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
-        printf(" failed! mbedtls_net_connect returned %d\n", ret);
+        printf(" failed! mbedtls_net_connect returned -0x%x\n", -ret);
         goto exit;     
     }
 
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
 
     if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *) pers, strlen(pers))) != 0) {
-        printf(" failed! mbedtls_ctr_drbg_seed returned %d\n", ret);
+        printf(" failed! mbedtls_ctr_drbg_seed returned -0x%x\n", -ret);
         goto exit;
     }
 
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
     fflush(stdout);
 
     if((ret = mbedtls_ssl_config_defaults(&tls_conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
-        printf(" failed! mbedtls_ssl_config_defaults returned %d\n", ret);
+        printf(" failed! mbedtls_ssl_config_defaults returned -0x%x\n", -ret);
         goto exit;
     }
 
@@ -175,12 +175,12 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
-        printf(" failed! mbedtls_ssl_setup returned %d\n", ret);
+        printf(" failed! mbedtls_ssl_setup returned -0x%x\n", -ret);
         goto exit;
     }
 
     if((ret = mbedtls_ssl_set_hostname(&tls, SERVER_IP)) != 0) {
-        printf(" failed! mbedtls_ssl_set_hostname returned %d\n", ret);
+        printf(" failed! mbedtls_ssl_set_hostname returned -0x%x\n", -ret);
         goto exit;
     }
 
@@ -260,7 +260,9 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
+#if !defined(USE_PAPI)
             print_hex(request, input_size);
+#endif
             fflush(stdout);
 
             // Receive response
@@ -275,7 +277,9 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
+#if !defined(USE_PAPI)
             print_hex(response, input_size);
+#endif
             fflush(stdout);
         }
 
@@ -291,7 +295,7 @@ int main(int argc, char **argv) {
     printf("Closing the connection...");
 
     if((ret = mbedtls_ssl_close_notify(&tls)) < 0) {
-        printf(" failed! mbedtls_ssl_close_notify returned %d\n", ret);
+        printf(" failed! mbedtls_ssl_close_notify returned -0x%x\n", -ret);
         goto exit;
     }
 
