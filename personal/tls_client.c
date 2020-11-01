@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
 const char* get_cipher_name(mbedtls_ssl_context *tls) {
     const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
     const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
@@ -68,8 +68,8 @@ int main(int argc, char **argv) {
     const char *pers = "tls_client generate request";
     char *p, *q;
     uint32_t flags;
-#if defined(USE_PAPI)
-    char filename[30] = "../docs/";
+#if defined(USE_PAPI_TLS)
+    char filename[30] = FILENAME;
     FILE *csv;
 #endif
 
@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
 
     sleep(1); // sleep 1 sec in order to differentiate the handshake and data transmission in Wireshark
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
     // Create the csv file for symmetric cipher alg
     strcat(filename, get_cipher_name(&tls));
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
@@ -226,8 +226,8 @@ int main(int argc, char **argv) {
     strcat(filename, ".csv");
 #endif
     csv = fopen(filename, "w");
-        fprintf(csv, "endpoint,input_size,enc_cycles,enc_usec,dec_cycles,dec_usec");
-        fclose(csv);
+    fprintf(csv, "endpoint,input_size,enc_cycles,enc_usec,dec_cycles,dec_usec");
+    fclose(csv);
 #endif
 
 
@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
         }
 
         for(i = 0; i < N_TESTS; i++) {
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
             csv = fopen(filename, "a+");    
             fprintf(csv, "\nclient,%d", input_size);
             fclose(csv);
@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(USE_PAPI)
+#if !defined(USE_PAPI_TLS)
             print_hex(request, input_size);
 #endif
             fflush(stdout);
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(USE_PAPI)
+#if !defined(USE_PAPI_TLS)
             print_hex(response, input_size);
 #endif
             fflush(stdout);
@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
         free(response);
     }
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
     sleep(2);
 #endif
 

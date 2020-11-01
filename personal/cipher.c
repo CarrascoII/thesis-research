@@ -1,5 +1,5 @@
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#include "config_cipher.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -15,25 +15,11 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/aes.h"
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
 #include "papi.h"
 #endif 
 
-#define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  1024
-#define N_TESTS         1000
-#define IV_SIZE         16
-#if !defined(MBEDTLS_CIPHER_MODE_XTS)
-#define MIN_KEY_SIZE    16
-#define MAX_KEY_SIZE    32
-#define KEY_JUMP        8
-#else
-#define MIN_KEY_SIZE    32
-#define MAX_KEY_SIZE    64
-#define KEY_JUMP        32
-#endif
-
-#if !defined(USE_PAPI)
+#if !defined(USE_PAPI_CIPHER)
 void sort(unsigned char arr[], int n) {
     int i, j;
 
@@ -143,13 +129,13 @@ int main(int argc, char **argv) {
     char *pers_data = "drbg generate data_unit";
 #endif
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
     // long long start_cycles_wall, end_cycles_wall, start_usec_wall, end_usec_wall, cycles_wall_enc, usec_wall_enc, cycles_wall_dec, usec_wall_dec;
     long long start_cycles_cpu, end_cycles_cpu, start_usec_cpu, end_usec_cpu;
     long long *test_cycles_enc, *test_usec_enc, *test_cycles_dec, *test_usec_dec,
               *avg_cycles_enc, *avg_usec_enc, *avg_cycles_dec, *avg_usec_dec;
     FILE *csv;
-    char filename[20] = "";
+    char filename[30] = "../docs/";
     int pos, exp, mult;
 #endif
 
@@ -197,7 +183,7 @@ int main(int argc, char **argv) {
     n_keys = (MAX_KEY_SIZE - key_size)/KEY_JUMP + 1;
     initial_input_size = input_size;
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
@@ -230,7 +216,7 @@ int main(int argc, char **argv) {
 #endif
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
     defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(filename, "_alt.csv");
+    strcat(filename, "_ALT.csv");
 #else
     strcat(filename, ".csv");
 #endif
@@ -301,7 +287,7 @@ int main(int argc, char **argv) {
             printf("\n---------KEY_SIZE=%d---------\n", key_size);
             printf("\n--------INPUT_SIZE=%d--------\n", input_size);
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
             test_cycles_enc = (long long *) malloc(n_tests*sizeof(long long));
             test_usec_enc = (long long *) malloc(n_tests*sizeof(long long));
             test_cycles_dec = (long long *) malloc(n_tests*sizeof(long long));
@@ -344,7 +330,7 @@ int main(int argc, char **argv) {
                 }
 #endif
 
-#if !defined(USE_PAPI)
+#if !defined(USE_PAPI_CIPHER)
                 printf("Input:\n");
                 print_hex(input, input_size);
 #else
@@ -389,7 +375,7 @@ int main(int argc, char **argv) {
                 }
 #endif
 
-#if !defined(USE_PAPI)
+#if !defined(USE_PAPI_CIPHER)
                 printf("Output:\n");
                 print_hex(output, input_size);
 #else
@@ -425,7 +411,7 @@ int main(int argc, char **argv) {
                 }
 #endif
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
                 /* Gets the starting time in clock cycles and microseconds */
                 // start_cycles_wall = PAPI_get_real_cyc();
                 // start_usec_wall = PAPI_get_real_usec();
@@ -467,7 +453,7 @@ int main(int argc, char **argv) {
                 }
 #endif
 
-#if !defined(USE_PAPI)
+#if !defined(USE_PAPI_CIPHER)
                 printf("Decipher:\n");
                 print_hex(decipher, input_size);
 
@@ -516,7 +502,7 @@ int main(int argc, char **argv) {
                 printf("\n");
             }
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
             pos = z*n_inputs + y;
 
             avg_cycles_enc[pos] = calc_avg(test_cycles_enc, n_tests);
@@ -546,7 +532,7 @@ int main(int argc, char **argv) {
         free(key);        
     }
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
     printf("\n--------FINAL (input_size:key_size)--------\n");
 
     for(z = 0; z < n_keys; z++) {
@@ -575,7 +561,7 @@ int main(int argc, char **argv) {
 #endif
 
 exit:
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_CIPHER)
     free(avg_usec_dec);
     free(avg_cycles_dec);
     free(avg_usec_enc);

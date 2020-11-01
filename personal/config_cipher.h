@@ -24,6 +24,20 @@
 
 #include "mbedtls/check_config.h"
 
- #define USE_PAPI
+#define USE_PAPI_CIPHER
+
+#define MIN_INPUT_SIZE  16
+#define MAX_INPUT_SIZE  1024
+#define N_TESTS         1000
+#define IV_SIZE         16
+#if !defined(MBEDTLS_CIPHER_MODE_XTS)
+#define MIN_KEY_SIZE    16
+#define MAX_KEY_SIZE    32
+#define KEY_JUMP        8
+#else
+#define MIN_KEY_SIZE    32
+#define MAX_KEY_SIZE    64
+#define KEY_JUMP        32
+#endif
 
 #endif /* MBEDTLS_CONFIG_H */

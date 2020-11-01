@@ -62,11 +62,11 @@ client_obj: lib_tls
 client: client_obj
 	./tls_client.out
 
-tls: server_obj client_obj
+tls: clean server_obj client_obj
 
 cipher_obj: lib_cipher
 	rm -f cipher.out
-	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) cipher.c -lm $(LOCAL_CFLAGS) -o cipher.out
+	gcc $(ALL_CFLAGS) cipher.c -lm $(LOCAL_CFLAGS) -o cipher.out
 
 cipher: cipher_obj
 	./cipher.out
@@ -74,28 +74,28 @@ cipher: cipher_obj
 ### MAKE PERSONAL PAPI ###
 server_papi_obj: lib_papi
 	rm -f tls_server.out
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_server.out
+	gcc $(ALL_CFLAGS) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_server.out
 
 server_papi: server_papi_obj
-#	source init_papi.sh
+#	source ./init_papi.sh
 	./tls_server.out
 
 client_papi_obj: lib_papi
 	rm -f tls_client.out
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_client.out
+	gcc $(ALL_CFLAGS) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_client.out
 
 client_papi: client_papi_obj
-#	source init_papi.sh
+#	source ./init_papi.sh
 	./tls_client.out
 
-tls_papi: server_papi_obj client_papi_obj
+tls_papi: clean server_papi_obj client_papi_obj
 
 cipher_papi_obj: lib_cipher
 	rm -f cipher.out
-	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher.out
+	gcc $(ALL_CFLAGS) cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher.out
 
 cipher_papi: cipher_papi_obj
-#	source init_papi.sh
+#	source ./init_papi.sh
 	./cipher.out
 
 ### CLEAN ###

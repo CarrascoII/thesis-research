@@ -65,7 +65,7 @@
 #define mbedtls_free   free
 #endif
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
 #include "papi.h"
 #endif
 
@@ -1002,12 +1002,12 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 {
     int ret;
     size_t finish_olen;
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = "../docs/";
+    char filename[30] = FILENAME;
 #endif
 
     CIPHER_VALIDATE_RET( ctx != NULL );
@@ -1016,13 +1016,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     CIPHER_VALIDATE_RET( output != NULL );
     CIPHER_VALIDATE_RET( olen != NULL );
 
-    if( ( ret = mbedtls_cipher_set_iv( ctx, iv, iv_len ) ) != 0 )
-        return( ret );
-
-    if( ( ret = mbedtls_cipher_reset( ctx ) ) != 0 )
-        return( ret );
-
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
@@ -1039,13 +1033,20 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
+    if( ( ret = mbedtls_cipher_set_iv( ctx, iv, iv_len ) ) != 0 )
+        return( ret );
+
+    if( ( ret = mbedtls_cipher_reset( ctx ) ) != 0 )
+        return( ret );
+
     if( ( ret = mbedtls_cipher_update( ctx, input, ilen, output, olen ) ) != 0 )
         return( ret );
+
 
     if( ( ret = mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
         return( ret );
 
-#if defined(USE_PAPI)
+#if defined(USE_PAPI_TLS)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -1063,7 +1064,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     fprintf(csv, ",%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+//    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
     *olen += finish_olen;
