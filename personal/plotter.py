@@ -3,12 +3,25 @@ import csv
 import matplotlib.pyplot as plt
 import statistics
 
+def multiple_custom_plots(x, y1, y2, name, ax=None, xlabel=None, ylabel=None, kwargs1={}, kwargs2={}):
+    if ax is None:
+        ax = plt.gca()
+    
+    ax.plot(x, y1, **kwargs1)
+    ax.plot(x, y2, **kwargs2)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=name)
+    ax.legend()
+
+    return(ax)
+
 def plot(ylabel, plotname, encryption, decryption):
     x = encryption.keys()
     y1 = []
     y2 = []
     y3 = []
     y4 = []
+    y5 = []
+    y6 = []
 
     for key in encryption:
         mean = statistics.mean(encryption[key])
@@ -18,28 +31,29 @@ def plot(ylabel, plotname, encryption, decryption):
         print(f'encryption: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
         y1.append(mean)
         y2.append(median)
+        y3.append(mode)
 
         mean = statistics.mean(decryption[key])
         median = statistics.median(decryption[key])
         mode = statistics.mode(decryption[key])
 
         print(f'decryption: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
-        y3.append(mean)
-        y4.append(median)
+        y4.append(mean)
+        y5.append(median)
+        y6.append(mode)
 
-    plt.plot(x, y1, label = "encryption_mean")
-    plt.plot(x, y3, label = "decryption_mean") 
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
 
-    plt.plot(x, y2, label = "encryption_median")
-    plt.plot(x, y4, label = "decryption_median") 
+    params1 = {'color': 'red', 'linestyle': '-', 'label': 'encryption'}
+    params2 = {'color': 'blue', 'linestyle': '--', 'label': 'decryption'}
 
-    plt.xlabel('input_size')
-    plt.ylabel(ylabel) 
-    plt.title(plotname)
+    ax1 = multiple_custom_plots(x, y1, y4, 'Mean', ax=ax1, xlabel='input_size', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+    ax2 = multiple_custom_plots(x, y2, y5, 'Median', ax=ax2, xlabel='input_size', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+    ax3 = multiple_custom_plots(x, y3, y6, 'Mode', ax=ax3, xlabel='input_size', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+
+    fig.tight_layout()
+    fig.savefig('../docs/' + plotname + '-' + ylabel.upper() + '.png')
     
-    plt.legend()
-    plt.show()
-    plt.savefig('../docs/' + ylabel + '_' + plotname + '.png')
     plt.cla()
 
 def parser(filename):
@@ -93,8 +107,8 @@ def main(argv):
     cycles_enc, cycles_dec, usec_enc, usec_dec = parser('../docs/' + inputfile)
 
     cipher = inputfile.replace('.csv', '')
-    plot('CPU cycles', cipher, cycles_enc, cycles_dec)
-    plot('microseconds', cipher, usec_enc, usec_dec)
+    plot('cycles', cipher, cycles_enc, cycles_dec)
+    plot('usec', cipher, usec_enc, usec_dec)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
