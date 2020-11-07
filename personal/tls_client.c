@@ -9,6 +9,7 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/debug.h"
+#include "mbedtls/md_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>

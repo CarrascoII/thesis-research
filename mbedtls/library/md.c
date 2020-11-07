@@ -392,7 +392,7 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, mbedtls_md_get_name(ctx));
+    strcat(filename, mbedtls_md_get_name(ctx->md_info));
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
     defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
     strcat(filename, "-ALT.csv");
