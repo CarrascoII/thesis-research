@@ -100,16 +100,17 @@
 /**
  * Program flags
  */
-#define USE_PAPI_TLS
+// #define USE_PAPI_TLS_CIPHER
+// #define USE_PAPI_TLS_MD
 
 #define SERVER_IP       "localhost"
 #define SERVER_PORT     "8080"
 #define DEBUG_LEVEL     0
 #define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  2048
-#define N_TESTS         500
-#if defined(USE_PAPI_TLS)
-#define FILENAME		"../docs/TLS-"
+#define MAX_INPUT_SIZE  32
+#define N_TESTS         1
+#if defined(USE_PAPI_TLS_CIPHER)
+#define FILENAME        "../docs/TLS-"
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

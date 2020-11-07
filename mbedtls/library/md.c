@@ -49,6 +49,10 @@
 #include <stdio.h>
 #endif
 
+#if defined(USE_PAPI_TLS_MD)
+#include "papi.h"
+#endif
+
 /*
  * Reminder: update profiles in x509_crt.c when adding a new hash!
  */
@@ -322,9 +326,33 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     unsigned char sum[MBEDTLS_MD_MAX_SIZE];
     unsigned char *ipad, *opad;
     size_t i;
+#if defined(USE_PAPI_TLS_MD)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+    char filename[30] = FILENAME;
+#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+
+#if defined(USE_PAPI_TLS_MD)
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
+    
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
+#endif
 
     if( keylen > (size_t) ctx->md_info->block_size )
     {
@@ -356,6 +384,27 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     if( ( ret = ctx->md_info->update_func( ctx->md_ctx, ipad,
                                            ctx->md_info->block_size ) ) != 0 )
         goto cleanup;
+
+#if defined(USE_PAPI_TLS_MD)
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
+
+    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu = end_usec_cpu - start_usec_cpu;
+
+    strcat(filename, mbedtls_md_get_name(ctx));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "a+");    
+    fprintf(csv, ",%lld,%lld", cycles_cpu, usec_cpu);
+    fclose(csv);
+
+//    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+#endif
 
 cleanup:
     mbedtls_platform_zeroize( sum, sizeof( sum ) );

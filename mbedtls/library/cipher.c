@@ -65,7 +65,7 @@
 #define mbedtls_free   free
 #endif
 
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER)
 #include "papi.h"
 #endif
 
@@ -1002,7 +1002,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 {
     int ret;
     size_t finish_olen;
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -1016,7 +1016,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     CIPHER_VALIDATE_RET( output != NULL );
     CIPHER_VALIDATE_RET( olen != NULL );
 
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
@@ -1046,7 +1046,7 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     if( ( ret = mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
         return( ret );
 
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 

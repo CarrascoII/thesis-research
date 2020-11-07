@@ -15,10 +15,19 @@
 #include <unistd.h>
 #include <string.h>
 
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER)
 const char* get_cipher_name(mbedtls_ssl_context *tls) {
     const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
     const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
+    
+    return info->name;
+}
+#endif
+
+#if defined(USE_PAPI_TLS_MD)
+const char* get_md_name(mbedtls_ssl_context *tls) {
+    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
+    const mbedtls_md_info_t *info = mbedtls_md_info_from_type(ciphersuite->mac);
     
     return info->name;
 }
@@ -68,11 +77,16 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_server generates response";
     char *p, *q;
-#if defined(USE_PAPI_TLS)
-    char filename[30] = FILENAME;
+#if defined(USE_PAPI_TLS_CIPHER)
+    char cipher_file[30] = FILENAME;
+#endif
+#if defined(USE_PAPI_TLS_MD)
+    char md_file[30] = FILENAME;
+#endif
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
     FILE *csv;
 #endif
-    
+
     for(i = 1; i < argc; i++) {
         p = argv[i];
         if((q = strchr(p, '=')) == NULL) {
@@ -240,14 +254,25 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER)
     // Create the csv file for symmetric cipher alg
-    strcat(filename, get_cipher_name(&tls));
+    strcat(cipher_file, get_cipher_name(&tls));
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
     defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(filename, "-ALT.csv");
+    strcat(cipher_file, "-ALT.csv");
 #else
-    strcat(filename, ".csv");
+    strcat(cipher_file, ".csv");
+#endif
+#endif
+
+#if defined(USE_PAPI_TLS_MD)
+    // Create the csv file for symmetric cipher alg
+    strcat(md_file, get_md_name(&tls));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(md_file, "-ALT.csv");
+#else
+    strcat(md_file, ".csv");
 #endif
 #endif
 
@@ -276,13 +301,19 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(USE_PAPI_TLS)
+#if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD)
             print_hex(request, input_size);
 #endif
             fflush(stdout);
 
-#if defined(USE_PAPI_TLS)
-            csv = fopen(filename, "a+");    
+#if defined(USE_PAPI_TLS_CIPHER)
+            csv = fopen(cipher_file, "a+");    
+            fprintf(csv, "\nserver,%d", input_size);
+            fclose(csv);
+#endif
+
+#if defined(USE_PAPI_TLS_MD)
+            csv = fopen(md_file, "a+");    
             fprintf(csv, "\nserver,%d", input_size);
             fclose(csv);
 #endif
@@ -297,7 +328,7 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(USE_PAPI_TLS)
+#if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD)
             print_hex(response, input_size);
 #endif
             fflush(stdout);
@@ -307,9 +338,18 @@ int main(int argc, char **argv) {
         free(response);
     }
 
-#if defined(USE_PAPI_TLS)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
     sleep(1);
-    csv = fopen(filename, "a+");    
+#endif
+
+#if defined(USE_PAPI_TLS_CIPHER)
+    csv = fopen(cipher_file, "a+");
+    fprintf(csv, "\nserver,close");
+    fclose(csv);
+#endif
+
+#if defined(USE_PAPI_TLS_MD)
+    csv = fopen(md_file, "a+");
     fprintf(csv, "\nserver,close");
     fclose(csv);
 #endif
