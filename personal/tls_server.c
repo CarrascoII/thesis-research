@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
 #endif
 #endif
 
-    for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
+    for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
 

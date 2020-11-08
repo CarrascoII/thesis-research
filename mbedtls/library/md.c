@@ -399,8 +399,9 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
 #else
     strcat(filename, ".csv");
 #endif
-    csv = fopen(filename, "a+");    
-    fprintf(csv, ",%lld,%lld", cycles_cpu, usec_cpu);
+    csv = fopen(filename, "w");    
+    fprintf(csv, "endpoint,input_size,operation,cycles,usec");
+    fprintf(csv, ",,init,%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
 //    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
@@ -414,10 +415,59 @@ cleanup:
 
 int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *input, size_t ilen )
 {
+#if defined(USE_PAPI_TLS_MD)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+    char filename[30] = FILENAME;
+#endif
+
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
+#if !defined(USE_PAPI_TLS_MD)
     return( ctx->md_info->update_func( ctx->md_ctx, input, ilen ) );
+#else
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
+    
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
+
+    if( ( ctx->md_info->update_func( ctx->md_ctx, input, ilen ) ) != 0 )
+        return( ret );
+
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
+
+    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu = end_usec_cpu - start_usec_cpu;
+
+    strcat(filename, mbedtls_md_get_name(ctx->md_info));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "a+");
+    fprintf(csv, ",update,%lld,%lld", cycles_cpu, usec_cpu);
+    fclose(csv);
+
+//  printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+
+    return( ret );
+#endif
 }
 
 int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
@@ -425,11 +475,35 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
     int ret;
     unsigned char tmp[MBEDTLS_MD_MAX_SIZE];
     unsigned char *opad;
+#if defined(USE_PAPI_TLS_MD)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+    char filename[30] = FILENAME;
+#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
     opad = (unsigned char *) ctx->hmac_ctx + ctx->md_info->block_size;
+
+#if defined(USE_PAPI_TLS_MD)
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
+    
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
+#endif
 
     if( ( ret = ctx->md_info->finish_func( ctx->md_ctx, tmp ) ) != 0 )
         return( ret );
@@ -441,23 +515,99 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
     if( ( ret = ctx->md_info->update_func( ctx->md_ctx, tmp,
                                            ctx->md_info->size ) ) != 0 )
         return( ret );
+
+#if !defined(USE_PAPI_TLS_MD)
     return( ctx->md_info->finish_func( ctx->md_ctx, output ) );
+#else
+    if( ( ret = ctx->md_info->finish_func( ctx->md_ctx, output ) ) != 0 )
+        return( ret );
+
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
+
+    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu = end_usec_cpu - start_usec_cpu;
+
+    strcat(filename, mbedtls_md_get_name(ctx->md_info));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "a+");
+    fprintf(csv, ",finish,%lld,%lld", cycles_cpu, usec_cpu);
+    fclose(csv);
+
+//  printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+    return( ret );
+#endif
 }
 
 int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
 {
     int ret;
     unsigned char *ipad;
+#if defined(USE_PAPI_TLS_MD)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+    char filename[30] = FILENAME;
+#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
     ipad = (unsigned char *) ctx->hmac_ctx;
 
+#if defined(USE_PAPI_TLS_MD)
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
+    
+    start_cycles_cpu = PAPI_get_virt_cyc();
+    start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
     if( ( ret = ctx->md_info->starts_func( ctx->md_ctx ) ) != 0 )
         return( ret );
+#if !defined(USE_PAPI_TLS_MD)
     return( ctx->md_info->update_func( ctx->md_ctx, ipad,
                                        ctx->md_info->block_size ) );
+#else
+    if( ( ret = ctx->md_info->update_func( ctx->md_ctx, ipad,
+                                       ctx->md_info->block_size ) ) != 0 )
+        return( ret );
+    
+    end_cycles_cpu = PAPI_get_virt_cyc();
+    end_usec_cpu = PAPI_get_virt_usec();
+
+    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+    usec_cpu = end_usec_cpu - start_usec_cpu;
+
+    strcat(filename, mbedtls_md_get_name(ctx->md_info));
+#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
+    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+    strcat(filename, "-ALT.csv");
+#else
+    strcat(filename, ".csv");
+#endif
+    csv = fopen(filename, "a+");
+    fprintf(csv, ",reset,%lld,%lld", cycles_cpu, usec_cpu);
+    fclose(csv);
+
+//  printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);    
+    return( ret );
+#endif
 }
 
 int mbedtls_md_hmac( const mbedtls_md_info_t *md_info,

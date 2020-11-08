@@ -107,9 +107,9 @@
 #define SERVER_PORT     "8080"
 #define DEBUG_LEVEL     0
 #define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  32
+#define MAX_INPUT_SIZE  1024
 #define N_TESTS         1
-#if defined(USE_PAPI_TLS_CIPHER)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
 #define FILENAME        "../docs/TLS-"
 #endif
 

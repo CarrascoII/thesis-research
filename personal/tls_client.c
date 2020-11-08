@@ -254,12 +254,9 @@ int main(int argc, char **argv) {
 #else
     strcat(md_file, ".csv");
 #endif
-    csv = fopen(md_file, "w");
-    fprintf(csv, "endpoint,input_size,enc_cycles,enc_usec,dec_cycles,dec_usec");
-    fclose(csv);
 #endif
 
-    for(; input_size < MAX_INPUT_SIZE; input_size *= 2) {
+    for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
 
