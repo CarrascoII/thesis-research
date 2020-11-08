@@ -326,18 +326,18 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     unsigned char sum[MBEDTLS_MD_MAX_SIZE];
     unsigned char *ipad, *opad;
     size_t i;
-#if defined(USE_PAPI_TLS_MD)
+/*#if defined(USE_PAPI_TLS_MD)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
-#endif
+#endif*/
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
-#if defined(USE_PAPI_TLS_MD)
+/*#if defined(USE_PAPI_TLS_MD)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
@@ -352,7 +352,7 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     
     start_cycles_cpu = PAPI_get_virt_cyc();
     start_usec_cpu = PAPI_get_virt_usec();
-#endif
+#endif*/
 
     if( keylen > (size_t) ctx->md_info->block_size )
     {
@@ -385,7 +385,7 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
                                            ctx->md_info->block_size ) ) != 0 )
         goto cleanup;
 
-#if defined(USE_PAPI_TLS_MD)
+/*#if defined(USE_PAPI_TLS_MD)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -393,19 +393,20 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     strcat(filename, mbedtls_md_get_name(ctx->md_info));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
     strcat(filename, "-ALT.csv");
 #else
     strcat(filename, ".csv");
 #endif
     csv = fopen(filename, "w");    
-    fprintf(csv, "endpoint,input_size,operation,cycles,usec");
-    fprintf(csv, ",,init,%lld,%lld", cycles_cpu, usec_cpu);
+    fprintf(csv, "endpoint,input_size,update_ctr_cycles,update_ctr_usec,update_hdr_cycles,");
+    fprintf(csv, "update_hdr_usec,update_len_cycles,update_len_usec,update_msg_cycles,");
+    fprintf(csv, "update_msg_usec,finish_cycles,finish_usec,reset_cycles,reset_usec\n");
+    fprintf(csv, "handshake,starts,%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
-//    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
-#endif
+    printf("\nSTARTS: %lld, %lld", cycles_cpu, usec_cpu);
+#endif*/
 
 cleanup:
     mbedtls_platform_zeroize( sum, sizeof( sum ) );
@@ -416,6 +417,7 @@ cleanup:
 int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *input, size_t ilen )
 {
 #if defined(USE_PAPI_TLS_MD)
+    int ret;
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -454,17 +456,16 @@ int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *inpu
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     strcat(filename, mbedtls_md_get_name(ctx->md_info));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
     strcat(filename, "-ALT.csv");
 #else
     strcat(filename, ".csv");
 #endif
     csv = fopen(filename, "a+");
-    fprintf(csv, ",update,%lld,%lld", cycles_cpu, usec_cpu);
+    fprintf(csv, "%lld,%lld,", cycles_cpu, usec_cpu);
     fclose(csv);
 
-//  printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: %d, %lld, %lld", ilen, cycles_cpu, usec_cpu);
 
     return( ret );
 #endif
@@ -529,17 +530,16 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     strcat(filename, mbedtls_md_get_name(ctx->md_info));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
     strcat(filename, "-ALT.csv");
 #else
     strcat(filename, ".csv");
 #endif
     csv = fopen(filename, "a+");
-    fprintf(csv, ",finish,%lld,%lld", cycles_cpu, usec_cpu);
+    fprintf(csv, "%lld,%lld,", cycles_cpu, usec_cpu);
     fclose(csv);
 
-//  printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nFINISH: %lld, %lld", cycles_cpu, usec_cpu);
     return( ret );
 #endif
 }
@@ -595,17 +595,16 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     strcat(filename, mbedtls_md_get_name(ctx->md_info));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
     strcat(filename, "-ALT.csv");
 #else
     strcat(filename, ".csv");
 #endif
     csv = fopen(filename, "a+");
-    fprintf(csv, ",reset,%lld,%lld", cycles_cpu, usec_cpu);
+    fprintf(csv, "%lld,%lld,", cycles_cpu, usec_cpu);
     fclose(csv);
 
-//  printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);    
+    printf("\nRESET: %lld, %lld", cycles_cpu, usec_cpu);    
     return( ret );
 #endif
 }

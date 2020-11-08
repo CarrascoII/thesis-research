@@ -248,12 +248,16 @@ int main(int argc, char **argv) {
 #if defined(USE_PAPI_TLS_MD)
     // Create the csv file for symmetric cipher alg
     strcat(md_file, get_md_name(&tls));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
     strcat(md_file, "-ALT.csv");
 #else
     strcat(md_file, ".csv");
 #endif
+    csv = fopen(md_file, "w");    
+    fprintf(csv, "update_ctr_cycles,update_ctr_usec,update_hdr_cycles,update_hdr_usec,");
+    fprintf(csv, "update_len_cycles,update_len_usec,update_msg_cycles,update_msg_usec,");
+    fprintf(csv, "finish_cycles,finish_usec,reset_cycles,reset_usec,endpoint,input_size\n");
+    fclose(csv);
 #endif
 
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
@@ -275,12 +279,6 @@ int main(int argc, char **argv) {
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD)
-            csv = fopen(md_file, "a+");    
-            fprintf(csv, "\nclient,%d", input_size);
-            fclose(csv);
-#endif
-
             // Send request
             printf("\n\n< Write to server:");
             fflush(stdout);
@@ -289,6 +287,12 @@ int main(int argc, char **argv) {
                 printf( " mbedtls_net_send returned -0x%x\n", -ret );
                 goto exit;
             }
+
+#if defined(USE_PAPI_TLS_MD)
+            csv = fopen(md_file, "a+");    
+            fprintf(csv, "client,%d\n", input_size);
+            fclose(csv);
+#endif
 
             printf(" %d bytes\n", ret);
 #if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD)
@@ -306,6 +310,12 @@ int main(int argc, char **argv) {
                 printf( " mbedtls_net_recv returned -0x%x\n", -ret );
                 goto exit;
             }
+
+#if defined(USE_PAPI_TLS_MD)
+            csv = fopen(md_file, "a+");    
+            fprintf(csv, "client,%d\n", input_size);
+            fclose(csv);
+#endif
 
             printf(" %d bytes\n", ret);
 #if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD)
@@ -329,6 +339,12 @@ int main(int argc, char **argv) {
         printf(" failed! mbedtls_ssl_close_notify returned -0x%x\n", -ret);
         goto exit;
     }
+
+#if defined(USE_PAPI_TLS_MD)
+    csv = fopen(md_file, "a+");
+    fprintf(csv, "client,close\n");
+    fclose(csv);
+#endif
 
     printf(" ok");
 
