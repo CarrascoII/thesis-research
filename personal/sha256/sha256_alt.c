@@ -5,7 +5,6 @@
 #endif
 
 #if defined(MBEDTLS_SHA256_PROCESS_ALT)
-
 #include "sha256_alt.h"
 #include "mbedtls/platform_util.h"
 
@@ -86,5 +85,4 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx, const unsigned
 	ctx->state[7] += h;
     return( 0 );
 }
-
 #endif /* MBEDTLS_SHA256_PROCESS_ALT */

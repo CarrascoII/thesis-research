@@ -1008,17 +1008,8 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
               cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
-#endif
 
-    CIPHER_VALIDATE_RET( ctx != NULL );
-    CIPHER_VALIDATE_RET( iv_len == 0 || iv != NULL );
-    CIPHER_VALIDATE_RET( ilen == 0 || input != NULL );
-    CIPHER_VALIDATE_RET( output != NULL );
-    CIPHER_VALIDATE_RET( olen != NULL );
-
-#if defined(USE_PAPI_TLS_CIPHER)
     ret = PAPI_library_init(PAPI_VER_CURRENT);
-
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
         printf("PAPI library version mismatch 0x%08x\n", ret);
         return ret;
@@ -1033,6 +1024,13 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
+    CIPHER_VALIDATE_RET( ctx != NULL );
+    CIPHER_VALIDATE_RET( iv_len == 0 || iv != NULL );
+    CIPHER_VALIDATE_RET( ilen == 0 || input != NULL );
+    CIPHER_VALIDATE_RET( output != NULL );
+    CIPHER_VALIDATE_RET( olen != NULL );
+
+
     if( ( ret = mbedtls_cipher_set_iv( ctx, iv, iv_len ) ) != 0 )
         return( ret );
 
@@ -1046,6 +1044,8 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     if( ( ret = mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
         return( ret );
 
+    *olen += finish_olen;
+
 #if defined(USE_PAPI_TLS_CIPHER)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
@@ -1054,20 +1054,14 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     strcat(filename, mbedtls_cipher_get_name(ctx));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(filename, "-ALT.csv");
-#else
     strcat(filename, ".csv");
-#endif
+
     csv = fopen(filename, "a+");    
     fprintf(csv, ",%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
 //    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
 #endif
-
-    *olen += finish_olen;
 
     return( 0 );
 }

@@ -258,22 +258,13 @@ int main(int argc, char **argv) {
 #if defined(USE_PAPI_TLS_CIPHER)
     // Create the csv file for symmetric cipher alg
     strcat(cipher_file, get_cipher_name(&tls));
-#if defined(MBEDTLS_AES_ENCRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT) && \
-    defined(MBEDTLS_AES_DECRYPT_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-    strcat(cipher_file, "-ALT.csv");
-#else
     strcat(cipher_file, ".csv");
-#endif
 #endif
 
 #if defined(USE_PAPI_TLS_MD)
-    // Create the csv file for symmetric cipher alg
+    // Create the csv file for message digest alg
     strcat(md_file, get_md_name(&tls));
-#if defined(MBEDTLS_SHA256_PROCESS_ALT)
-    strcat(md_file, "-ALT.csv");
-#else
     strcat(md_file, ".csv");
-#endif
 #endif
 
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
