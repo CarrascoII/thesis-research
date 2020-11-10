@@ -65,8 +65,11 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
-    mbedtls_x509_crt cacert, clicert1, clicert2;
+    mbedtls_x509_crt cacert;
+#if defined(USE_PAPI_TLS_PK)
+    mbedtls_x509_crt clicert1, clicert2;
     mbedtls_pk_context privkey, privkey2;
+#endif
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
@@ -123,10 +126,12 @@ int main(int argc, char **argv) {
 
     mbedtls_net_init(&server);
     mbedtls_x509_crt_init(&cacert);
+#if defined(USE_PAPI_TLS_PK)
     mbedtls_x509_crt_init(&clicert1);
     mbedtls_x509_crt_init(&clicert2);
     mbedtls_pk_init(&privkey);
     mbedtls_pk_init(&privkey2);
+#endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
@@ -135,7 +140,7 @@ int main(int argc, char **argv) {
     mbedtls_debug_set_threshold(debug);
 
     // Load certificates and key
-    printf("\nLoading the ca cert.......................");
+    printf("\nLoading the ca certificate................");
     fflush(stdout);
 
     for(i = 0; mbedtls_test_cas[i] != NULL; i++) {        
@@ -147,7 +152,8 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-    printf("\nLoading the client cert...................");
+#if defined(USE_PAPI_TLS_PK)
+    printf("\nLoading the client certificate............");
     fflush(stdout);
 
     if((ret = mbedtls_x509_crt_parse(&clicert1, (const unsigned char *) mbedtls_test_cli_crt_rsa, mbedtls_test_cli_crt_rsa_len)) != 0) {
@@ -176,6 +182,7 @@ int main(int argc, char **argv) {
     }
 
     printf(" ok");
+#endif
 
     // Seed the RNG
     printf("\nSeeding the random number generator.......");
@@ -212,6 +219,7 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
 
+#if defined(USE_PAPI_TLS_PK)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &clicert1, &privkey)) != 0) {
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
         goto exit;
@@ -221,6 +229,7 @@ int main(int argc, char **argv) {
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
         goto exit;
     }
+#endif
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
         printf(" failed! mbedtls_ssl_setup returned -0x%04x\n", -ret);
@@ -393,10 +402,12 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
+#if defined(USE_PAPI_TLS_PK)
     mbedtls_pk_free(&privkey2);
     mbedtls_pk_free(&privkey);
     mbedtls_x509_crt_free(&clicert2);
     mbedtls_x509_crt_free(&clicert1);
+#endif
     mbedtls_x509_crt_free(&cacert);
     mbedtls_net_free(&server);
 

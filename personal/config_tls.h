@@ -104,6 +104,7 @@
  */
 // #define USE_PAPI_TLS_CIPHER
 // #define USE_PAPI_TLS_MD
+// #define USE_PAPI_TLS_PK
 
 #define SERVER_IP       "localhost"
 #define SERVER_PORT     "8080"

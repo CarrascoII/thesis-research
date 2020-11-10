@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     mbedtls_debug_set_threshold(debug);
 
     // Load certificates and key
-    printf("\nLoading the ca cert.......................");
+    printf("\nLoading the ca certificate................");
     fflush(stdout);
 
     for(i = 0; mbedtls_test_cas[i] != NULL; i++) {        
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-    printf("\nLoading the server cert...................");
+    printf("\nLoading the server certificate............");
     fflush(stdout);
 
     if((ret = mbedtls_x509_crt_parse(&srvcert, (const unsigned char *) mbedtls_test_srv_crt_rsa, mbedtls_test_srv_crt_rsa_len)) != 0) {
@@ -208,7 +208,9 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+#if defined(USE_PAPI_TLS_PK)
     mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+#endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
