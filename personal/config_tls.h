@@ -5,6 +5,7 @@
  * mbed TLS feature support
  */
 /* Key exchange algorithms */
+#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
@@ -92,6 +93,7 @@
  */
 #define MBEDTLS_SSL_CIPHERSUITES                        \
         MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,    \
+        MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256,        \
         MBEDTLS_TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384,   \
         MBEDTLS_TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
 
@@ -101,7 +103,7 @@
  * Program flags
  */
 // #define USE_PAPI_TLS_CIPHER
-#define USE_PAPI_TLS_MD
+// #define USE_PAPI_TLS_MD
 
 #define SERVER_IP       "localhost"
 #define SERVER_PORT     "8080"
