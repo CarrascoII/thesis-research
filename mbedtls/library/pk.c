@@ -45,6 +45,9 @@
 #include <stdint.h>
 
 #if defined(USE_PAPI_TLS_PK)
+#include <stdio.h>
+#include <string.h>
+
 #include "papi.h"
 #endif
 
@@ -311,7 +314,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
         fprintf(csv, "verify,%lld,%lld,", cycles_cpu, usec_cpu);
         fclose(csv);
 
-        printf("\nUPDATE: verify, %lld, %lld", cycles_cpu, usec_cpu);
+        printf("\nUPDATE: verify, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
         return( ret );
@@ -327,7 +330,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     return( ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                        sig, sig_len ) );
 #else
-    if( ( ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
+    if( ( ret = ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                        sig, sig_len ) ) != 0 )
         return( ret );
 
@@ -341,7 +344,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "verify,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "verify,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: verify, %lld, %lld", cycles_cpu, usec_cpu);
@@ -495,10 +498,10 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
         strcat(filename, ".csv");
 
         csv = fopen(filename, "a+");
-        fprintf(csv, "verify,%lld,%lld,", cycles_cpu, usec_cpu);
+        fprintf(csv, "sign,%lld,%lld\n", cycles_cpu, usec_cpu);
         fclose(csv);
 
-        printf("\nUPDATE: verify, %lld, %lld", cycles_cpu, usec_cpu);
+        printf("\nUPDATE: sign, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
         return( ret );
@@ -514,7 +517,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     return( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                      sig, sig_len, f_rng, p_rng ) );
 #else
-    if( ( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
+    if( ( ret = ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                      sig, sig_len, f_rng, p_rng ) ) != 0 )
         return( ret );
 
@@ -528,7 +531,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "sign,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "sign,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: sign, %lld, %lld", cycles_cpu, usec_cpu);

@@ -113,7 +113,7 @@
 #define MIN_INPUT_SIZE  16
 #define MAX_INPUT_SIZE  16
 #define N_TESTS         1
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_PK)
 #define FILENAME        "../docs/TLS-"
 #endif
 
