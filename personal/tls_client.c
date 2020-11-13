@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
     mbedtls_x509_crt cacert;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(MUTUAL_AUTH)
     mbedtls_x509_crt clicert1, clicert2;
     mbedtls_pk_context privkey, privkey2;
 #endif
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
 
     mbedtls_net_init(&server);
     mbedtls_x509_crt_init(&cacert);
-#if defined(USE_PAPI_TLS_PK)
+#if defined(MUTUAL_AUTH)
     mbedtls_x509_crt_init(&clicert1);
     mbedtls_x509_crt_init(&clicert2);
     mbedtls_pk_init(&privkey);
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(MUTUAL_AUTH)
     printf("\nLoading the client certificate............");
     fflush(stdout);
 
@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(MUTUAL_AUTH)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &clicert1, &privkey)) != 0) {
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
         goto exit;
@@ -402,7 +402,7 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
-#if defined(USE_PAPI_TLS_PK)
+#if defined(MUTUAL_AUTH)
     mbedtls_pk_free(&privkey2);
     mbedtls_pk_free(&privkey);
     mbedtls_x509_crt_free(&clicert2);

@@ -311,7 +311,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
         strcat(filename, ".csv");
 
         csv = fopen(filename, "a+");
-        fprintf(csv, "verify,%lld,%lld,", cycles_cpu, usec_cpu);
+        fprintf(csv, ",verify,%lld,%lld,", cycles_cpu, usec_cpu);
         fclose(csv);
 
         printf("\nUPDATE: verify, %lld, %lld\n", cycles_cpu, usec_cpu);
@@ -344,7 +344,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "verify,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, ",verify,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: verify, %lld, %lld", cycles_cpu, usec_cpu);
@@ -498,7 +498,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
         strcat(filename, ".csv");
 
         csv = fopen(filename, "a+");
-        fprintf(csv, "sign,%lld,%lld\n", cycles_cpu, usec_cpu);
+        fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
         fclose(csv);
 
         printf("\nUPDATE: sign, %lld, %lld", cycles_cpu, usec_cpu);
@@ -531,7 +531,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "sign,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: sign, %lld, %lld", cycles_cpu, usec_cpu);

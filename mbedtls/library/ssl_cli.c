@@ -51,6 +51,13 @@
 #include "mbedtls/platform_util.h"
 #endif
 
+#if defined(USE_PAPI_TLS_PK)
+#include "papi.h"
+
+#define str(x) #x
+#define xstr(x) str(x)
+#endif
+
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
 static void ssl_write_hostname_ext( mbedtls_ssl_context *ssl,
                                     unsigned char *buf,
@@ -1495,6 +1502,11 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
 #endif
     int handshake_failure = 0;
     const mbedtls_ssl_ciphersuite_t *suite_info;
+#if defined(USE_PAPI_TLS_PK)
+    FILE *csv;
+    char filename[30] = FILENAME;
+#endif
+
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse server hello" ) );
 
@@ -1762,6 +1774,15 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %s", suite_info->name ) );
+
+#if defined(USE_PAPI_TLS_PK)
+    strcat(filename, xstr(suite_info->key_exchange) + 21);
+    strcat(filename, ".csv");
+
+    csv = fopen(filename, "w");
+    fprintf(csv, "endpoint,phase,operation,cycles,usec\n");
+    fclose(csv);
+#endif
 
 #if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
     if( suite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA &&

@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(MUTUAL_AUTH)
     mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
 #endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
