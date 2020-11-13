@@ -189,10 +189,10 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "client,dh_read_params,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,read_params,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: dh_read_params, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: read_params, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
     return( 0 );
@@ -300,10 +300,10 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "server,dh_make_params,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "server,make_params,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: dh_set_group, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: make_params, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
 cleanup:
@@ -368,11 +368,11 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "w");
-    fprintf(csv, "endpoint,operation,cycles,usec\n", cycles_cpu, usec_cpu);
-    fprintf(csv, "server,dh_set_group,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "endpoint,operation,cycles,usec\n");
+    fprintf(csv, "server,set_group,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: dh_set_group, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: set_group, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
     return( 0 );
@@ -427,10 +427,10 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "server,dh_read_public,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "server,read_public,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: dh_read_public, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: read_public, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
     return( 0 );
@@ -511,10 +511,10 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "client,dh_make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: make public, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: make_public, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
 cleanup:
@@ -670,10 +670,10 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, ",dh_calc_secret,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, ",calc_secret,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: dh_calc_secret, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nUPDATE: calc_secret, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
 
 cleanup:

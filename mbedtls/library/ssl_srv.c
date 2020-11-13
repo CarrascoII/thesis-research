@@ -804,8 +804,6 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
         csv = fopen(filename, "w");
         fprintf(csv, "endpoint,operation,cycles,usec\n");
         fclose(csv);
-
-        printf("\nUPDATE: verify, %lld, %lld\n", cycles_cpu, usec_cpu);
 #endif
         return( 0 );
     }

@@ -1,0 +1,7 @@
+endpoint,operation,cycles,usec
+,verify,4908549,1893
+,sign,204206529,78753
+,verify,6007981,2317
+,verify,6039097,2328
+,sign,166958084,64387
+,verify,5792762,2234
