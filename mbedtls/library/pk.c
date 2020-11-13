@@ -497,6 +497,8 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
         strcat(filename, mbedtls_pk_get_name(ctx));
         strcat(filename, ".csv");
 
+        if(access(filename, F_OK) && )
+
         csv = fopen(filename, "a+");
         fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
         fclose(csv);

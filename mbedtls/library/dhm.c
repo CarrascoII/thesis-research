@@ -182,11 +182,11 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DHE_RSA");
+    strcat(filename, "DH");
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "client,dh_read_params,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,dh_read_params,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: dh_read_params, %lld, %lld\n", cycles_cpu, usec_cpu);
@@ -290,11 +290,11 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DHE_RSA");
+    strcat(filename, "DH");
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "server,dh_make_params,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "server,dh_make_params,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: dh_set_group, %lld, %lld\n", cycles_cpu, usec_cpu);
@@ -355,11 +355,12 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DHE_RSA");
+    strcat(filename, "DH");
     strcat(filename, ".csv");
 
-    csv = fopen(filename, "a+");
-    fprintf(csv, "server,dh_set_group,%lld,%lld,", cycles_cpu, usec_cpu);
+    csv = fopen(filename, "w");
+    fprintf(csv, "endpoint,operation,cycles,usec\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "server,dh_set_group,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: dh_set_group, %lld, %lld\n", cycles_cpu, usec_cpu);
@@ -410,11 +411,11 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DHE_RSA");
+    strcat(filename, "DH");
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "server,dh_read_public,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "server,dh_read_public,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: dh_read_public, %lld, %lld\n", cycles_cpu, usec_cpu);
@@ -491,11 +492,11 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DHE_RSA");
+    strcat(filename, "DH");
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, "client,dh_make_public,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,dh_make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: make public, %lld, %lld\n", cycles_cpu, usec_cpu);
@@ -647,11 +648,11 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DHE_RSA");
+    strcat(filename, "DH");
     strcat(filename, ".csv");
 
     csv = fopen(filename, "a+");
-    fprintf(csv, ",dh_calc_secret,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, ",dh_calc_secret,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nUPDATE: dh_calc_secret, %lld, %lld\n", cycles_cpu, usec_cpu);
