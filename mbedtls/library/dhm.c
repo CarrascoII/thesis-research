@@ -143,6 +143,9 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
 {
     int ret;
 #if defined(USE_PAPI_TLS_PK)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
 
@@ -207,6 +210,9 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     size_t n1, n2, n3;
     unsigned char *p;
 #if defined(USE_PAPI_TLS_PK)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
 
@@ -318,6 +324,9 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 
     int ret;
 #if defined(USE_PAPI_TLS_PK)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
 
@@ -377,6 +386,9 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
 {
     int ret;
 #if defined(USE_PAPI_TLS_PK)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
 
@@ -434,6 +446,9 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
 {
     int ret, count = 0;
 #if defined(USE_PAPI_TLS_PK)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
 
@@ -586,6 +601,9 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
     int ret;
     mbedtls_mpi GYb;
 #if defined(USE_PAPI_TLS_PK)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
     FILE *csv;
     char filename[30] = FILENAME;
 
