@@ -54,6 +54,69 @@
 #include "mbedtls/oid.h"
 #endif
 
+#if defined(USE_PAPI_TLS_CIPHER)
+char cipher_fname[50] = "../docs/TLS-CIPHER-";
+static const char* cipher_lst[] = {
+    "NONE", "NULL",
+    "AES-128-ECB", "AES-192-ECB", "AES-256-ECB",
+    "AES-128-CBC", "AES-192-CBC", "AES-256-CBC",
+    "AES-128-CFB128", "AES-192-CFB128", "AES-256-CFB128",
+    "AES-128-CTR", "AES-192-CTR", "AES-256-CTR",
+    "AES-128-GCM", "AES-192-GCM", "AES-256-GCM",
+    "CAMELLIA-128-ECB", "CAMELLIA-192-ECB", "CAMELLIA-256-ECB",
+    "CAMELLIA-128-CBC", "CAMELLIA-192-CBC", "CAMELLIA-256-CBC",
+    "CAMELLIA-128-CFB128", "CAMELLIA-192-CFB128", "CAMELLIA-256-CFB128",
+    "CAMELLIA-128-CTR", "CAMELLIA-192-CTR", "CAMELLIA-256-CTR",
+    "CAMELLIA-128-GCM", "CAMELLIA-192-GCM", "CAMELLIA-256-GCM",
+    "DES-ECB", "DES-CBC",
+    "DES-EDE-ECB", "DES-EDE-CBC",
+    "DES-EDE3-ECB", "DES-EDE3-CBC",
+    "BLOWFISH-ECB",
+    "BLOWFISH-CBC",
+    "BLOWFISH-CFB64",
+    "BLOWFISH-CTR",
+    "ARC4-128",
+    "AES-128-CCM", "AES-192-CCM", "AES-256-CCM",
+    "CAMELLIA-128-CCM", "CAMELLIA-192-CCM", "CAMELLIA-256-CCM",
+    "ARIA-128-ECB", "ARIA-192-ECB", "ARIA-256-ECB",
+    "ARIA-128-CBC", "ARIA-192-CBC", "ARIA-256-CBC",
+    "ARIA-128-CFB128", "ARIA-192-CFB128", "ARIA-256-CFB128",
+    "ARIA-128-CTR", "ARIA-192-CTR", "ARIA-256-CTR",
+    "ARIA-128-GCM", "ARIA-192-GCM", "ARIA-256-GCM",
+    "ARIA-128-CCM", "ARIA-192-CCM", "ARIA-256-CCM",
+    "AES-128-OFB", "AES-192-OFB", "AES-256-OFB",
+    "AES-128-XTS", "AES-256-XTS",
+    "CHACHA20",
+    "CHACHA20-POLY1305"
+};
+#endif
+#if defined(USE_PAPI_TLS_MD)
+char md_fname[50] = "../docs/TLS-MD-";
+static const char* md_lst[] = {
+    "NONE",
+    "MD2", "MD4", "MD5",
+    "SHA1", "SHA224", "SHA256", "SHA384", "SHA512",
+    "RIPEMD160"
+};
+#endif
+#if defined(USE_PAPI_TLS_KE)
+char ke_fname[50] = "../docs/TLS-KE-";
+static const char* ke_lst[] = {
+    "NONE",
+    "RSA",
+    "DHE-RSA",
+    "ECDHE-RSA",
+    "ECDHE-ECDSA",
+    "PSK",
+    "DHE-PSK",
+    "RSA-PSK",
+    "ECDHE-PSK",
+    "ECDH-RSA",
+    "ECDH-ECDSA",
+    "ECJPAKE"
+};
+#endif
+
 static void ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl );
 static uint32_t ssl_get_hs_total_len( mbedtls_ssl_context const *ssl );
 
@@ -8077,6 +8140,10 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+    FILE *csv;
+    mbedtls_ssl_ciphersuite_t *suite_info;
+#endif
 
     if( ssl == NULL || ssl->conf == NULL )
         return( MBEDTLS_ERR_SSL_BAD_INPUT_DATA );
@@ -8089,6 +8156,40 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
         if( ret != 0 )
             break;
+
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+        if(ssl->state == MBEDTLS_SSL_SERVER_HELLO + 1) {
+            suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
+
+#if defined(USE_PAPI_TLS_CIPHER)
+            strcat(cipher_fname, cipher_lst[suite_info->cipher]);
+            strcat(cipher_fname, ".csv");
+
+            csv = fopen(cipher_fname, "w");
+            fprintf(csv, "operation,cycles,usec,endpoint,input_size\n");
+            fclose(csv);
+#endif
+
+#if defined(USE_PAPI_TLS_MD)
+            strcat(md_fname, md_lst[suite_info->mac]);
+            strcat(md_fname, ".csv");
+
+            csv = fopen(md_fname, "w");
+            fprintf(csv, "operation,cycles,usec,endpoint,input_size\n");
+            fclose(csv);
+#endif
+
+#if defined(USE_PAPI_TLS_KE)
+            strcat(ke_fname, ke_lst[suite_info->key_exchange]);
+            strcat(ke_fname, ".csv");
+
+            csv = fopen(ke_fname, "w");
+            fprintf(csv, "endpoint,operation,cycles,usec\n");
+            fclose(csv);
+#endif
+        }
+
+#endif
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= handshake" ) );
