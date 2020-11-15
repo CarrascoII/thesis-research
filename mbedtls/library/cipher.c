@@ -1054,9 +1054,9 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 
     csv = fopen(cipher_fname, "a+");
     if(ctx->operation == MBEDTLS_DECRYPT) {
-        fprintf(csv, "decrypt,%lld,%lld", cycles_cpu, usec_cpu);
+        fprintf(csv, "\ndecrypt,%lld,%lld", cycles_cpu, usec_cpu);
     } else {
-        fprintf(csv, "encrypt,%lld,%lld", cycles_cpu, usec_cpu);
+        fprintf(csv, "\nencrypt,%lld,%lld", cycles_cpu, usec_cpu);
     }
     fclose(csv);
 
