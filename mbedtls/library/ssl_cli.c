@@ -1502,6 +1502,15 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
 #endif
     int handshake_failure = 0;
     const mbedtls_ssl_ciphersuite_t *suite_info;
+#if defined(USE_PAPI_TLS_CIPHER)
+    char cipher_fname[30] = "../docs/TLS-CIPHER_";
+#endif
+#if defined(USE_PAPI_TLS_MD)
+    char md_fname[30] = "../docs/TLS-MD_";
+#endif
+#if defined(USE_PAPI_TLS_KE)
+    char ke_fname[30] = "../docs/TLS-KE_";
+#endif
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
     FILE *csv;
 #endif
