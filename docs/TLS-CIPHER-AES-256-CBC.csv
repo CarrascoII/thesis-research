@@ -1,0 +1,11 @@
+operation,cycles,usec,endpoint,input_size
+encrypt,7779,2
+decrypt,10372,4
+encrypt,7779,2
+decrypt,12965,5
+encrypt,7779,3,client,16
+decrypt,12965,4,server,16
+encrypt,7779,2,server,16
+decrypt,10372,3,client,16
+encrypt,7779,2,server,close
+encrypt,7779,2,client,close

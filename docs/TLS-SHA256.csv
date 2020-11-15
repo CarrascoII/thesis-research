@@ -1,7 +1,0 @@
-update_ctr_cycles,update_ctr_usec,update_hdr_cycles,update_hdr_usec,update_len_cycles,update_len_usec,update_msg_cycles,update_msg_usec,finish_cycles,finish_usec,reset_cycles,reset_usec,endpoint,input_size
-5186,1,2593,0,2593,1,2593,1,10372,5,5186,1,client,16
-2593,1,2593,1,2593,1,0,1,15558,6,2593,2,server,16
-2593,0,2593,0,2593,0,2593,0,7779,3,5186,1,server,16
-2593,1,2593,1,2593,1,2593,0,7779,3,5186,1,client,16
-2593,0,2593,1,2593,1,2593,1,10372,3,2593,2,client,close
-10372,2,2593,1,2593,0,2593,0,15558,5,5186,1,server,close

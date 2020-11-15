@@ -8142,7 +8142,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
     int ret = 0;
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
     FILE *csv;
-    mbedtls_ssl_ciphersuite_t *suite_info;
+    const mbedtls_ssl_ciphersuite_t *suite_info;
 #endif
 
     if( ssl == NULL || ssl->conf == NULL )
@@ -8166,7 +8166,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(cipher_fname, ".csv");
 
             csv = fopen(cipher_fname, "w");
-            fprintf(csv, "operation,cycles,usec,endpoint,input_size\n");
+            fprintf(csv, "operation,cycles,usec,endpoint,input_size");
             fclose(csv);
 #endif
 
@@ -8175,7 +8175,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(md_fname, ".csv");
 
             csv = fopen(md_fname, "w");
-            fprintf(csv, "operation,cycles,usec,endpoint,input_size\n");
+            fprintf(csv, "operation,cycles,usec,endpoint,input_size");
             fclose(csv);
 #endif
 

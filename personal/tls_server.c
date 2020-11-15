@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI_TLS_MD)
             csv = fopen(md_fname, "a+");    
-            fprintf(csv, ",server,%d\n", input_size);
+            fprintf(csv, ",server,%d", input_size);
             fclose(csv);
 #endif
 
@@ -299,7 +299,7 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI_TLS_MD)
             csv = fopen(md_fname, "a+");    
-            fprintf(csv, ",server,%d\n", input_size);
+            fprintf(csv, ",server,%d", input_size);
             fclose(csv);
 #endif
         }
@@ -330,7 +330,7 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI_TLS_MD)
     csv = fopen(md_fname, "a+");
-    fprintf(csv, ",server,close\n");
+    fprintf(csv, ",server,close");
     fclose(csv);
 #endif
 

@@ -1,0 +1,11 @@
+endpoint,operation,cycles,usec
+server,set_group,10372,2
+,verify,2014761,749
+server,make_params,7898278,3045
+,sign,211702892,81642
+client,read_params,15558,5
+,verify,6516209,2513
+client,make_public,169146576,65231
+,calc_secret,9259603,3570
+server,read_public,10372,3
+,calc_secret,9394439,3622

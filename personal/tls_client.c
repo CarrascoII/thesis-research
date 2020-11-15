@@ -278,13 +278,13 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI_TLS_CIPHER)
             csv = fopen(cipher_fname, "a+");    
-            fprintf(csv, ",client,%d\n", input_size);
+            fprintf(csv, ",client,%d", input_size);
             fclose(csv);
 #endif
 
 #if defined(USE_PAPI_TLS_MD)
             csv = fopen(md_fname, "a+");    
-            fprintf(csv, ",client,%d\n", input_size);
+            fprintf(csv, ",client,%d", input_size);
             fclose(csv);
 #endif
 
@@ -307,13 +307,13 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI_TLS_CIPHER)
             csv = fopen(cipher_fname, "a+");    
-            fprintf(csv, ",client,%d\n", input_size);
+            fprintf(csv, ",client,%d", input_size);
             fclose(csv);
 #endif
 
 #if defined(USE_PAPI_TLS_MD)
             csv = fopen(md_fname, "a+");    
-            fprintf(csv, ",client,%d\n", input_size);
+            fprintf(csv, ",client,%d", input_size);
             fclose(csv);
 #endif
         }
@@ -338,13 +338,13 @@ int main(int argc, char **argv) {
 
 #if defined(USE_PAPI_TLS_CIPHER)
     csv = fopen(cipher_fname, "a+");
-    fprintf(csv, ",server,close\n");
+    fprintf(csv, ",client,close");
     fclose(csv);
 #endif
 
 #if defined(USE_PAPI_TLS_MD)
     csv = fopen(md_fname, "a+");
-    fprintf(csv, ",client,close\n");
+    fprintf(csv, ",client,close");
     fclose(csv);
 #endif
 

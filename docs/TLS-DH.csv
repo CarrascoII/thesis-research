@@ -1,8 +1,0 @@
-endpoint,operation,cycles,usec
-server,set_group,10372,2
-server,make_params,502780107,193900
-client,read_params,15558,5
-client,make_public,20705105,7984
-,calc_secret,550921745,212464
-server,read_public,7779,2
-,calc_secret,315246568,121575

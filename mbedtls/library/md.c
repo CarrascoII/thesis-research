@@ -393,7 +393,7 @@ cleanup:
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     csv = fopen(md_fname, "a+");    
-    fprintf(csv, "starts,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "\nstarts,%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nMD: starts, %lld, %lld", cycles_cpu, usec_cpu);
@@ -443,7 +443,7 @@ int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *inpu
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     csv = fopen(md_fname, "a+");
-    fprintf(csv, "update,%lld,%lld", cycles_cpu, usec_cpu);
+    fprintf(csv, "\nupdate,%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nMD: update, %lld, %lld", cycles_cpu, usec_cpu);
@@ -508,7 +508,7 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     csv = fopen(md_fname, "a+");
-    fprintf(csv, "finish,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "\nfinish,%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nMD: finish, %lld, %lld", cycles_cpu, usec_cpu);
@@ -564,7 +564,7 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
     csv = fopen(md_fname, "a+");
-    fprintf(csv, "reset,%lld,%lld,", cycles_cpu, usec_cpu);
+    fprintf(csv, "\nreset,%lld,%lld", cycles_cpu, usec_cpu);
     fclose(csv);
 
     printf("\nMD: reset, %lld, %lld", cycles_cpu, usec_cpu);    
