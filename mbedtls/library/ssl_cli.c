@@ -51,6 +51,11 @@
 #include "mbedtls/platform_util.h"
 #endif
 
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+#define str(x) #x
+#define xstr(x) str(x)
+#endif
+
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
 static void ssl_write_hostname_ext( mbedtls_ssl_context *ssl,
                                     unsigned char *buf,
