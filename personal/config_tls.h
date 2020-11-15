@@ -116,15 +116,12 @@
 #define N_TESTS         1
 #if defined(USE_PAPI_TLS_CIPHER)
 extern char cipher_fname[30];
-char cipher_fname[30] = "../docs/TLS-CIPHER_";
 #endif
 #if defined(USE_PAPI_TLS_MD)
 extern char md_fname[30];
-char md_fname[30] = "../docs/TLS-MD_";
 #endif
 #if defined(USE_PAPI_TLS_KE)
 extern char ke_fname[30];
-char ke_fname[30] = "../docs/TLS-KE_";
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

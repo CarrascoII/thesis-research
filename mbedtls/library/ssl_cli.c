@@ -56,6 +56,16 @@
 #define xstr(x) str(x)
 #endif
 
+#if defined(USE_PAPI_TLS_CIPHER)
+char cipher_fname[30] = "../docs/TLS-CIPHER_";
+#endif
+#if defined(USE_PAPI_TLS_MD)
+char md_fname[30] = "../docs/TLS-MD_";
+#endif
+#if defined(USE_PAPI_TLS_KE)
+char ke_fname[30] = "../docs/TLS-KE_";
+#endif
+
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
 static void ssl_write_hostname_ext( mbedtls_ssl_context *ssl,
                                     unsigned char *buf,

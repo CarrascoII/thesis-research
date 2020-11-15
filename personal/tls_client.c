@@ -275,14 +275,14 @@ int main(int argc, char **argv) {
             print_hex(request, input_size);
 #endif
             fflush(stdout);
-#if defined(USE_PAPI_TLS_CIPHER)
 
+#if defined(USE_PAPI_TLS_CIPHER)
             csv = fopen(cipher_fname, "a+");    
             fprintf(csv, ",client,%d\n", input_size);
             fclose(csv);
 #endif
-#if defined(USE_PAPI_TLS_MD)
 
+#if defined(USE_PAPI_TLS_MD)
             csv = fopen(md_fname, "a+");    
             fprintf(csv, ",client,%d\n", input_size);
             fclose(csv);
@@ -304,14 +304,14 @@ int main(int argc, char **argv) {
             print_hex(response, input_size);
 #endif
             fflush(stdout);
-#if defined(USE_PAPI_TLS_CIPHER)
 
+#if defined(USE_PAPI_TLS_CIPHER)
             csv = fopen(cipher_fname, "a+");    
             fprintf(csv, ",client,%d\n", input_size);
             fclose(csv);
 #endif
-#if defined(USE_PAPI_TLS_MD)
 
+#if defined(USE_PAPI_TLS_MD)
             csv = fopen(md_fname, "a+");    
             fprintf(csv, ",client,%d\n", input_size);
             fclose(csv);
@@ -321,8 +321,8 @@ int main(int argc, char **argv) {
         free(request);
         free(response);
     }
-#if defined(USE_PAPI_TLS_CIPHER) || !defined(USE_PAPI_TLS_MD)
 
+#if defined(USE_PAPI_TLS_CIPHER) || !defined(USE_PAPI_TLS_MD)
     sleep(2);
 #endif
 
@@ -335,14 +335,14 @@ int main(int argc, char **argv) {
     }
 
     printf(" ok");
-#if defined(USE_PAPI_TLS_CIPHER)
 
+#if defined(USE_PAPI_TLS_CIPHER)
     csv = fopen(cipher_fname, "a+");
     fprintf(csv, ",server,close\n");
     fclose(csv);
 #endif
-#if defined(USE_PAPI_TLS_MD)
 
+#if defined(USE_PAPI_TLS_MD)
     csv = fopen(md_fname, "a+");
     fprintf(csv, ",client,close\n");
     fclose(csv);
