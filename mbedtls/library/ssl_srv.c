@@ -50,10 +50,6 @@
 #include "mbedtls/platform_time.h"
 #endif
 
-#if defined(USE_PAPI_TLS_PK)
-#include "papi.h"
-#endif
-
 #if defined(MBEDTLS_SSL_DTLS_HELLO_VERIFY)
 int mbedtls_ssl_set_client_transport_id( mbedtls_ssl_context *ssl,
                                  const unsigned char *info,
@@ -708,10 +704,6 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
     mbedtls_pk_type_t pk_alg =
         mbedtls_ssl_get_ciphersuite_sig_pk_alg( ciphersuite_info );
     uint32_t flags;
-#if defined(USE_PAPI_TLS_PK)
-    FILE *csv;
-    char filename[30] = FILENAME;
-#endif
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
     if( ssl->handshake->sni_key_cert != NULL )
         list = ssl->handshake->sni_key_cert;
@@ -797,14 +789,6 @@ static int ssl_pick_cert( mbedtls_ssl_context *ssl,
         MBEDTLS_SSL_DEBUG_CRT( 3, "selected certificate chain, certificate",
                           ssl->handshake->key_cert->cert );
 
-#if defined(USE_PAPI_TLS_PK)
-        strcat(filename, mbedtls_pk_get_name(ssl->handshake->key_cert->key));
-        strcat(filename, ".csv");
-
-        csv = fopen(filename, "w");
-        fprintf(csv, "endpoint,operation,cycles,usec\n");
-        fclose(csv);
-#endif
         return( 0 );
     }
 

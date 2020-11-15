@@ -44,7 +44,7 @@
 #include <limits.h>
 #include <stdint.h>
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
 #include <stdio.h>
 #include <string.h>
 
@@ -250,13 +250,12 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
                const unsigned char *sig, size_t sig_len,
                mbedtls_pk_restart_ctx *rs_ctx )
 {
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     int ret;
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -300,21 +299,18 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
         usec_cpu = end_usec_cpu - start_usec_cpu;
 
-        strcat(filename, mbedtls_pk_get_name(ctx));
-        strcat(filename, ".csv");
-
-        csv = fopen(filename, "a+");
-        fprintf(csv, ",verify,%lld,%lld,", cycles_cpu, usec_cpu);
+        csv = fopen(ke_fname, "a+");
+        fprintf(csv, ",verify,%lld,%lld\n", cycles_cpu, usec_cpu);
         fclose(csv);
 
-        printf("\nUPDATE: verify, %lld, %lld\n", cycles_cpu, usec_cpu);
+        printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
         return( ret );
@@ -326,7 +322,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     if( ctx->pk_info->verify_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
-#if !defined(USE_PAPI_TLS_PK)
+#if !defined(USE_PAPI_TLS_KE)
     return( ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                        sig, sig_len ) );
 #else
@@ -340,14 +336,11 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, mbedtls_pk_get_name(ctx));
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, ",verify,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: verify, %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
 
     return( ret );
 #endif
@@ -437,13 +430,12 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
              mbedtls_pk_restart_ctx *rs_ctx )
 {
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     int ret;
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -487,23 +479,18 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
         usec_cpu = end_usec_cpu - start_usec_cpu;
 
-        strcat(filename, mbedtls_pk_get_name(ctx));
-        strcat(filename, ".csv");
-
-        if(access(filename, F_OK) && )
-
-        csv = fopen(filename, "a+");
+        csv = fopen(ke_fname, "a+");
         fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
         fclose(csv);
 
-        printf("\nUPDATE: sign, %lld, %lld", cycles_cpu, usec_cpu);
+        printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
         return( ret );
@@ -515,7 +502,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     if( ctx->pk_info->sign_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
-#if !defined(USE_PAPI_TLS_PK)
+#if !defined(USE_PAPI_TLS_KE)
     return( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                      sig, sig_len, f_rng, p_rng ) );
 #else
@@ -529,14 +516,11 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, mbedtls_pk_get_name(ctx));
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: sign, %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
 
     return( ret );
 #endif

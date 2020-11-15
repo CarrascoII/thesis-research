@@ -58,7 +58,7 @@
 #define mbedtls_free       free
 #endif
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
 #include "papi.h"
 #endif
 
@@ -142,12 +142,11 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
                      const unsigned char *end )
 {
     int ret;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -178,21 +177,18 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DH");
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, "client,read_params,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: read_params, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nKE: read_params, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
     return( 0 );
@@ -209,12 +205,11 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     int ret, count = 0;
     size_t n1, n2, n3;
     unsigned char *p;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -289,21 +284,18 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
 
     ctx->len = n1;
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DH");
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, "server,make_params,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: make_params, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nKE: make_params, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
 cleanup:
@@ -323,12 +315,11 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 {
 
     int ret;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -357,22 +348,18 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DH");
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "w");
-    fprintf(csv, "endpoint,operation,cycles,usec\n");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, "server,set_group,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: set_group, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nKE: set_group, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
     return( 0 );
@@ -385,12 +372,11 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen )
 {
     int ret;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -416,21 +402,18 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
     if( ( ret = mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
         return( MBEDTLS_ERR_DHM_READ_PUBLIC_FAILED + ret );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DH");
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, "server,read_public,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: read_public, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nKE: read_public, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
     return( 0 );
@@ -445,12 +428,11 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
                      void *p_rng )
 {
     int ret, count = 0;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -500,21 +482,18 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->GX, output, olen ) );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DH");
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: make_public, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nKE: make_public, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
 cleanup:
@@ -600,12 +579,11 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
 {
     int ret;
     mbedtls_mpi GYb;
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -659,21 +637,18 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->K, output, *olen ) );
 
-#if defined(USE_PAPI_TLS_PK)
+#if defined(USE_PAPI_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, "DH");
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");
+    csv = fopen(ke_fname, "a+");
     fprintf(csv, ",calc_secret,%lld,%lld\n", cycles_cpu, usec_cpu);
     fclose(csv);
 
-    printf("\nUPDATE: calc_secret, %lld, %lld\n", cycles_cpu, usec_cpu);
+    printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
 cleanup:

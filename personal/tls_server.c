@@ -16,24 +16,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#if defined(USE_PAPI_TLS_CIPHER)
-const char* get_cipher_name(mbedtls_ssl_context *tls) {
-    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
-    const mbedtls_cipher_info_t *info = mbedtls_cipher_info_from_type(ciphersuite->cipher);
-    
-    return info->name;
-}
-#endif
-
-#if defined(USE_PAPI_TLS_MD)
-const char* get_md_name(mbedtls_ssl_context *tls) {
-    const mbedtls_ssl_ciphersuite_t *ciphersuite = mbedtls_ssl_ciphersuite_from_string(mbedtls_ssl_get_ciphersuite(tls));
-    const mbedtls_md_info_t *info = mbedtls_md_info_from_type(ciphersuite->mac);
-    
-    return info->name;
-}
-#endif
-
 /*
  *  Print for the generated inputs
  */
@@ -78,12 +60,6 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_server generates response";
     char *p, *q;
-#if defined(USE_PAPI_TLS_CIPHER)
-    char cipher_file[30] = FILENAME;
-#endif
-#if defined(USE_PAPI_TLS_MD)
-    char md_file[30] = FILENAME;
-#endif
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
     FILE *csv;
 #endif
@@ -258,18 +234,6 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI_TLS_CIPHER)
-    // Create the csv file for symmetric cipher alg
-    strcat(cipher_file, get_cipher_name(&tls));
-    strcat(cipher_file, ".csv");
-#endif
-
-#if defined(USE_PAPI_TLS_MD)
-    // Create the csv file for message digest alg
-    strcat(md_file, get_md_name(&tls));
-    strcat(md_file, ".csv");
-#endif
-
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
@@ -283,7 +247,6 @@ int main(int argc, char **argv) {
         }
 
         for(i = 0; i < N_TESTS; i++) {
-
             // Receive request
             printf("\n\n> Read from client:");
             fflush(stdout);
@@ -295,21 +258,21 @@ int main(int argc, char **argv) {
                 goto exit;
             }
 
-#if defined(USE_PAPI_TLS_MD)
-            csv = fopen(md_file, "a+");    
-            fprintf(csv, "server,%d\n", input_size);
-            fclose(csv);
-#endif
-
             printf(" %d bytes\n", ret);
 #if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD)
             print_hex(request, input_size);
 #endif
             fflush(stdout);
-
 #if defined(USE_PAPI_TLS_CIPHER)
-            csv = fopen(cipher_file, "a+");    
-            fprintf(csv, "\nserver,%d", input_size);
+
+            csv = fopen(cipher_fname, "a+");    
+            fprintf(csv, "server,%d\n", input_size);
+            fclose(csv);
+#endif
+#if defined(USE_PAPI_TLS_MD)
+
+            csv = fopen(md_fname, "a+");    
+            fprintf(csv, "server,%d\n", input_size);
             fclose(csv);
 #endif
 
@@ -322,31 +285,31 @@ int main(int argc, char **argv) {
                 goto exit;
             }
 
-#if defined(USE_PAPI_TLS_MD)
-            csv = fopen(md_file, "a+");    
-            fprintf(csv, "server,%d\n", input_size);
-            fclose(csv);
-#endif
-
             printf(" %d bytes\n", ret);
 #if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD)
             print_hex(response, input_size);
 #endif
             fflush(stdout);
+#if defined(USE_PAPI_TLS_CIPHER)
+
+            csv = fopen(cipher_fname, "a+");    
+            fprintf(csv, "server,%d\n", input_size);
+            fclose(csv);
+#endif
+#if defined(USE_PAPI_TLS_MD)
+
+            csv = fopen(md_fname, "a+");    
+            fprintf(csv, "server,%d\n", input_size);
+            fclose(csv);
+#endif
         }
 
         free(request);
         free(response);
     }
-
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
-    sleep(1);
-#endif
 
-#if defined(USE_PAPI_TLS_CIPHER)
-    csv = fopen(cipher_file, "a+");
-    fprintf(csv, "\nserver,close");
-    fclose(csv);
+    sleep(1);
 #endif
 
     // Close connection
@@ -357,14 +320,20 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+    printf(" ok");
+#if defined(USE_PAPI_TLS_CIPHER)
+
+    csv = fopen(cipher_fname, "a+");
+    fprintf(csv, ",server,close\n");
+    fclose(csv);
+#endif
 #if defined(USE_PAPI_TLS_MD)
-    csv = fopen(md_file, "a+");
-    fprintf(csv, "server,close\n");
+
+    csv = fopen(md_fname, "a+");
+    fprintf(csv, ",server,close\n");
     fclose(csv);
 #endif
 
-    printf(" ok");
-    
     // Final connection status
     printf("\n\nFinal status:");
     printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));

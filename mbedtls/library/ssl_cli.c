@@ -51,6 +51,13 @@
 #include "mbedtls/platform_util.h"
 #endif
 
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+#include "papi.h"
+
+#define str(x) #x
+#define xstr(x) str(x)
+#endif
+
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
 static void ssl_write_hostname_ext( mbedtls_ssl_context *ssl,
                                     unsigned char *buf,
@@ -1495,6 +1502,9 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
 #endif
     int handshake_failure = 0;
     const mbedtls_ssl_ciphersuite_t *suite_info;
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+    FILE *csv;
+#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse server hello" ) );
 
@@ -1762,6 +1772,31 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 3, ( "server hello, chosen ciphersuite: %s", suite_info->name ) );
+
+#if defined(USE_PAPI_TLS_CIPHER)
+    strcat(cipher_fname, xstr(suite_info->name) + 15);
+    strcat(cipher_fname, ".csv");
+
+    csv = fopen(cipher_fname, "w");
+    fprintf(csv, "operation,cycles,usec,endpoint,input_size\n");
+    fclose(csv);
+#endif
+#if defined(USE_PAPI_TLS_MD)
+    strcat(md_fname, xstr(suite_info->name) + 11);
+    strcat(md_fname, ".csv");
+
+    csv = fopen(md_fname, "w");
+    fprintf(csv, "operation,cycles,usec,endpoint,input_size\n");
+    fclose(csv);
+#endif
+#if defined(USE_PAPI_TLS_KE)
+    strcat(ke_fname, xstr(suite_info->key_exchange) + 21);
+    strcat(ke_fname, ".csv");
+
+    csv = fopen(ke_fname, "w");
+    fprintf(csv, "endpoint,operation,cycles,usec\n");
+    fclose(csv);
+#endif
 
 #if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
     if( suite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA &&

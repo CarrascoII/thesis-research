@@ -1007,7 +1007,6 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
-    char filename[30] = FILENAME;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
     if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
@@ -1053,14 +1052,19 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
     usec_cpu = end_usec_cpu - start_usec_cpu;
 
-    strcat(filename, mbedtls_cipher_get_name(ctx));
-    strcat(filename, ".csv");
-
-    csv = fopen(filename, "a+");    
-    fprintf(csv, ",%lld,%lld", cycles_cpu, usec_cpu);
+    csv = fopen(cipher_fname, "a+");
+    if(ctx->operation == MBEDTLS_DECRYPT) {
+        fprintf(csv, "decrypt,%lld,%lld", cycles_cpu, usec_cpu);
+    } else {
+        fprintf(csv, "encrypt,%lld,%lld", cycles_cpu, usec_cpu);
+    }
     fclose(csv);
 
-//    printf("\nGOT THESE RESULTS: %lld, %lld", cycles_cpu, usec_cpu);
+    if(ctx->operation == MBEDTLS_DECRYPT) {
+        printf("\nCIPHER: decrypt, %lld, %lld", cycles_cpu, usec_cpu);
+    } else {
+        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
+    }
 #endif
 
     return( 0 );
