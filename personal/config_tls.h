@@ -115,13 +115,13 @@
 #define MAX_INPUT_SIZE  16
 #define N_TESTS         1
 #if defined(USE_PAPI_TLS_CIPHER)
-extern char cipher_fname[30];
+extern char cipher_fname[50];
 #endif
 #if defined(USE_PAPI_TLS_MD)
-extern char md_fname[30];
+extern char md_fname[50];
 #endif
 #if defined(USE_PAPI_TLS_KE)
-extern char ke_fname[30];
+extern char ke_fname[50];
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */
