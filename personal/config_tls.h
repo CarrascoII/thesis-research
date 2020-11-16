@@ -103,9 +103,10 @@
 /**
  * Program flags
  */
-#define USE_PAPI_TLS_CIPHER
-#define USE_PAPI_TLS_MD
-#define USE_PAPI_TLS_KE
+// #define USE_PAPI_TLS_CIPHER
+// #define USE_PAPI_TLS_MD
+#define USE_PAPI_TLS_MD_II
+// #define USE_PAPI_TLS_KE
 // #define MUTUAL_AUTH
 
 #define SERVER_IP       "localhost"

@@ -53,6 +53,9 @@
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 #include "mbedtls/oid.h"
 #endif
+#if defined(USE_PAPI_TLS_MD_II)
+#include "papi.h"
+#endif
 
 #if defined(USE_PAPI_TLS_CIPHER)
 char cipher_fname[50] = "../docs/TLS-CIPHER-";
@@ -90,7 +93,8 @@ static const char* cipher_lst[] = {
     "CHACHA20-POLY1305"
 };
 #endif
-#if defined(USE_PAPI_TLS_MD)
+
+#if defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_MD_II)
 char md_fname[50] = "../docs/TLS-MD-";
 static const char* md_lst[] = {
     "NONE",
@@ -99,6 +103,7 @@ static const char* md_lst[] = {
     "RIPEMD160"
 };
 #endif
+
 #if defined(USE_PAPI_TLS_KE)
 char ke_fname[50] = "../docs/TLS-KE-";
 static const char* ke_lst[] = {
@@ -687,6 +692,24 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
     mbedtls_ssl_session *session = ssl->session_negotiate;
     mbedtls_ssl_transform *transform = ssl->transform_negotiate;
     mbedtls_ssl_handshake_params *handshake = ssl->handshake;
+#if defined(USE_PAPI_TLS_MD_II)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
+#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> derive keys" ) );
 
@@ -1053,8 +1076,31 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
            For AEAD-based ciphersuites, there is nothing to do here. */
         if( mac_key_len != 0 )
         {
+#if defined(USE_PAPI_TLS_MD_II)    
+            start_cycles_cpu = PAPI_get_virt_cyc();
+            start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
             mbedtls_md_hmac_starts( &transform->md_ctx_enc, mac_enc, mac_key_len );
             mbedtls_md_hmac_starts( &transform->md_ctx_dec, mac_dec, mac_key_len );
+
+#if defined(USE_PAPI_TLS_MD_II)
+            end_cycles_cpu = PAPI_get_virt_cyc();
+            end_usec_cpu = PAPI_get_virt_usec();
+
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            usec_cpu = end_usec_cpu - start_usec_cpu;
+
+            csv = fopen(md_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nstarts,%lld,%lld,client", cycles_cpu, usec_cpu);
+            } else {
+                fprintf(csv, "\nstarts,%lld,%lld,server", cycles_cpu, usec_cpu);
+            }
+            fclose(csv);
+
+            printf("\nMD: starts, %lld, %lld", cycles_cpu, usec_cpu);
+#endif
         }
     }
     else
@@ -1504,6 +1550,24 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 {
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
+#if defined(USE_PAPI_TLS_MD_II)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
+#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> encrypt buf" ) );
 
@@ -1550,6 +1614,11 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
         {
             unsigned char mac[MBEDTLS_SSL_MAC_ADD];
 
+#if defined(USE_PAPI_TLS_MD_II)    
+            start_cycles_cpu = PAPI_get_virt_cyc();
+            start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_len, 2 );
@@ -1557,6 +1626,24 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                              ssl->out_msg, ssl->out_msglen );
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc, mac );
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+
+#if defined(USE_PAPI_TLS_MD_II)
+            end_cycles_cpu = PAPI_get_virt_cyc();
+            end_usec_cpu = PAPI_get_virt_usec();
+
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            usec_cpu = end_usec_cpu - start_usec_cpu;
+
+            csv = fopen(md_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nmake_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            } else {
+                fprintf(csv, "\nmake_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            }
+            fclose(csv);
+
+            printf("\nMD: make_hmac, %lld, %lld", cycles_cpu, usec_cpu);
+#endif
 
             memcpy( ssl->out_msg + ssl->out_msglen, mac, ssl->transform_out->maclen );
         }
@@ -1812,11 +1899,34 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
             MBEDTLS_SSL_DEBUG_BUF( 4, "MAC'd meta-data", pseudo_hdr, 13 );
 
+#if defined(USE_PAPI_TLS_MD_II)    
+            start_cycles_cpu = PAPI_get_virt_cyc();
+            start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, pseudo_hdr, 13 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc,
                              ssl->out_iv, ssl->out_msglen );
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc, mac );
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+
+#if defined(USE_PAPI_TLS_MD_II)
+            end_cycles_cpu = PAPI_get_virt_cyc();
+            end_usec_cpu = PAPI_get_virt_usec();
+
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            usec_cpu = end_usec_cpu - start_usec_cpu;
+
+            csv = fopen(md_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nmake_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            } else {
+                fprintf(csv, "\nmake_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            }
+            fclose(csv);
+
+            printf("\nMD: make_hmac, %lld, %lld", cycles_cpu, usec_cpu);
+#endif
 
             memcpy( ssl->out_iv + ssl->out_msglen, mac,
                     ssl->transform_out->maclen );
@@ -1852,6 +1962,24 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     int auth_done = 0;
 #if defined(SSL_SOME_MODES_USE_MAC)
     size_t padlen = 0, correct = 1;
+#endif
+#if defined(USE_PAPI_TLS_MD_II)
+    long long start_cycles_cpu, end_cycles_cpu,
+              start_usec_cpu, end_usec_cpu,
+              cycles_cpu, usec_cpu;
+    FILE *csv;
+
+    ret = PAPI_library_init(PAPI_VER_CURRENT);
+
+    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
+        printf("PAPI library version mismatch 0x%08x\n", ret);
+        return ret;
+    }
+
+    if(ret < PAPI_OK) {
+        printf("PAPI_library_init returned -0x%04x\n", -ret);
+        return ret;
+    }
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> decrypt buf" ) );
@@ -2057,11 +2185,34 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             MBEDTLS_SSL_DEBUG_BUF( 4, "MAC'd meta-data", pseudo_hdr, 13 );
 
+#if defined(USE_PAPI_TLS_MD_II)    
+            start_cycles_cpu = PAPI_get_virt_cyc();
+            start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, pseudo_hdr, 13 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec,
                              ssl->in_iv, ssl->in_msglen );
             mbedtls_md_hmac_finish( &ssl->transform_in->md_ctx_dec, mac_expect );
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+
+#if defined(USE_PAPI_TLS_MD_II)
+            end_cycles_cpu = PAPI_get_virt_cyc();
+            end_usec_cpu = PAPI_get_virt_usec();
+
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            usec_cpu = end_usec_cpu - start_usec_cpu;
+
+            csv = fopen(md_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nverify_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            } else {
+                fprintf(csv, "\nverify_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            }
+            fclose(csv);
+
+            printf("\nMD: verify_hmac, %lld, %lld", cycles_cpu, usec_cpu);
+#endif
 
             MBEDTLS_SSL_DEBUG_BUF( 4, "message  mac", ssl->in_iv + ssl->in_msglen,
                                               ssl->transform_in->maclen );
@@ -2323,6 +2474,11 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             extra_run &= correct * 0xFF;
 
+#if defined(USE_PAPI_TLS_MD_II)    
+            start_cycles_cpu = PAPI_get_virt_cyc();
+            start_usec_cpu = PAPI_get_virt_usec();
+#endif
+
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_len, 2 );
@@ -2340,6 +2496,24 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
                 mbedtls_md_process( &ssl->transform_in->md_ctx_dec, ssl->in_msg );
 
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+
+#if defined(USE_PAPI_TLS_MD_II)
+            end_cycles_cpu = PAPI_get_virt_cyc();
+            end_usec_cpu = PAPI_get_virt_usec();
+
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            usec_cpu = end_usec_cpu - start_usec_cpu;
+
+            csv = fopen(md_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nverify_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            } else {
+                fprintf(csv, "\nverify_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+            }
+            fclose(csv);
+
+            printf("\nMD: make_hmac, %lld, %lld", cycles_cpu, usec_cpu);
+#endif
 
             /* Make sure we access all the memory that could contain the MAC,
              * before we check it in the next code block. This makes the
@@ -8140,7 +8314,7 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_MD_II)
     FILE *csv;
     const mbedtls_ssl_ciphersuite_t *suite_info;
 #endif
@@ -8157,7 +8331,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         if( ret != 0 )
             break;
 
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_MD_II)
         if(ssl->state == MBEDTLS_SSL_SERVER_HELLO + 1) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
@@ -8170,7 +8344,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD)
+#if defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_MD_II)
             strcat(md_fname, md_lst[suite_info->mac]);
             strcat(md_fname, ".csv");
 
