@@ -1555,6 +1555,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
+    int ret;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -1968,6 +1969,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
+    int ret;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -2205,9 +2207,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nverify_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nverify_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
             } else {
-                fprintf(csv, "\nverify_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nverify_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
             }
             fclose(csv);
 
@@ -2506,13 +2508,13 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nverify_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nverify_hmac,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
             } else {
-                fprintf(csv, "\nverify_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nverify_hmac,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
             }
             fclose(csv);
 
-            printf("\nMD: make_hmac, %lld, %lld", cycles_cpu, usec_cpu);
+            printf("\nMD: verify_hmac, %lld, %lld", cycles_cpu, usec_cpu);
 #endif
 
             /* Make sure we access all the memory that could contain the MAC,
