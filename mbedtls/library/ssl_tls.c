@@ -8306,7 +8306,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_MD_II)
-        if(ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER) {
+        if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
 #if defined(USE_PAPI_TLS_CIPHER)
