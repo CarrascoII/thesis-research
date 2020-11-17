@@ -1,0 +1,7 @@
+endpoint,operation,input_size,cycles,usec
+client,digest,16,20744,6
+server,verify,80,18151,7
+server,digest,16,334497,130
+client,verify,80,15558,5
+server,digest,2,23337,7
+client,digest,2,20744,7

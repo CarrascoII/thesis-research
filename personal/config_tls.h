@@ -103,13 +103,13 @@
 /**
  * Program flags
  */
-// #define USE_PAPI_TLS_CIPHER
+#define USE_PAPI_TLS_CIPHER
+#define USE_PAPI_TLS_MD
+#define USE_PAPI_TLS_KE
 // #define MEASURE_TLS_CIPHER
-// #define USE_PAPI_TLS_MD
 // #define MEASURE_TLS_MD
-// #define USE_PAPI_TLS_KE
 // #define MEASURE_TLS_KE
-#define MUTUAL_AUTH
+// #define MUTUAL_AUTH
 
 #define SERVER_IP       "localhost"
 #define SERVER_PORT     "8080"

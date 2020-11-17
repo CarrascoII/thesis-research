@@ -8411,12 +8411,23 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         if(ssl->state == MBEDTLS_SSL_SERVER_CERTIFICATE) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
+#if defined(USE_PAPI_TLS_KE)
             strcat(ke_fname, ke_lst[suite_info->key_exchange]);
             strcat(ke_fname, ".csv");
 
             csv = fopen(ke_fname, "w");
             fprintf(csv, "endpoint,operation,cycles,usec\n");
             fclose(csv);
+#endif
+
+#if defined(MEASURE_TLS_KE)
+            strcat(ke_fname, ke_lst[suite_info->key_exchange]);
+            strcat(ke_fname, "-II.csv");
+
+            csv = fopen(ke_fname, "w");
+            fprintf(csv, "endpoint,operation,cycles,usec\n");
+            fclose(csv);
+#endif
         }
 #endif
 

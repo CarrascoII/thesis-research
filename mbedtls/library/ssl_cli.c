@@ -3073,7 +3073,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
                                     ssl->handshake->premaster,
                                     MBEDTLS_PREMASTER_SIZE,
                                     &ssl->handshake->pmslen,
-                                    ssl->conf->f_rng, ssl->conf->p_rng )
+                                    ssl->conf->f_rng, ssl->conf->p_rng );
 
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();

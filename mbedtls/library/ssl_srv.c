@@ -2910,15 +2910,12 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
 #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
 #endif /* MBEDTLS_KEY_EXCHANGE__SOME_PFS__ENABLED */
 
-    (void) ciphersuite_info; /* unused in some configurations */
-#if !defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED)
-    (void) signature_len;
-#endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
 #if defined(MEASURE_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
     FILE *csv;
+    int ret;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -2932,6 +2929,11 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
         return ret;
     }
 #endif
+
+    (void) ciphersuite_info; /* unused in some configurations */
+#if !defined(MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED)
+    (void) signature_len;
+#endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
 
     ssl->out_msglen = 4; /* header (type:1, length:3) to be written later */
 
