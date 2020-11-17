@@ -53,11 +53,11 @@
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 #include "mbedtls/oid.h"
 #endif
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
 #include "papi.h"
 #endif
 
-#if defined(USE_PAPI_TLS_CIPHER)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_CIPHER_II)
 char cipher_fname[50] = "../docs/TLS-CIPHER-";
 static const char* cipher_lst[] = {
     "NONE", "NULL",
@@ -104,7 +104,7 @@ static const char* md_lst[] = {
 };
 #endif
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_KE_II)
 char ke_fname[50] = "../docs/TLS-KE-";
 static const char* ke_lst[] = {
     "NONE",
@@ -1509,7 +1509,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 {
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -1596,9 +1596,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\ndigest,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nclient,digest,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             } else {
-                fprintf(csv, "\ndigest,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nserver,digest,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             }
             fclose(csv);
 
@@ -1636,11 +1636,39 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             "including %d bytes of padding",
                        ssl->out_msglen, 0 ) );
 
+#if !defined(USE_PAPI_TLS_CIPHER_II)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
                                    ssl->out_msg, ssl->out_msglen,
                                    ssl->out_msg, &olen ) ) != 0 )
+#else
+        start_cycles_cpu = PAPI_get_virt_cyc();
+        start_usec_cpu = PAPI_get_virt_usec();
+
+        ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
+                                   ssl->transform_out->iv_enc,
+                                   ssl->transform_out->ivlen,
+                                   ssl->out_msg, ssl->out_msglen,
+                                   ssl->out_msg, &olen );
+
+        end_cycles_cpu = PAPI_get_virt_cyc();
+        end_usec_cpu = PAPI_get_virt_usec();
+
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        usec_cpu = end_usec_cpu - start_usec_cpu;
+
+        csv = fopen(cipher_fname, "a+");
+        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+            fprintf(csv, "\nclient,encrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        } else {
+            fprintf(csv, "\nserver,encrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        }
+        fclose(csv);
+
+        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
+        if(ret != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
@@ -1807,11 +1835,40 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             ssl->out_msglen, ssl->transform_out->ivlen,
                             padlen + 1 ) );
 
+#if !defined(USE_PAPI_TLS_CIPHER_II)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
                                    enc_msg, enc_msglen,
                                    enc_msg, &olen ) ) != 0 )
+#else
+        start_cycles_cpu = PAPI_get_virt_cyc();
+        start_usec_cpu = PAPI_get_virt_usec();
+
+        ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
+                                   ssl->transform_out->iv_enc,
+                                   ssl->transform_out->ivlen,
+                                   enc_msg, enc_msglen,
+                                   enc_msg, &olen );
+
+        end_cycles_cpu = PAPI_get_virt_cyc();
+        end_usec_cpu = PAPI_get_virt_usec();
+
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        usec_cpu = end_usec_cpu - start_usec_cpu;
+
+        csv = fopen(cipher_fname, "a+");
+        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+            fprintf(csv, "\nclient,encrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        } else {
+            fprintf(csv, "\nserver,encrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        }
+        fclose(csv);
+
+        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
+        if(ret != 0)
+#endif
+
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
@@ -1879,9 +1936,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\ndigest,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nclient,digest,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             } else {
-                fprintf(csv, "\ndigest,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->out_msglen);
+                fprintf(csv, "\nserver,digest,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             }
             fclose(csv);
 
@@ -1923,7 +1980,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #if defined(SSL_SOME_MODES_USE_MAC)
     size_t padlen = 0, correct = 1;
 #endif
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -1968,11 +2025,40 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
         padlen = 0;
 
+#if !defined(USE_PAPI_TLS_CIPHER_II)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
                                    ssl->in_msg, ssl->in_msglen,
                                    ssl->in_msg, &olen ) ) != 0 )
+#else
+        start_cycles_cpu = PAPI_get_virt_cyc();
+        start_usec_cpu = PAPI_get_virt_usec();
+
+        ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
+                                   ssl->transform_in->iv_dec,
+                                   ssl->transform_in->ivlen,
+                                   ssl->in_msg, ssl->in_msglen,
+                                   ssl->in_msg, &olen );
+
+        end_cycles_cpu = PAPI_get_virt_cyc();
+        end_usec_cpu = PAPI_get_virt_usec();
+
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        usec_cpu = end_usec_cpu - start_usec_cpu;
+
+        csv = fopen(cipher_fname, "a+");
+        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+            fprintf(csv, "\nclient,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        } else {
+            fprintf(csv, "\nserver,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        }
+        fclose(csv);
+
+        printf("\nCIPHER: decrypt, %lld, %lld", cycles_cpu, usec_cpu);
+        if(ret != 0)
+#endif
+
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
@@ -2166,9 +2252,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nverify,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
+                fprintf(csv, "\nclient,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             } else {
-                fprintf(csv, "\nverify,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
+                fprintf(csv, "\nserver,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             }
             fclose(csv);
 
@@ -2216,11 +2302,39 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_1 || MBEDTLS_SSL_PROTO_TLS1_2 */
 
+#if !defined(USE_PAPI_TLS_CIPHER_II)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
                                    dec_msg, dec_msglen,
                                    dec_msg_result, &olen ) ) != 0 )
+#else
+        start_cycles_cpu = PAPI_get_virt_cyc();
+        start_usec_cpu = PAPI_get_virt_usec();
+
+        ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
+                                   ssl->transform_in->iv_dec,
+                                   ssl->transform_in->ivlen,
+                                   dec_msg, dec_msglen,
+                                   dec_msg_result, &olen );
+
+        end_cycles_cpu = PAPI_get_virt_cyc();
+        end_usec_cpu = PAPI_get_virt_usec();
+
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        usec_cpu = end_usec_cpu - start_usec_cpu;
+
+        csv = fopen(cipher_fname, "a+");
+        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+            fprintf(csv, "\nclient,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        } else {
+            fprintf(csv, "\nserver,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+        }
+        fclose(csv);
+
+        printf("\nCIPHER: decrypt, %lld, %lld", cycles_cpu, usec_cpu);
+        if(ret != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
@@ -2467,9 +2581,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nverify,%lld,%lld,client,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
+                fprintf(csv, "\nclient,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             } else {
-                fprintf(csv, "\nverify,%lld,%lld,server,%d", cycles_cpu, usec_cpu, ssl->in_msglen);
+                fprintf(csv, "\nserver,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
             }
             fclose(csv);
 
@@ -8275,7 +8389,8 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
+    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
     FILE *csv;
     const mbedtls_ssl_ciphersuite_t *suite_info;
 #endif
@@ -8292,7 +8407,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         if( ret != 0 )
             break;
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_KE_II)
         if(ssl->state == MBEDTLS_SSL_SERVER_CERTIFICATE) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
@@ -8305,7 +8420,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         }
 #endif
 
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || \
+    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
         if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
@@ -8318,12 +8434,30 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_CIPHER_II)
+            strcat(cipher_fname, cipher_lst[suite_info->cipher]);
+            strcat(cipher_fname, "-II.csv");
+
+            csv = fopen(cipher_fname, "w");
+            fprintf(csv, "endpoint,operation,input_size,cycles,usec");
+            fclose(csv);
+#endif
+
+#if defined(USE_PAPI_TLS_MD)
             strcat(md_fname, md_lst[suite_info->mac]);
             strcat(md_fname, ".csv");
 
             csv = fopen(md_fname, "w");
             fprintf(csv, "operation,cycles,usec,endpoint,input_size");
+            fclose(csv);
+#endif
+
+#if defined(USE_PAPI_TLS_MD_II)
+            strcat(md_fname, md_lst[suite_info->mac]);
+            strcat(md_fname, "-II.csv");
+
+            csv = fopen(md_fname, "w");
+            fprintf(csv, "endpoint,operation,input_size,cycles,usec");
             fclose(csv);
 #endif
         }
