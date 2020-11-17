@@ -1859,9 +1859,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
         csv = fopen(cipher_fname, "a+");
         if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,encrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+            fprintf(csv, "\nclient,encrypt,%d,%lld,%lld", enc_msglen, cycles_cpu, usec_cpu);
         } else {
-            fprintf(csv, "\nserver,encrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+            fprintf(csv, "\nserver,encrypt,%d,%lld,%lld", enc_msglen, cycles_cpu, usec_cpu);
         }
         fclose(csv);
 
@@ -2049,9 +2049,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
         csv = fopen(cipher_fname, "a+");
         if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+            fprintf(csv, "\nclient,decrypt,%d,%lld,%lld", ssl->in_msglen, cycles_cpu, usec_cpu);
         } else {
-            fprintf(csv, "\nserver,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+            fprintf(csv, "\nserver,decrypt,%d,%lld,%lld", ssl->in_msglen, cycles_cpu, usec_cpu);
         }
         fclose(csv);
 
@@ -2252,9 +2252,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+                fprintf(csv, "\nclient,verify,%d,%lld,%lld", ssl->in_msglen, cycles_cpu, usec_cpu);
             } else {
-                fprintf(csv, "\nserver,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+                fprintf(csv, "\nserver,verify,%d,%lld,%lld", ssl->in_msglen, cycles_cpu, usec_cpu);
             }
             fclose(csv);
 
@@ -2326,9 +2326,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
         csv = fopen(cipher_fname, "a+");
         if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+            fprintf(csv, "\nclient,decrypt,%d,%lld,%lld", dec_msglen, cycles_cpu, usec_cpu);
         } else {
-            fprintf(csv, "\nserver,decrypt,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+            fprintf(csv, "\nserver,decrypt,%d,%lld,%lld", dec_msglen, cycles_cpu, usec_cpu);
         }
         fclose(csv);
 
@@ -2581,9 +2581,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             csv = fopen(md_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+                fprintf(csv, "\nclient,verify,%d,%lld,%lld", ssl->in_msglen, cycles_cpu, usec_cpu);
             } else {
-                fprintf(csv, "\nserver,verify,%d,%lld,%lld", ssl->out_msglen, cycles_cpu, usec_cpu);
+                fprintf(csv, "\nserver,verify,%d,%lld,%lld", ssl->in_msglen, cycles_cpu, usec_cpu);
             }
             fclose(csv);
 
