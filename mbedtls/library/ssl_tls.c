@@ -53,11 +53,11 @@
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 #include "mbedtls/oid.h"
 #endif
-#if defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD)
 #include "papi.h"
 #endif
 
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_CIPHER_II)
+#if defined(USE_PAPI_TLS_CIPHER) || defined(MEASURE_TLS_CIPHER)
 char cipher_fname[50] = "../docs/TLS-CIPHER-";
 static const char* cipher_lst[] = {
     "NONE", "NULL",
@@ -94,7 +94,7 @@ static const char* cipher_lst[] = {
 };
 #endif
 
-#if defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_MD_II)
+#if defined(USE_PAPI_TLS_MD) || defined(MEASURE_TLS_MD)
 char md_fname[50] = "../docs/TLS-MD-";
 static const char* md_lst[] = {
     "NONE",
@@ -104,7 +104,7 @@ static const char* md_lst[] = {
 };
 #endif
 
-#if defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_KE_II)
+#if defined(USE_PAPI_TLS_KE) || defined(MEASURE_TLS_KE)
 char ke_fname[50] = "../docs/TLS-KE-";
 static const char* ke_lst[] = {
     "NONE",
@@ -1509,7 +1509,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 {
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
-#if defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -1574,7 +1574,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
         {
             unsigned char mac[MBEDTLS_SSL_MAC_ADD];
 
-#if defined(USE_PAPI_TLS_MD_II)    
+#if defined(MEASURE_TLS_MD)    
             start_cycles_cpu = PAPI_get_virt_cyc();
             start_usec_cpu = PAPI_get_virt_usec();
 #endif
@@ -1587,7 +1587,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc, mac );
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
 
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
             end_usec_cpu = PAPI_get_virt_usec();
 
@@ -1636,7 +1636,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             "including %d bytes of padding",
                        ssl->out_msglen, 0 ) );
 
-#if !defined(USE_PAPI_TLS_CIPHER_II)
+#if !defined(MEASURE_TLS_CIPHER)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
@@ -1835,7 +1835,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             ssl->out_msglen, ssl->transform_out->ivlen,
                             padlen + 1 ) );
 
-#if !defined(USE_PAPI_TLS_CIPHER_II)
+#if !defined(MEASURE_TLS_CIPHER)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
@@ -1916,7 +1916,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
             MBEDTLS_SSL_DEBUG_BUF( 4, "MAC'd meta-data", pseudo_hdr, 13 );
 
-#if defined(USE_PAPI_TLS_MD_II)    
+#if defined(MEASURE_TLS_MD)    
             start_cycles_cpu = PAPI_get_virt_cyc();
             start_usec_cpu = PAPI_get_virt_usec();
 #endif
@@ -1927,7 +1927,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc, mac );
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
 
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
             end_usec_cpu = PAPI_get_virt_usec();
 
@@ -1980,7 +1980,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #if defined(SSL_SOME_MODES_USE_MAC)
     size_t padlen = 0, correct = 1;
 #endif
-#if defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -2025,7 +2025,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
         padlen = 0;
 
-#if !defined(USE_PAPI_TLS_CIPHER_II)
+#if !defined(MEASURE_TLS_CIPHER)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
@@ -2232,7 +2232,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             MBEDTLS_SSL_DEBUG_BUF( 4, "MAC'd meta-data", pseudo_hdr, 13 );
 
-#if defined(USE_PAPI_TLS_MD_II)    
+#if defined(MEASURE_TLS_MD)    
             start_cycles_cpu = PAPI_get_virt_cyc();
             start_usec_cpu = PAPI_get_virt_usec();
 #endif
@@ -2243,7 +2243,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             mbedtls_md_hmac_finish( &ssl->transform_in->md_ctx_dec, mac_expect );
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
 
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
             end_usec_cpu = PAPI_get_virt_usec();
 
@@ -2302,7 +2302,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_1 || MBEDTLS_SSL_PROTO_TLS1_2 */
 
-#if !defined(USE_PAPI_TLS_CIPHER_II)
+#if !defined(MEASURE_TLS_CIPHER)
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
@@ -2549,7 +2549,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             extra_run &= correct * 0xFF;
 
-#if defined(USE_PAPI_TLS_MD_II)    
+#if defined(MEASURE_TLS_MD)    
             start_cycles_cpu = PAPI_get_virt_cyc();
             start_usec_cpu = PAPI_get_virt_usec();
 #endif
@@ -2572,7 +2572,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
 
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
             end_usec_cpu = PAPI_get_virt_usec();
 
@@ -8390,7 +8390,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
     FILE *csv;
     const mbedtls_ssl_ciphersuite_t *suite_info;
 #endif
@@ -8407,7 +8407,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         if( ret != 0 )
             break;
 
-#if defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_KE_II)
+#if defined(USE_PAPI_TLS_KE) || defined(MEASURE_TLS_KE)
         if(ssl->state == MBEDTLS_SSL_SERVER_CERTIFICATE) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
@@ -8421,7 +8421,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD)
         if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
@@ -8434,7 +8434,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_CIPHER_II)
+#if defined(MEASURE_TLS_CIPHER)
             strcat(cipher_fname, cipher_lst[suite_info->cipher]);
             strcat(cipher_fname, "-II.csv");
 
@@ -8452,7 +8452,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD_II)
+#if defined(MEASURE_TLS_MD)
             strcat(md_fname, md_lst[suite_info->mac]);
             strcat(md_fname, "-II.csv");
 

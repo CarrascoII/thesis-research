@@ -51,7 +51,7 @@
 #include "mbedtls/platform_util.h"
 #endif
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
 #include "papi.h"
 #endif
 
@@ -1990,7 +1990,7 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
                                        unsigned char *end )
 {
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -2017,7 +2017,7 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
      *     opaque dh_Ys<1..2^16-1>;
      * } ServerDHParams;
      */
-#if !defined(USE_PAPI_TLS_KE_II)
+#if !defined(MEASURE_TLS_KE)
     if( ( ret = mbedtls_dhm_read_params( &ssl->handshake->dhm_ctx, p, end ) ) != 0 )
 #else
     start_cycles_cpu = PAPI_get_virt_cyc();
@@ -2373,7 +2373,7 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->transform_negotiate->ciphersuite_info;
     unsigned char *p = NULL, *end = NULL;
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -2658,14 +2658,14 @@ start_processing:
     defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( md_alg != MBEDTLS_MD_NONE )
         {
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
             start_cycles_cpu = PAPI_get_virt_cyc();
             start_usec_cpu = PAPI_get_virt_usec();
 #endif
             ret = mbedtls_ssl_get_key_exchange_md_tls1_2( ssl, hash, &hashlen,
                                                           params, params_len,
                                                           md_alg );
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
             end_cycles_cpu = PAPI_get_virt_cyc();
             end_usec_cpu = PAPI_get_virt_usec();
 
@@ -2716,7 +2716,7 @@ start_processing:
             rs_ctx = &ssl->handshake->ecrs_ctx.pk;
 #endif
 
-#if !defined(USE_PAPI_TLS_KE_II)
+#if !defined(MEASURE_TLS_KE)
         if( ( ret = mbedtls_pk_verify_restartable(
                         &ssl->session_negotiate->peer_cert->pk,
                         md_alg, hash, hashlen, p, sig_len, rs_ctx ) ) != 0 )
@@ -2993,7 +2993,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
     size_t i, n;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->transform_negotiate->ciphersuite_info;
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -3026,7 +3026,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         ssl->out_msg[5] = (unsigned char)( n      );
         i = 6;
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
         start_cycles_cpu = PAPI_get_virt_cyc();
         start_usec_cpu = PAPI_get_virt_usec();
 #endif
@@ -3036,7 +3036,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
                                &ssl->out_msg[i], n,
                                 ssl->conf->f_rng, ssl->conf->p_rng );
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
@@ -3059,7 +3059,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_MPI( 3, "DHM: X ", &ssl->handshake->dhm_ctx.X  );
         MBEDTLS_SSL_DEBUG_MPI( 3, "DHM: GX", &ssl->handshake->dhm_ctx.GX );
 
-#if !defined(USE_PAPI_TLS_KE_II)
+#if !defined(MEASURE_TLS_KE)
         if( ( ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
                                       ssl->handshake->premaster,
                                       MBEDTLS_PREMASTER_SIZE,
@@ -3232,7 +3232,7 @@ ecdh_calc_secret:
             ssl->out_msg[i++] = (unsigned char)( n >> 8 );
             ssl->out_msg[i++] = (unsigned char)( n      );
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
             start_cycles_cpu = PAPI_get_virt_cyc();
             start_usec_cpu = PAPI_get_virt_usec();
 #endif
@@ -3242,7 +3242,7 @@ ecdh_calc_secret:
                     &ssl->out_msg[i], n,
                     ssl->conf->f_rng, ssl->conf->p_rng );
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
             end_cycles_cpu = PAPI_get_virt_cyc();
             end_usec_cpu = PAPI_get_virt_usec();
 
@@ -3401,7 +3401,7 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
     unsigned int hashlen;
     void *rs_ctx = NULL;
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -3470,14 +3470,14 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
 sign:
 #endif
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
     start_cycles_cpu = PAPI_get_virt_cyc();
     start_usec_cpu = PAPI_get_virt_usec();
 #endif
 
     ssl->handshake->calc_verify( ssl, hash );
 
-#if defined(USE_PAPI_TLS_KE_II)
+#if defined(MEASURE_TLS_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -3570,7 +3570,7 @@ sign:
         rs_ctx = &ssl->handshake->ecrs_ctx.pk;
 #endif
 
-#if !defined(USE_PAPI_TLS_KE_II)
+#if !defined(MEASURE_TLS_KE)
     if( ( ret = mbedtls_pk_sign_restartable( mbedtls_ssl_own_key( ssl ),
                          md_alg, hash_start, hashlen,
                          ssl->out_msg + 6 + offset, &n,
@@ -3776,7 +3776,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
     {
         case MBEDTLS_SSL_HELLO_REQUEST:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nHELLO REQUEST");
 #endif
             ssl->state = MBEDTLS_SSL_CLIENT_HELLO;
@@ -3787,7 +3787,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
         */
        case MBEDTLS_SSL_CLIENT_HELLO:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCLIENT HELLO");
 #endif
            ret = ssl_write_client_hello( ssl );
@@ -3802,7 +3802,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
         */
        case MBEDTLS_SSL_SERVER_HELLO:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER HELLO");
 #endif
            ret = ssl_parse_server_hello( ssl );
@@ -3810,7 +3810,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_SERVER_CERTIFICATE:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER CERTIFICATE");
 #endif
            ret = mbedtls_ssl_parse_certificate( ssl );
@@ -3818,7 +3818,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_SERVER_KEY_EXCHANGE:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER KEY EXCHANGE");
 #endif
            ret = ssl_parse_server_key_exchange( ssl );
@@ -3826,7 +3826,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_CERTIFICATE_REQUEST:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCERTIFICATE REQUEST");
 #endif
            ret = ssl_parse_certificate_request( ssl );
@@ -3834,7 +3834,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_SERVER_HELLO_DONE:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER HELLO DONE");
 #endif
            ret = ssl_parse_server_hello_done( ssl );
@@ -3849,7 +3849,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
         */
        case MBEDTLS_SSL_CLIENT_CERTIFICATE:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCLIENT CERTIFICATE");
 #endif
            ret = mbedtls_ssl_write_certificate( ssl );
@@ -3857,7 +3857,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_CLIENT_KEY_EXCHANGE:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCLIENT KEY EXCHANGE");
 #endif
            ret = ssl_write_client_key_exchange( ssl );
@@ -3865,7 +3865,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_CERTIFICATE_VERIFY:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCERTIFICATE VERIFY");
 #endif
            ret = ssl_write_certificate_verify( ssl );
@@ -3873,7 +3873,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCLIENT CHANGE CIPHER SPEC");
 #endif
            ret = mbedtls_ssl_write_change_cipher_spec( ssl );
@@ -3881,7 +3881,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_CLIENT_FINISHED:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nCLIENT FINISHED");
 #endif
            ret = mbedtls_ssl_write_finished( ssl );
@@ -3895,7 +3895,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
        case MBEDTLS_SSL_SERVER_NEW_SESSION_TICKET:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER NEW SESSION TICKET");
 #endif
            ret = ssl_parse_new_session_ticket( ssl );
@@ -3904,7 +3904,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER CHANGE CIPHER SPEC");
 #endif
            ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
@@ -3912,7 +3912,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_SERVER_FINISHED:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nSERVER FINISHED");
 #endif
            ret = mbedtls_ssl_parse_finished( ssl );
@@ -3920,7 +3920,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_FLUSH_BUFFERS:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nFLUSH BUFFERS");
 #endif
            MBEDTLS_SSL_DEBUG_MSG( 2, ( "handshake: done" ) );
@@ -3929,7 +3929,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_HANDSHAKE_WRAPUP:
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || defined(USE_PAPI_TLS_KE) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II) || defined(USE_PAPI_TLS_KE_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD) || defined(MEASURE_TLS_KE)
             printf("\nHANDSHAKE WRAPUP");
 #endif
            mbedtls_ssl_handshake_wrapup( ssl );

@@ -104,11 +104,11 @@
  * Program flags
  */
 // #define USE_PAPI_TLS_CIPHER
-// #define USE_PAPI_TLS_CIPHER_II
+// #define MEASURE_TLS_CIPHER
 // #define USE_PAPI_TLS_MD
-// #define USE_PAPI_TLS_MD_II
+// #define MEASURE_TLS_MD
 // #define USE_PAPI_TLS_KE
-// #define USE_PAPI_TLS_KE_II
+// #define MEASURE_TLS_KE
 #define MUTUAL_AUTH
 
 #define SERVER_IP       "localhost"
@@ -123,7 +123,7 @@ extern char cipher_fname[50];
 #if defined(USE_PAPI_TLS_MD)
 extern char md_fname[50];
 #endif
-#if defined(USE_PAPI_TLS_KE) || defined(USE_PAPI_TLS_KE_II)
+#if defined(USE_PAPI_TLS_KE) || defined(MEASURE_TLS_KE)
 extern char ke_fname[50];
 #endif
 

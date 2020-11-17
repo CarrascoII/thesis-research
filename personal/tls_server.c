@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
 
             printf(" %d bytes\n", ret);
 #if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD) && \
-    !defined(USE_PAPI_TLS_CIPHER_II) && !defined(USE_PAPI_TLS_MD_II)
+    !defined(MEASURE_TLS_CIPHER) && !defined(MEASURE_TLS_MD)
             print_hex(request, input_size);
 #endif
             fflush(stdout);
@@ -288,7 +288,7 @@ int main(int argc, char **argv) {
 
             printf(" %d bytes\n", ret);
 #if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD) && \
-    !defined(USE_PAPI_TLS_CIPHER_II) && !defined(USE_PAPI_TLS_MD_II)
+    !defined(MEASURE_TLS_CIPHER) && !defined(MEASURE_TLS_MD)
             print_hex(response, input_size);
 #endif
             fflush(stdout);
@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
     }
 
 #if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || \
-    defined(USE_PAPI_TLS_CIPHER_II) || defined(USE_PAPI_TLS_MD_II)
+    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD)
     sleep(1);
 #endif
 
