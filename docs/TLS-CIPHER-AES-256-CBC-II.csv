@@ -1,7 +1,7 @@
 endpoint,operation,input_size,cycles,usec
-client,encrypt,80,7779,3
-server,decrypt,80,347462,255
-server,encrypt,80,7779,2
-client,decrypt,80,10372,4
-server,encrypt,64,7779,3
-client,encrypt,64,7779,2
+client,encrypt,64,10372,3
+server,decrypt,64,12965,4
+server,encrypt,64,7779,2
+client,decrypt,64,12965,4
+server,encrypt,48,7779,3
+client,encrypt,48,7779,3
