@@ -14,8 +14,8 @@ def multiple_custom_plots(x, y1, y2, name, ax=None, xlabel=None, ylabel=None, kw
 
     return(ax)
 
-def plot(ylabel, plotname, encryption, decryption):
-    x = encryption.keys()
+def plot(ylabel, plotname, out_op, in_op):
+    x = out_op.keys()
     y1 = []
     y2 = []
     y3 = []
@@ -23,29 +23,36 @@ def plot(ylabel, plotname, encryption, decryption):
     y5 = []
     y6 = []
 
-    for key in encryption:
-        mean = statistics.mean(encryption[key])
-        median = statistics.median(encryption[key])
-        mode = statistics.mode(encryption[key])
+    for key in out_op:
+        mean = statistics.mean(out_op[key])
+        median = statistics.median(out_op[key])
+        mode = statistics.mode(out_op[key])
 
-        print(f'encryption: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
+#        print(f'out_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
         y1.append(mean)
         y2.append(median)
         y3.append(mode)
 
-        mean = statistics.mean(decryption[key])
-        median = statistics.median(decryption[key])
-        mode = statistics.mode(decryption[key])
+        mean = statistics.mean(in_op[key])
+        median = statistics.median(in_op[key])
+        mode = statistics.mode(in_op[key])
 
-        print(f'decryption: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
+#        print(f'in_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
         y4.append(mean)
         y5.append(median)
         y6.append(mode)
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+    params1 = {}
+    params2 = {}
+    plotname = plotname.replace('../docs/TLS-','')
 
-    params1 = {'color': 'red', 'linestyle': '-', 'label': 'encryption'}
-    params2 = {'color': 'blue', 'linestyle': '--', 'label': 'decryption'}
+    if plotname.find('CIPHER') == 0:    
+        params1 = {'color': 'red', 'linestyle': '-', 'label': 'encryption'}
+        params2 = {'color': 'blue', 'linestyle': '--', 'label': 'decryption'}
+    elif plotname.find('MD') == 0:
+        params1 = {'color': 'red', 'linestyle': '-', 'label': 'digest'}
+        params2 = {'color': 'blue', 'linestyle': '--', 'label': 'verify'}
 
     ax1 = multiple_custom_plots(x, y1, y4, 'Mean', ax=ax1, xlabel='input_size', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
     ax2 = multiple_custom_plots(x, y2, y5, 'Median', ax=ax2, xlabel='input_size', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
@@ -57,58 +64,69 @@ def plot(ylabel, plotname, encryption, decryption):
     plt.cla()
 
 def parser(filename):
-    print(f'parser:\tInput file is {filename}')
-
-    with open(filename, mode='r') as file:
-        csv_reader = csv.DictReader(file)
-        cycles_enc = {}
-        cycles_dec = {}
-        usec_enc = {}
-        usec_dec = {}
+    with open(filename, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+        cycles_out = {}
+        cycles_in = {}
+        usec_out = {}
+        usec_in = {}
+        keys = []
 
         for row in csv_reader:
-            # print(f'row: {row["input_size"]}, {row["enc_cycles"]}, {row["enc_usec"]}, {row["dec_cycles"]}, {row["dec_usec"]}')            
-            
-            key = row["input_size"]
-            if(key == 'close'):
+#            print(f'row: {row["endpoint"]}, {row["operation"]}, {row["input_size"]}, {row["cycles"]}, {row["usec"]}')            
+            key = row['input_size']
+            if key == 'close' or key == '48' or key == '2': # TODO: Change 48 and 2 to close
                 continue
+            elif not key in keys:
+                keys.append(key)
+                cycles_out[key] = []
+                cycles_in[key] = []
+                usec_out[key] = []
+                usec_in[key] = []
 
-            elif(not key in cycles_enc.keys() and not key in cycles_dec.keys() and
-               not key in usec_enc.keys() and not key in usec_dec.keys()):
-                cycles_enc[key] = []
-                cycles_dec[key] = []
-                usec_enc[key] = []
-                usec_dec[key] = []
+            if row['operation'] == 'encrypt' or row['operation'] == 'digest':
+                cycles_out[key].append(int(row['cycles']))
+                usec_out[key].append(int(row['usec']))
+            elif row['operation'] == 'decrypt' or row['operation'] == 'verify':
+                cycles_in[key].append(int(row['cycles']))
+                usec_in[key].append(int(row['usec']))
 
-            cycles_enc[key].append(int(row["enc_cycles"]))
-            cycles_dec[key].append(int(row["dec_cycles"]))
-            usec_enc[key].append(int(row["enc_usec"]))
-            usec_dec[key].append(int(row["dec_usec"]))
-
-        # print(f'\n{cycles_enc}')
-        return cycles_enc, cycles_dec, usec_enc, usec_dec
+        return cycles_out, cycles_in, usec_out, usec_in
 
 def main(argv):
-    inputfile = ''
+    path = '../docs/'
+    files = {}
+
     try:
-        opts, args = getopt.getopt(argv,'hi:o:', ['ifile='])
+        opts, args = getopt.getopt(argv, 'h:c:m:k', ['cfile=','mfile=','kfile='])
     except getopt.GetoptError:
-        print(f'plotter.py -i <inputfile>')
+        print(f'plotter.py -c <cipher_file> -m <md_file> -k <ke_file>')
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            print(f'plotter.py -i <inputfile>')
+            print(f'plotter.py -c <cipher_file> -m <md_file> -k <ke_file>')
             sys.exit()
-        elif opt in ('-i', '--ifile'):
-            inputfile = arg
-    print(f'main:\tInput file is {inputfile}')
+        elif opt in ('-c', '--cfile'):
+            files['cipher'] = path + arg
+        elif opt in ('-m', '--mfile'):
+            files['md'] = path + arg
+        elif opt in ('-k', '--kfile'):
+            files['ke'] = path + arg
 
-    cycles_enc, cycles_dec, usec_enc, usec_dec = parser('../docs/' + inputfile)
+    for file_type in files:
+        title = files[file_type].replace('-II.csv', '')
 
-    cipher = inputfile.replace('.csv', '')
-    plot('cycles', cipher, cycles_enc, cycles_dec)
-    plot('usec', cipher, usec_enc, usec_dec)
+        if file_type != 'ke':
+            print(f'Making plot from {title}.csv')
+            cycles_out, cycles_in, usec_out, usec_in = parser(files[file_type])
+            plot('cycles', title, cycles_out, cycles_in)
+            plot('usec', title, usec_out, usec_in)
+        # else:
+        #     cycles_hash, cycles_ver, usec_hash, usec_ver = ke_parser(files[file_type])
+        #     plot('cycles', cipher, cycles_out, cycles_in)
+        #     plot('usec', cipher, usec_out, usec_in)
+        
 
 if __name__ == '__main__':
    main(sys.argv[1:])
