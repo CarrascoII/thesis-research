@@ -115,8 +115,8 @@
 #define SERVER_PORT     "8080"
 #define DEBUG_LEVEL     0
 #define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  2048
-#define N_TESTS         100
+#define MAX_INPUT_SIZE  1024
+#define N_TESTS         500
 #if defined(USE_PAPI_TLS_CIPHER)
 extern char cipher_fname[50];
 #endif
