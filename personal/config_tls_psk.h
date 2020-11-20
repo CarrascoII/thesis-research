@@ -62,8 +62,8 @@
 // #define PAPI_CIPHER
 // #define PAPI_MD
 
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_IN_USEC
 
 #define PSK_AUTH
