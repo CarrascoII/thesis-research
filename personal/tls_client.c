@@ -1,21 +1,24 @@
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "config_tls.h"
+#include "config_tls_psk.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
 #include "mbedtls/net_sockets.h"
+#if !defined(PSK_AUTH)
 #include "mbedtls/certs.h"
+#include "mbedtls/debug.h"
+#endif
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
-#include "mbedtls/debug.h"
-#include "mbedtls/md_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
+#if !defined(PAPI_CIPHER) && !defined(PAPI_MD) && \
+    !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
 /*
  *  Print for the generated inputs
  */
@@ -27,7 +30,9 @@ void print_hex(unsigned char array[], int size) {
     }
     printf("\n");
 }
+#endif
 
+#if !defined(PSK_AUTH)
 /*
  *  Debug callback to be used in mbedtls_ssl_conf_dbg
  */
@@ -42,29 +47,44 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
     fprintf((FILE *) ctx, "%s:%04d: |%d| %s", basename, line, level, str);
     fflush((FILE *) ctx);
 }
-
+#endif
 
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
+#if defined(PSK_AUTH)
+    const unsigned char test_psk[] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+#if MBEDTLS_PSK_MAX_LEN == 32
+        ,0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+#endif
+    };
+    const char psk_id[] = CLI_ID;
+#else
     mbedtls_x509_crt cacert;
 #if defined(MUTUAL_AUTH)
     mbedtls_x509_crt clicert1, clicert2;
     mbedtls_pk_context privkey, privkey2;
+#endif
 #endif
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
 
-    int ret, debug = DEBUG_LEVEL,
-        i, n_tests = N_TESTS,
+    int ret, i,
+        n_tests = N_TESTS,
         input_size = MIN_INPUT_SIZE;
     unsigned char *request, *response;
     const char *pers = "tls_client generate request";
     char *p, *q;
+#if !defined(PSK_AUTH)
+    int debug = DEBUG_LEVEL;
     uint32_t flags;
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD)
+#endif
+#if defined(PAPI_CIPHER) || defined(PAPI_MD)
     FILE *csv;
 #endif
 
@@ -82,13 +102,17 @@ int main(int argc, char **argv) {
                 printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
                 return 1;
             }
-        } else if(strcmp(p, "debug_level") == 0) {
+        }
+#if !defined(PSK_AUTH)
+        else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
             if(debug < 0 || debug > 5) {
                 printf("Debug level must be int between 0 and 5\n");
                 return 1;
             }
-        } else if(strcmp(p, "n_tests") == 0) {
+        }
+#endif
+        else if(strcmp(p, "n_tests") == 0) {
 			n_tests = atoi(q);
             if(n_tests < 1 || n_tests > 1000) {
                 printf("Number of tests must be between 1 and 1000\n");
@@ -101,6 +125,7 @@ int main(int argc, char **argv) {
 	}
 
     mbedtls_net_init(&server);
+#if !defined(PSK_AUTH)
     mbedtls_x509_crt_init(&cacert);
 #if defined(MUTUAL_AUTH)
     mbedtls_x509_crt_init(&clicert1);
@@ -108,11 +133,14 @@ int main(int argc, char **argv) {
     mbedtls_pk_init(&privkey);
     mbedtls_pk_init(&privkey2);
 #endif
+#endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
     mbedtls_ssl_init(&tls);
 
+
+#if !defined(PSK_AUTH)
     mbedtls_debug_set_threshold(debug);
 
     // Load certificates and key
@@ -145,7 +173,7 @@ int main(int argc, char **argv) {
     printf(" ok");
 
     printf("\nLoading the client key....................");
-    fflush( stdout );
+    fflush(stdout);
 
     if((ret = mbedtls_pk_parse_key(&privkey, (const unsigned char *) mbedtls_test_cli_key_rsa, mbedtls_test_cli_key_rsa_len, NULL, 0)) != 0) {
         printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
@@ -158,6 +186,7 @@ int main(int argc, char **argv) {
     }
 
     printf(" ok");
+#endif
 #endif
 
     // Seed the RNG
@@ -192,6 +221,12 @@ int main(int argc, char **argv) {
     }
 
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
+#if defined(PSK_AUTH)
+    if((ret = mbedtls_ssl_conf_psk(&tls_conf, test_psk, sizeof(test_psk), (const unsigned char *) psk_id, sizeof(psk_id) - 1)) != 0) {
+        printf(" failed! mbedtls_ssl_conf_psk returned -0x%04x\n", -ret);
+        goto exit;
+    }
+#else
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
 #if defined(MUTUAL_AUTH)
@@ -206,16 +241,19 @@ int main(int argc, char **argv) {
         goto exit;
     }
 #endif
+#endif
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
         printf(" failed! mbedtls_ssl_setup returned -0x%04x\n", -ret);
         goto exit;
     }
 
+#if !defined(PSK_AUTH)
     if((ret = mbedtls_ssl_set_hostname(&tls, SERVER_IP)) != 0) {
         printf(" failed! mbedtls_ssl_set_hostname returned -0x%04x\n", -ret);
         goto exit;
     }
+#endif
 
     mbedtls_ssl_set_bio(&tls, &server, mbedtls_net_send, mbedtls_net_recv, NULL);
 
@@ -234,20 +272,23 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
+#if !defined(PSK_AUTH)
     // Verify server certificate
     printf("\nVerifying server certificate..............");
 
     if((flags = mbedtls_ssl_get_verify_result(&tls)) != 0) {
         char vrfy_buf[512];
         
-        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof( vrfy_buf ), "", flags);
+        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "", flags);
         printf(" failed! mbedtls_ssl_get_verify_result returned %s\n", vrfy_buf);
         goto exit;
     }
 
     printf(" ok");
+#endif
 
     sleep(1); // sleep 1 sec in order to differentiate the handshake and data transmission in Wireshark
+
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
@@ -260,30 +301,30 @@ int main(int argc, char **argv) {
             goto exit;
         }
 
-        for(i = 0; i < N_TESTS; i++) {
+        for(i = 0; i < n_tests; i++) {
             // Send request
             printf("\n\n< Write to server:");
             fflush(stdout);
 
             if((ret = mbedtls_ssl_write(&tls, request, input_size)) < 0) {
-                printf( " mbedtls_net_send returned -0x%04x\n", -ret );
+                printf(" mbedtls_net_send returned -0x%04x\n", -ret);
                 goto exit;
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD) && \
-    !defined(MEASURE_TLS_CIPHER) && !defined(MEASURE_TLS_MD)
+#if !defined(PAPI_CIPHER) && !defined(PAPI_MD) && \
+    !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
             print_hex(request, input_size);
 #endif
             fflush(stdout);
 
-#if defined(USE_PAPI_TLS_CIPHER)
+#if defined(PAPI_CIPHER)
             csv = fopen(cipher_fname, "a+");    
             fprintf(csv, ",client,%d", input_size);
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
             csv = fopen(md_fname, "a+");    
             fprintf(csv, ",client,%d", input_size);
             fclose(csv);
@@ -296,24 +337,24 @@ int main(int argc, char **argv) {
             memset(response, 0, input_size);
 
             if((ret = mbedtls_ssl_read(&tls, response, input_size)) < 0) {
-                printf( " mbedtls_net_recv returned -0x%04x\n", -ret );
+                printf(" mbedtls_net_recv returned -0x%04x\n", -ret);
                 goto exit;
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(USE_PAPI_TLS_CIPHER) && !defined(USE_PAPI_TLS_MD) && \
-    !defined(MEASURE_TLS_CIPHER) && !defined(MEASURE_TLS_MD)
+#if !defined(PAPI_CIPHER) && !defined(PAPI_MD) && \
+    !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
             print_hex(response, input_size);
 #endif
             fflush(stdout);
 
-#if defined(USE_PAPI_TLS_CIPHER)
+#if defined(PAPI_CIPHER)
             csv = fopen(cipher_fname, "a+");    
             fprintf(csv, ",client,%d", input_size);
             fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
             csv = fopen(md_fname, "a+");    
             fprintf(csv, ",client,%d", input_size);
             fclose(csv);
@@ -324,8 +365,7 @@ int main(int argc, char **argv) {
         free(response);
     }
 
-#if defined(USE_PAPI_TLS_CIPHER) || defined(USE_PAPI_TLS_MD) || \
-    defined(MEASURE_TLS_CIPHER) || defined(MEASURE_TLS_MD)
+#if defined(PAPI_CIPHER) || defined(PAPI_MD)
     sleep(2);
 #endif
 
@@ -339,13 +379,13 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
-#if defined(USE_PAPI_TLS_CIPHER)
+#if defined(PAPI_CIPHER)
     csv = fopen(cipher_fname, "a+");
     fprintf(csv, ",client,close");
     fclose(csv);
 #endif
 
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
     csv = fopen(md_fname, "a+");
     fprintf(csv, ",client,close");
     fclose(csv);
@@ -353,6 +393,10 @@ int main(int argc, char **argv) {
 
     // Final connection status
     printf("\n\nFinal status:");
+    printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
+    printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
+
+#if !defined(PSK_AUTH)
     ret = mbedtls_ssl_get_verify_result(&tls);
     printf("\n  -Server certificate verification:   %s", ret == 0 ? "Success" : "Failed");
 
@@ -361,6 +405,7 @@ int main(int argc, char **argv) {
         mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
         printf("\n  -Server certificate:\n%s", crt_buf);
     }
+#endif
 
     printf("\n");
 
@@ -369,6 +414,7 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
+#if !defined(PSK_AUTH)
 #if defined(MUTUAL_AUTH)
     mbedtls_pk_free(&privkey2);
     mbedtls_pk_free(&privkey);
@@ -376,6 +422,7 @@ exit:
     mbedtls_x509_crt_free(&clicert1);
 #endif
     mbedtls_x509_crt_free(&cacert);
+#endif
     mbedtls_net_free(&server);
 
     return(ret);

@@ -58,7 +58,7 @@
 #define mbedtls_free       free
 #endif
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
 #include "papi.h"
 #endif
 
@@ -142,7 +142,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
                      const unsigned char *end )
 {
     int ret;
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -177,7 +177,7 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -205,7 +205,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     int ret, count = 0;
     size_t n1, n2, n3;
     unsigned char *p;
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -284,7 +284,7 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
 
     ctx->len = n1;
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -315,7 +315,7 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 {
 
     int ret;
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -348,7 +348,7 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -372,7 +372,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen )
 {
     int ret;
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -402,7 +402,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
     if( ( ret = mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
         return( MBEDTLS_ERR_DHM_READ_PUBLIC_FAILED + ret );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -428,7 +428,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
                      void *p_rng )
 {
     int ret, count = 0;
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -482,7 +482,7 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->GX, output, olen ) );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -579,7 +579,7 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
 {
     int ret;
     mbedtls_mpi GYb;
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -637,7 +637,7 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->K, output, *olen ) );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 

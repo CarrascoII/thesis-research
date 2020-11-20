@@ -98,14 +98,15 @@ def main(argv):
     files = {}
 
     try:
-        opts, args = getopt.getopt(argv, 'h:c:m:k', ['cfile=','mfile=','kfile='])
+        opts, args = getopt.getopt(argv, 'h:c:m:k', ['help','cfile=','mfile=','kfile='])
     except getopt.GetoptError:
         print(f'plotter.py -c <cipher_file> -m <md_file> -k <ke_file>')
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt == '-h':
+        if opt in ('-h', '--help'):
             print(f'plotter.py -c <cipher_file> -m <md_file> -k <ke_file>')
+            print(f'plotter.py --cfile=<cipher_file> --mfile=<md_file> --kfile=<ke_file>')
             sys.exit()
         elif opt in ('-c', '--cfile'):
             files['cipher'] = path + arg

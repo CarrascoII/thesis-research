@@ -44,7 +44,7 @@
 #include <limits.h>
 #include <stdint.h>
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
 #include <stdio.h>
 #include <string.h>
 
@@ -250,7 +250,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
                const unsigned char *sig, size_t sig_len,
                mbedtls_pk_restart_ctx *rs_ctx )
 {
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     int ret;
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
@@ -299,7 +299,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
@@ -322,7 +322,7 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     if( ctx->pk_info->verify_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
-#if !defined(USE_PAPI_TLS_KE)
+#if !defined(PAPI_KE)
     return( ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                        sig, sig_len ) );
 #else
@@ -430,7 +430,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
              mbedtls_pk_restart_ctx *rs_ctx )
 {
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
     int ret;
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
@@ -479,7 +479,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
 
-#if defined(USE_PAPI_TLS_KE)
+#if defined(PAPI_KE)
         end_cycles_cpu = PAPI_get_virt_cyc();
         end_usec_cpu = PAPI_get_virt_usec();
 
@@ -502,7 +502,7 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     if( ctx->pk_info->sign_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
-#if !defined(USE_PAPI_TLS_KE)
+#if !defined(PAPI_KE)
     return( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                      sig, sig_len, f_rng, p_rng ) );
 #else

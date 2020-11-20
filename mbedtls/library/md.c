@@ -49,7 +49,7 @@
 #include <stdio.h>
 #endif
 
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
 #include "papi.h"
 #endif
 
@@ -326,7 +326,7 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     unsigned char sum[MBEDTLS_MD_MAX_SIZE];
     unsigned char *ipad, *opad;
     size_t i;
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -385,7 +385,7 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
 cleanup:
     mbedtls_platform_zeroize( sum, sizeof( sum ) );
 
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
     end_cycles_cpu = PAPI_get_virt_cyc();
     end_usec_cpu = PAPI_get_virt_usec();
 
@@ -404,7 +404,7 @@ cleanup:
 
 int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *input, size_t ilen )
 {
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
     int ret;
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
@@ -430,7 +430,7 @@ int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *inpu
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
-#if !defined(USE_PAPI_TLS_MD)
+#if !defined(PAPI_MD)
     return( ctx->md_info->update_func( ctx->md_ctx, input, ilen ) );
 #else
     if( ( ctx->md_info->update_func( ctx->md_ctx, input, ilen ) ) != 0 )
@@ -457,7 +457,7 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
     int ret;
     unsigned char tmp[MBEDTLS_MD_MAX_SIZE];
     unsigned char *opad;
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -495,7 +495,7 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
                                            ctx->md_info->size ) ) != 0 )
         return( ret );
 
-#if !defined(USE_PAPI_TLS_MD)
+#if !defined(PAPI_MD)
     return( ctx->md_info->finish_func( ctx->md_ctx, output ) );
 #else
     if( ( ret = ctx->md_info->finish_func( ctx->md_ctx, output ) ) != 0 )
@@ -520,7 +520,7 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
 {
     int ret;
     unsigned char *ipad;
-#if defined(USE_PAPI_TLS_MD)
+#if defined(PAPI_MD)
     long long start_cycles_cpu, end_cycles_cpu,
               start_usec_cpu, end_usec_cpu,
               cycles_cpu, usec_cpu;
@@ -549,7 +549,7 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
 
     if( ( ret = ctx->md_info->starts_func( ctx->md_ctx ) ) != 0 )
         return( ret );
-#if !defined(USE_PAPI_TLS_MD)
+#if !defined(PAPI_MD)
     return( ctx->md_info->update_func( ctx->md_ctx, ipad,
                                        ctx->md_info->block_size ) );
 #else

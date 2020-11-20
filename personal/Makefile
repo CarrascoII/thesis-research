@@ -11,7 +11,7 @@ ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
 LOCAL_CFLAGS = $(MY_AES).o -I$(MBEDTLS_DIR)/include -L$(MBEDTLS_DIR)/library -lmbedx509 -lmbedtls -lmbedcrypto
 PAPI_CFLAGS = -I${PAPI_DIR}/include -L${PAPI_DIR}/lib -lpapi
 
-TLS_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_tls.h>'
+TLS_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_tls_psk.h>'
 CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_cipher.h>'
 
 .PHONY: lib_mbedtls lib_tls lib_cipher lib_papi progs server_obj server client_obj client tls cipher_obj cipher server_papi_obj server_papi client_papi_obj client_papi tls_papi cipher_papi_obj cipher_papi clean_local clean
@@ -63,7 +63,8 @@ client: client_obj
 	./tls_client.out
 
 tls: clean server_obj client_obj
-
+	./check_footprint.sh
+	
 cipher_obj: lib_cipher
 	rm -f cipher.out
 	gcc $(ALL_CFLAGS) cipher.c -lm $(LOCAL_CFLAGS) -o cipher.out
@@ -89,6 +90,7 @@ client_papi: client_papi_obj
 	./tls_client.out
 
 tls_papi: clean server_papi_obj client_papi_obj
+	./check_footprint.sh
 
 cipher_papi_obj: lib_cipher
 	rm -f cipher.out
