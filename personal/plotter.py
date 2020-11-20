@@ -118,11 +118,11 @@ def main(argv):
     for file_type in files:
         title = files[file_type].replace('-II.csv', '')
 
-        if file_type != 'ke':
-            print(f'Making plot from {title}.csv')
-            cycles_out, cycles_in, usec_out, usec_in = parser(files[file_type])
-            plot('cycles', title, cycles_out, cycles_in)
-            plot('usec', title, usec_out, usec_in)
+#        if file_type != 'ke':
+        print(f'Making plot from {title}.csv')
+        cycles_out, cycles_in, usec_out, usec_in = parser(files[file_type])
+        plot('cycles', title, cycles_out, cycles_in)
+        plot('usec', title, usec_out, usec_in)
         # else:
         #     cycles_hash, cycles_ver, usec_hash, usec_ver = ke_parser(files[file_type])
         #     plot('cycles', cipher, cycles_out, cycles_in)

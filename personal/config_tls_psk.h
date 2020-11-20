@@ -56,6 +56,9 @@
 /**
  * Program flags
  */
+// #define PAPI_CIPHER
+// #define PAPI_MD
+
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
 
@@ -65,9 +68,15 @@
 #define SERVER_IP       "localhost"
 #define SERVER_PORT     "8080"
 #define CLI_ID          "Client_identity"
-#define DEBUG_LEVEL     0
 #define MIN_INPUT_SIZE  16
 #define MAX_INPUT_SIZE  1024
 #define N_TESTS         500
+
+#if defined(PAPI_CIPHER)
+extern char cipher_fname[50];
+#endif
+#if defined(PAPI_MD)
+extern char md_fname[50];
+#endif
 
 #endif /* MBEDTLS_CONFIG_H */

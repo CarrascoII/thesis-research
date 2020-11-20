@@ -100,6 +100,7 @@
 #define MIN_INPUT_SIZE  16
 #define MAX_INPUT_SIZE  1024
 #define N_TESTS         500
+
 #if defined(PAPI_CIPHER)
 extern char cipher_fname[50];
 #endif
