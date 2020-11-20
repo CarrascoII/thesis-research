@@ -46,7 +46,7 @@
 // #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
 #define MBEDTLS_PSK_MAX_LEN         16      /* 128-bits keys are generally enough */
 #define MBEDTLS_ENTROPY_MAX_SOURCES 2       /* Minimum is 2 for the entropy test suite */
-// #define MBEDTLS_SSL_MAX_CONTENT_LEN MAX_INPUT_SIZE + 3*16    /* The optimal size here depends on the typical size of records */
+#define MBEDTLS_SSL_MAX_CONTENT_LEN MAX_INPUT_SIZE + 3*16    /* The optimal size here depends on the typical size of records */
 
 /**
  * mbed TLS ciphersuites

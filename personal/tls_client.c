@@ -395,6 +395,8 @@ int main(int argc, char **argv) {
     printf("\n\nFinal status:");
     printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
     printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
+    printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
+    printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
 
 #if !defined(PSK_AUTH)
     ret = mbedtls_ssl_get_verify_result(&tls);
