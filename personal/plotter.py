@@ -103,17 +103,21 @@ def main(argv):
         print(f'plotter.py -c <cipher_file> -m <md_file> -k <ke_file>')
         sys.exit(2)
 
+    if args:
+        print(f'Could not parse {args}')
+        sys.exit(2)
+
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             print(f'plotter.py -c <cipher_file> -m <md_file> -k <ke_file>')
             print(f'plotter.py --cfile=<cipher_file> --mfile=<md_file> --kfile=<ke_file>')
-            sys.exit()
+            sys.exit(0)
         elif opt in ('-c', '--cfile'):
             files['cipher'] = path + arg
         elif opt in ('-m', '--mfile'):
             files['md'] = path + arg
-        elif opt in ('-k', '--kfile'):
-            files['ke'] = path + arg
+        # elif opt in ('-k', '--kfile'):
+        #     files['ke'] = path + arg
 
     for file_type in files:
         title = files[file_type].replace('-II.csv', '')
