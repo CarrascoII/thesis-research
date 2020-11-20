@@ -37,6 +37,9 @@
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
 
+/* Aditional features */
+#define MBEDTLS_PLATFORM_C
+
 /**
  *  Options to reduce footprint
  */

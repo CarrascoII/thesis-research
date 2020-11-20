@@ -63,7 +63,7 @@ client: client_obj
 	./tls_client.out
 
 tls: clean server_obj client_obj
-	./check_footprint.sh
+#	./check_footprint.sh
 	
 cipher_obj: lib_cipher
 	rm -f cipher.out
@@ -90,7 +90,7 @@ client_papi: client_papi_obj
 	./tls_client.out
 
 tls_papi: clean server_papi_obj client_papi_obj
-	./check_footprint.sh
+#	./check_footprint.sh
 
 cipher_papi_obj: lib_cipher
 	rm -f cipher.out

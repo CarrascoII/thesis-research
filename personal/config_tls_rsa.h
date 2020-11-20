@@ -68,6 +68,9 @@
 #define MBEDTLS_ENTROPY_C
 #define MBEDTLS_DEBUG_C
 
+/* Aditional features */
+#define MBEDTLS_PLATFORM_C
+
 /**
  * mbed TLS ciphersuites
  */
