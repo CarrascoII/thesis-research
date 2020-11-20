@@ -59,6 +59,7 @@
 
 #if defined(PAPI_CIPHER) || defined(MEASURE_CIPHER)
 char cipher_fname[50] = "../docs/CIPHER-";
+#if defined(PAPI_CIPHER)
 static const char* cipher_lst[] = {
     "NONE", "NULL",
     "AES-128-ECB", "AES-192-ECB", "AES-256-ECB",
@@ -93,15 +94,18 @@ static const char* cipher_lst[] = {
     "CHACHA20-POLY1305"
 };
 #endif
+#endif
 
 #if defined(PAPI_MD) || defined(MEASURE_MD)
 char md_fname[50] = "../docs/MD-";
+#if defined(PAPI_MD)
 static const char* md_lst[] = {
     "NONE",
     "MD2", "MD4", "MD5",
     "SHA1", "SHA224", "SHA256", "SHA384", "SHA512",
     "RIPEMD160"
 };
+#endif
 #endif
 
 #if defined(PAPI_KE) || defined(MEASURE_KE)
@@ -1510,11 +1514,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
     int ret;
+    FILE *csv;
+    long long start_cycles_cpu, end_cycles_cpu, cycles_cpu;
+#if defined(MEASURE_IN_USEC)
+    long long start_usec_cpu, end_usec_cpu, usec_cpu;
+#endif
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
@@ -2016,11 +2021,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     size_t padlen = 0, correct = 1;
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
     int ret;
+    FILE *csv;
+    long long start_cycles_cpu, end_cycles_cpu, cycles_cpu;
+#if defined(MEASURE_IN_USEC)
+    long long start_usec_cpu, end_usec_cpu, usec_cpu;
+#endif
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
 
