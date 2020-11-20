@@ -64,16 +64,18 @@
 
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
+// #define MEASURE_IN_USEC
 
 #define PSK_AUTH
 // #define PRINT_HANDSHAKE_STEPS
 
-#define SERVER_IP       "localhost"
-#define SERVER_PORT     "8080"
-#define CLI_ID          "Client_identity"
-#define MIN_INPUT_SIZE  16
-#define MAX_INPUT_SIZE  1024
-#define N_TESTS         500
+#define SERVER_IP                       "localhost"
+#define SERVER_PORT                     "8080"
+#define CLI_ID                          "Client_identity"
+#define MIN_INPUT_SIZE                  16
+#define MAX_INPUT_SIZE                  1024*8
+#define N_TESTS                         500
+#define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 
 #if defined(PAPI_CIPHER)
 extern char cipher_fname[50];

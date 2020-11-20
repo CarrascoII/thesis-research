@@ -79,7 +79,6 @@ def scatter(ylabel, plotname, out_op, in_op):
         ax3 = custom_scatter(x, y2, ax=ax3, title='verify', xlabel='input_size', ylabel=ylabel, kwargs=params1)
         ax4 = custom_errorbar(keys, mean2, std2, ax=ax4, title='verify', xlabel='input_size', ylabel=ylabel, kwargs=params2)
 
-    
     fig.tight_layout()
     fig.savefig('../docs/' + plotname + '-' + ylabel.upper() + '-DISTRIBUTION.png')
     
