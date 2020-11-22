@@ -8547,6 +8547,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             strcat(md_fname, suite_info->name + 4);
+            strcat(md_fname, ".csv");
 
             csv = fopen(md_fname, "w");
             fprintf(csv, "endpoint,operation,input_size,cycles");
