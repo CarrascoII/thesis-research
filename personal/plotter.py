@@ -141,9 +141,9 @@ def csv_parser(filename):
         # usec_in = {}
 
         for row in csv_reader:
-#            print(f'row: {row["endpoint"]}, {row["operation"]}, {row["input_size"]}, {row["cycles"]}, {row["usec"]}')            
+#            print(f'row: {row["endpoint"]}, {row["operation"]}, {row["data_size"]}, {row["cycles"]}, {row["usec"]}')            
             
-            key = row['input_size']
+            key = row['data_size']
             if key == 'close' or key == '48' or key == '2': # TODO: Change 48 and 2 to close
                 continue
             elif not int(key) in data['output_size']:

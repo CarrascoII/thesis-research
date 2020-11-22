@@ -8520,7 +8520,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(cipher_fname, ".csv");
 
             csv = fopen(cipher_fname, "w");
-            fprintf(csv, "operation,cycles,usec,endpoint,input_size");
+            fprintf(csv, "operation,cycles,usec,endpoint,data_size");
             fclose(csv);
 #endif
 
@@ -8529,7 +8529,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(cipher_fname, ".csv");
 
             csv = fopen(cipher_fname, "w");
-            fprintf(csv, "endpoint,operation,input_size,cycles");
+            fprintf(csv, "endpoint,operation,data_size,cycles");
 #if defined(MEASURE_IN_USEC)
             fprintf(csv, ",usec");
 #endif
@@ -8541,7 +8541,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(md_fname, ".csv");
 
             csv = fopen(md_fname, "w");
-            fprintf(csv, "operation,cycles,usec,endpoint,input_size");
+            fprintf(csv, "operation,cycles,usec,endpoint,data_size");
             fclose(csv);
 #endif
 
@@ -8550,7 +8550,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(md_fname, ".csv");
 
             csv = fopen(md_fname, "w");
-            fprintf(csv, "endpoint,operation,input_size,cycles");
+            fprintf(csv, "endpoint,operation,data_size,cycles");
 #if defined(MEASURE_IN_USEC)
             fprintf(csv, ",usec");
 #endif
