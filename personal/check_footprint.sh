@@ -3,12 +3,14 @@ EXTENTION=../mbedtls/library/
 CRYPTO=libmbedcrypto.a
 TLS=libmbedtls.a
 X509=libmbedx509.a
-SERVER=tls_server.out
-CLIENT=tls_client.out
+
+SERVER=tls_psk/psk_server
+CLIENT=tls_psk/psk_client
 
 CRYPTO_SIZE=$(stat -c%s "${EXTENTION}/${CRYPTO}")
 TLS_SIZE=$(stat -c%s "${EXTENTION}/${TLS}")
 X509_SIZE=$(stat -c%s "${EXTENTION}/${X509}")
+
 SERVER_SIZE=$(stat -c%s "${SERVER}")
 CLIENT_SIZE=$(stat -c%s "${CLIENT}")
 

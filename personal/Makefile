@@ -11,100 +11,145 @@ ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
 LOCAL_CFLAGS = $(MY_AES).o -I$(MBEDTLS_DIR)/include -L$(MBEDTLS_DIR)/library -lmbedx509 -lmbedtls -lmbedcrypto
 PAPI_CFLAGS = -I${PAPI_DIR}/include -L${PAPI_DIR}/lib -lpapi
 
-TLS_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_tls_psk.h>'
-CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_cipher.h>'
+TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
+TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
+CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/test_cipher/config_cipher.h>'
 
-.PHONY: lib_mbedtls lib_tls lib_cipher lib_papi progs server_obj server client_obj client tls cipher_obj cipher server_papi_obj server_papi client_papi_obj client_papi tls_papi cipher_papi_obj cipher_papi clean_local clean
-
-# all: mbedtls server_obj client_obj cipher_obj
-
-# local: server_obj client_obj cipher_obj
+.PHONY: lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher \
+		progs \
+		psk_server run_psk_server psk_client run_psk_client psk_tls \
+		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi psk_tls_papi \
+		rsa_server run_rsa_server rsa_client run_rsa_client rsa_tls \
+		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi rsa_tls_papi \
+		cipher run_cipher \
+		cipher_papi run_cipher_papi \
+		clean_local clean
 
 ### MAKE MBEDTLS LIBRARY ###
 lib_mbedtls:
 	gcc $(ALL_CFLAGS) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
 	gcc $(ALL_CFLAGS) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	export DEBUG=1
 	$(MBEDTLS_LIB_MAKE)
 
-lib_tls:
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	export DEBUG=1
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_CONFIG)"
+lib_psk:
+	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG)"
+
+lib_psk_papi:
+	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../$(PAPI_DIR)/include -L../$(PAPI_DIR)/lib -lpapi"
+
+lib_rsa:
+	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG)"
+
+lib_rsa_papi:
+	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../$(PAPI_DIR)/include -L../$(PAPI_DIR)/lib -lpapi"
 
 lib_cipher:
 	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	export DEBUG=1
 	$(MBEDTLS_LIB_MAKE) CFLAGS="$(CIPHER_CONFIG)"
-
-lib_papi:
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) $(TLS_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_CONFIG) -I../$(PAPI_DIR)/include -L../$(PAPI_DIR)/lib -lpapi"
 
 ### MAKE MBEDTLS PROGRAMS ###
 progs: lib_mbedtls
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="../$(PERSONAL_DIR)/$(MY_SHA256).o ../$(PERSONAL_DIR)/$(MY_AES).o"
 
-### MAKE PERSONAL ###
-server_obj: lib_tls
-	rm -f tls_server.out
-	gcc $(ALL_CFLAGS) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_server.out
+### MAKE TLS PSK ###
+psk_server: lib_psk
+	rm -f tls_psk/psk_server
+	gcc $(ALL_CFLAGS) tls_psk/psk_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/psk_server
 
-server: server_obj
-	./tls_server.out
+run_psk_server: psk_server
+	./tls_psk/psk_server
 
-client_obj: lib_tls
-	rm -f tls_client.out
-	gcc $(ALL_CFLAGS) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_client.out
+psk_client: lib_psk
+	rm -f tls_psk/psk_client
+	gcc $(ALL_CFLAGS) tls_psk/psk_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/psk_client
 
-client: client_obj
-	./tls_client.out
+run_psk_client: psk_client
+	./tls_psk/psk_client
 
-tls: clean server_obj client_obj
-#	./check_footprint.sh
-	
-cipher_obj: lib_cipher
-	rm -f cipher.out
-	gcc $(ALL_CFLAGS) cipher.c -lm $(LOCAL_CFLAGS) -o cipher.out
+psk_tls: clean psk_server psk_client
 
-cipher: cipher_obj
-	./cipher.out
+### MAKE TLS PSK PAPI ###
+psk_server_papi: lib_psk_papi
+	rm -f tls_psk/psk_server
+	gcc $(ALL_CFLAGS) tls_psk/psk_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/psk_server
 
-### MAKE PERSONAL PAPI ###
-server_papi_obj: lib_papi
-	rm -f tls_server.out
-	gcc $(ALL_CFLAGS) tls_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_server.out
+run_psk_server_papi: psk_server_papi
+	./tls_psk/psk_server
 
-server_papi: server_papi_obj
-#	source ./init_papi.sh
-	./tls_server.out
+psk_client_papi: lib_psk_papi
+	rm -f tls_psk/psk_client
+	gcc $(ALL_CFLAGS) tls_psk/psk_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/psk_client
 
-client_papi_obj: lib_papi
-	rm -f tls_client.out
-	gcc $(ALL_CFLAGS) tls_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_client.out
+run_psk_client_papi: psk_client_papi
+	./tls_psk/psk_client
 
-client_papi: client_papi_obj
-#	source ./init_papi.sh
-	./tls_client.out
+psk_tls_papi: clean psk_server_papi psk_client_papi
 
-tls_papi: clean server_papi_obj client_papi_obj
-#	./check_footprint.sh
+### MAKE TLS RSA ###
+rsa_server: lib_rsa
+	rm -f tls_rsa/rsa_server
+	gcc $(ALL_CFLAGS) tls_rsa/rsa_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/rsa_server
 
-cipher_papi_obj: lib_cipher
-	rm -f cipher.out
-	gcc $(ALL_CFLAGS) cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher.out
+run_rsa_server: rsa_server
+	./tls_rsa/rsa_server
 
-cipher_papi: cipher_papi_obj
-#	source ./init_papi.sh
-	./cipher.out
+rsa_client: lib_rsa
+	rm -f tls_rsa/rsa_client
+	gcc $(ALL_CFLAGS) tls_rsa/rsa_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/rsa_client
+
+run_rsa_client: rsa_client
+	./tls_rsa/rsa_client
+
+rsa_tls: clean rsa_server rsa_client
+
+### MAKE TLS RSA PAPI ###
+rsa_server_papi: lib_rsa_papi
+	rm -f tls_rsa/rsa_server
+	gcc $(ALL_CFLAGS) tls_rsa/rsa_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/rsa_server
+
+run_rsa_server_papi: rsa_server_papi
+	./tls_rsa/rsa_server
+
+rsa_client_papi: lib_rsa_papi
+	rm -f tls_rsa/rsa_client
+	gcc $(ALL_CFLAGS) tls_rsa/rsa_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/rsa_client
+
+run_rsa_client_papi: rsa_client_papi
+	./tls_rsa/rsa_client
+
+rsa_tls_papi: clean rsa_server_papi rsa_client_papi
+
+### MAKE TEST CIPHER ###
+cipher: lib_cipher
+	rm -f test_cipher/cipher
+	gcc $(ALL_CFLAGS) test_cipher/cipher.c -lm $(LOCAL_CFLAGS) -o test_cipher/cipher
+
+run_cipher: cipher
+	./test_cipher/cipher
+
+### MAKE TEST CIPHER PAPI ###
+cipher_papi: lib_cipher
+	rm -f test_cipher/cipher
+	gcc $(ALL_CFLAGS) test_cipher/cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o test_cipher/cipher
+
+run_cipher_papi: cipher_papi
+	./test_cipher/cipher
 
 ### CLEAN ###
 clean_local:
-	rm -f tls_server.out
-	rm -f tls_client.out
-	rm -f cipher.out
+	rm -f tls_psk/psk_server
+	rm -f tls_psk/psk_client
+	rm -f tls_rsa/rsa_server
+	rm -f tls_rsa/rsa_client
+	rm -f test_cipher/cipher
 	
 clean: clean_local
 	$(MBEDTLS_PROGS_MAKE) clean
