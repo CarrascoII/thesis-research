@@ -105,6 +105,7 @@
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
 // #define MEASURE_KE
+// #define MEASURE_IN_USEC
 
 // #define MUTUAL_AUTH
 // #define PRINT_HANDSHAKE_STEPS
