@@ -4,8 +4,8 @@ CRYPTO=libmbedcrypto.a
 TLS=libmbedtls.a
 X509=libmbedx509.a
 
-SERVER=tls_psk/psk_server
-CLIENT=tls_psk/psk_client
+SERVER=tls_psk/psk_server.out
+CLIENT=tls_psk/psk_client.out
 
 CRYPTO_SIZE=$(stat -c%s "${EXTENTION}/${CRYPTO}")
 TLS_SIZE=$(stat -c%s "${EXTENTION}/${TLS}")
