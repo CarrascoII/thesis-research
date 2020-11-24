@@ -1,5 +1,6 @@
 import csv
 
+
 def csv_to_data(filename, parse_usec=False):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
@@ -49,7 +50,6 @@ def csv_to_data(filename, parse_usec=False):
                     usec_in[key].append(int(row['usec']))
 
         return data, cycles_out, cycles_in, usec_out, usec_in
-
 
 def txt_to_list(filename):
     with open(filename, 'r') as fl:

@@ -126,10 +126,11 @@ int main(int argc, char **argv) {
 
     int ret,
         i, n_tests = N_TESTS,
+        input_size = MIN_INPUT_SIZE,
 #if defined(MBEDTLS_DEBUG_C)
         debug = DEBUG_LEVEL,
 #endif
-        input_size = MIN_INPUT_SIZE;
+        suite_id = 0;
     unsigned char *request, *response;
     const char *pers = "tls_server generates response";
     char *p, *q;
@@ -150,19 +151,19 @@ int main(int argc, char **argv) {
         }
 
         *q++ = '\0';
-        if(strcmp(p, "input_size") == 0) {
-            input_size = atoi(q);
-            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
-                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
-                return 1;
-            }
-        } else if(strcmp(p, "n_tests") == 0) {
+        if(strcmp(p, "n_tests") == 0) {
 			n_tests = atoi(q);
             if(n_tests < 1 || n_tests > 1000) {
                 printf("Number of tests must be between 1 and 1000\n");
                 return 1;
             }
-		}
+		} else if(strcmp(p, "input_size") == 0) {
+            input_size = atoi(q);
+            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
+                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                return 1;
+            }
+        } 
 #if defined(MBEDTLS_DEBUG_C) 
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
@@ -170,12 +171,19 @@ int main(int argc, char **argv) {
                 printf("Debug level must be int between 0 and 5\n");
                 return 1;
             }
-        } else {
-			printf("Available options are input_size, n_tests and debug_level\n");
-#else
-        else {
-			printf("Available options are input_size and n_tests\n");
+        }
 #endif
+        else if(strcmp(p, "ciphersuite") == 0) {
+			if((suite_id = mbedtls_ssl_get_ciphersuite_id(q)) == 0) {
+                printf("%s is not an available ciphersuite\n", q);
+                return 1;
+            }
+		} else {
+			printf("Available options are input_size, n_tests");
+#if defined(MBEDTLS_DEBUG_C) 
+            printf(", debug_level");
+#endif
+            printf(" and ciphersuite\n");
 			return 1;
 		}
 	}
@@ -234,10 +242,15 @@ int main(int argc, char **argv) {
     }
 
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
-    mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
+    
+    if(suite_id != 0) {
+        mbedtls_ssl_conf_ciphersuites(&tls_conf, &suite_id);
+    }
+    
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 #endif
+    mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
         printf(" failed! mbedtls_ssl_setup returned -0x%04x\n", -ret);

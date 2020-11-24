@@ -13,7 +13,6 @@ def custom_errorbar(x, y, e, ax=None, title=None, xlabel=None, ylabel=None, kwar
 
     return(ax)
 
-
 def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
@@ -22,7 +21,6 @@ def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={
     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
 
     return(ax)
-
 
 def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={}, kwargs2={}):
     if ax is None:
@@ -34,7 +32,6 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={
     ax.legend()
 
     return(ax)
-
 
 def scatter(ylabel, plotname, data, stats):
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(20, 5))
@@ -60,7 +57,6 @@ def scatter(ylabel, plotname, data, stats):
     
     plt.cla()
 
-
 def plot(ylabel, plotname, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
     
@@ -85,7 +81,6 @@ def plot(ylabel, plotname, stats):
     fig.savefig('../docs/' + plotname + '-' + ylabel.upper() + '.png')
     
     plt.cla()
-
 
 def calc_statistics(out_op, in_op):
     data_size = []
@@ -133,8 +128,7 @@ def calc_statistics(out_op, in_op):
         'mode_out': mode_out, 'mode_in': mode_in
     }
 
-
-def make_graphs(filename, usec):
+def make_graphs(filename, usec=False):
         title = filename.replace('.csv', '')
 
         print(f'Parsing {filename}... ', end='')
@@ -166,10 +160,9 @@ def make_graphs(filename, usec):
             scatter('usec', title, data, statistics)
             print(f'Done')
 
-
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'h:us:c:m', ['help', 'useconds', 'cfile=', 'mfile='])
+        opts, args = getopt.getopt(argv, 'hsc:m:', ['help', 'useconds', 'cfile=', 'mfile='])
     except getopt.GetoptError:
         print(f'One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
@@ -182,17 +175,16 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print(f'plotter.py [-us] [-c <cipher_file>] [-m <md_file>]')
+            print(f'plotter.py [-s] [-c <cipher_file>] [-m <md_file>]')
             print(f'plotter.py [--useconds] [--cfile=<cipher_file>] [--mfile=<md_file>]')
             sys.exit(0)
-        if opt in ('-us', '--useconds'):
+        if opt in ('-s', '--useconds'):
             usec = True
         elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
             make_graphs(arg, usec)
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
-
 
 if __name__ == '__main__':
    main(sys.argv[1:])
