@@ -57,9 +57,18 @@
 #include "papi.h"
 #endif
 
-#if defined(PAPI_CIPHER) || defined(MEASURE_CIPHER)
-char cipher_fname[50] = "../docs/CIPHER-";
+#if defined(MEASURE_CIPHER)
+char cipher_fname[50] = "../docs/";
+#endif
+#if defined(MEASURE_MD)
+char md_fname[50] = "../docs/";
+#endif
+#if defined(MEASURE_KE)
+char ke_fname[50] = "../docs/";
+#endif
+
 #if defined(PAPI_CIPHER)
+char cipher_fname[50] = "../docs/CIPHER-";
 static const char* cipher_lst[] = {
     "NONE", "NULL",
     "AES-128-ECB", "AES-192-ECB", "AES-256-ECB",
@@ -94,11 +103,9 @@ static const char* cipher_lst[] = {
     "CHACHA20-POLY1305"
 };
 #endif
-#endif
 
-#if defined(PAPI_MD) || defined(MEASURE_MD)
-char md_fname[50] = "../docs/MD-";
 #if defined(PAPI_MD)
+char md_fname[50] = "../docs/MD-";
 static const char* md_lst[] = {
     "NONE",
     "MD2", "MD4", "MD5",
@@ -106,9 +113,8 @@ static const char* md_lst[] = {
     "RIPEMD160"
 };
 #endif
-#endif
 
-#if defined(PAPI_KE) || defined(MEASURE_KE)
+#if defined(PAPI_KE)
 char ke_fname[50] = "../docs/KE-";
 static const char* ke_lst[] = {
     "NONE",
@@ -8498,7 +8504,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_KE)
-            strcat(ke_fname, suite_info->name + 4);
+            strcat(ke_fname, suite_info->name);
+            strcat(ke_fname, "/ke_data.csv");
 
             csv = fopen(ke_fname, "w");
             fprintf(csv, "endpoint,operation,cycles");
@@ -8525,8 +8532,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_CIPHER)
-            strcat(cipher_fname, suite_info->name + 4);
-            strcat(cipher_fname, ".csv");
+            strcat(cipher_fname, suite_info->name);
+            strcat(cipher_fname, "/cipher_data.csv");
 
             csv = fopen(cipher_fname, "w");
             fprintf(csv, "endpoint,operation,data_size,cycles");
@@ -8546,8 +8553,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            strcat(md_fname, suite_info->name + 4);
-            strcat(md_fname, ".csv");
+            strcat(md_fname, suite_info->name);
+            strcat(md_fname, "/md_data.csv");
 
             csv = fopen(md_fname, "w");
             fprintf(csv, "endpoint,operation,data_size,cycles");

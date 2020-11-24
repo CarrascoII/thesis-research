@@ -33,7 +33,7 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={
 
     return(ax)
 
-def scatter(ylabel, plotname, data, stats):
+def scatter(ylabel, file_path, data, stats):
     fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(20, 5))
     
     operations = None
@@ -42,9 +42,9 @@ def scatter(ylabel, plotname, data, stats):
     params3 = {'color': 'blue', 'marker': '.'}
     params4 = {'color': 'blue', 'fmt': 'o'}
 
-    if plotname.find('CIPHER'):
+    if file_path.find('cipher'):
         operations = ['cipher', 'decipher']
-    elif plotname.find('MD'):
+    elif file_path.find('md'):
         operations = ['hash', 'verify']
 
     ax1 = custom_scatter(data['output_size'], data['cycles_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
@@ -53,20 +53,20 @@ def scatter(ylabel, plotname, data, stats):
     ax4 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax4, title=operations[1], ylabel=ylabel, kwargs=params4)
 
     fig.tight_layout()
-    fig.savefig('../docs/' + plotname + '-' + ylabel.upper() + '-DISTRIBUTION.png')
+    fig.savefig(file_path + '_' + ylabel + '_distribution.png')
     
     plt.cla()
 
-def plot(ylabel, plotname, stats):
+def plot(ylabel, file_path, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
     
     params1 = {'color': 'red', 'linestyle': '-'}
     params2 = {'color': 'blue', 'linestyle': '--'}
 
-    if plotname.find('CIPHER'):    
+    if file_path.find('cipher'):
         params1['label'] = 'encryption'
         params2['label'] = 'decryption'
-    elif plotname.find('MD'):
+    elif file_path.find('md'):
         params1['label'] = 'digest'
         params2['label'] = 'verify'
 
@@ -78,7 +78,7 @@ def plot(ylabel, plotname, stats):
                                 ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     fig.tight_layout()
-    fig.savefig('../docs/' + plotname + '-' + ylabel.upper() + '.png')
+    fig.savefig(file_path + '_' + ylabel + '.png')
     
     plt.cla()
 
@@ -129,10 +129,10 @@ def calc_statistics(out_op, in_op):
     }
 
 def make_graphs(filename, usec=False):
-        title = filename.replace('.csv', '')
+        path = filename.replace('data.csv', '')
 
         print(f'Parsing {filename}... ', end='')
-        data, cycles_out, cycles_in, usec_out, usec_in = parser.csv_to_data('../docs/' + filename, parse_usec=usec)
+        data, cycles_out, cycles_in, usec_out, usec_in = parser.csv_to_data(filename, parse_usec=usec)
         print(f'Done')
 
         print(f'Calculating statistics (CPU cycles) from {filename}... ', end='')
@@ -140,11 +140,11 @@ def make_graphs(filename, usec=False):
         print(f'Done')
 
         print(f'Making plot (CPU cycles) from {filename}... ', end='')
-        plot('cycles', title, statistics)
+        plot('cycles', path, statistics)
         print(f'Done')
 
         print(f'Making scatter (CPU cycles) from {filename}... ', end='')
-        scatter('cycles', title, data, statistics)
+        scatter('cycles', path, data, statistics)
         print(f'Done')
 
         if usec_out != None and usec_in != None:
@@ -153,11 +153,11 @@ def make_graphs(filename, usec=False):
             print(f'Done')
 
             print(f'Making plot (useconds) from {filename}... ', end='')
-            plot('usec', title, statistics)
+            plot('usec', path, statistics)
             print(f'Done')
 
             print(f'Making scatter (useconds) from {filename}... ', end='')
-            scatter('usec', title, data, statistics)
+            scatter('usec', path, data, statistics)
             print(f'Done')
 
 def main(argv):
