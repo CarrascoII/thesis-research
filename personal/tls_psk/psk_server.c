@@ -156,7 +156,13 @@ int main(int argc, char **argv) {
                 printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
                 return 1;
             }
-        }
+        } else if(strcmp(p, "n_tests") == 0) {
+			n_tests = atoi(q);
+            if(n_tests < 1 || n_tests > 1000) {
+                printf("Number of tests must be between 1 and 1000\n");
+                return 1;
+            }
+		}
 #if defined(MBEDTLS_DEBUG_C) 
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
@@ -164,16 +170,12 @@ int main(int argc, char **argv) {
                 printf("Debug level must be int between 0 and 5\n");
                 return 1;
             }
-        }
+        } else {
+			printf("Available options are input_size, n_tests and debug_level\n");
+#else
+        else {
+			printf("Available options are input_size and n_tests\n");
 #endif
-        else if(strcmp(p, "n_tests") == 0) {
-			n_tests = atoi(q);
-            if(n_tests < 1 || n_tests > 1000) {
-                printf("Number of tests must be between 1 and 1000\n");
-                return 1;
-            }
-		} else {
-			printf("Available options are input_size, key_size and n_tests\n");
 			return 1;
 		}
 	}
@@ -270,6 +272,11 @@ int main(int argc, char **argv) {
 
     printf(" ok");
 
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+    printf("\nPerforming TLS record.....................");    
+    fflush(stdout);
+#endif
+
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
@@ -283,10 +290,11 @@ int main(int argc, char **argv) {
         }
 
         for(i = 0; i < n_tests; i++) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
             // Receive request
             printf("\n\n> Read from client:");
             fflush(stdout);
-
+#endif
             memset(request, 0, input_size);
 
             if((ret = mbedtls_ssl_read(&tls, request, input_size)) < 0) {
@@ -294,31 +302,35 @@ int main(int argc, char **argv) {
                 goto exit;
             }
 
-            printf(" %d bytes\n", ret);
 #if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+            printf(" %d bytes\n", ret);
             print_hex(request, input_size);
-#endif
             fflush(stdout);
 
             // Send response
             printf("\n< Write to client:");
             fflush(stdout);
+#endif
 
             if((ret = mbedtls_ssl_write(&tls, response, input_size)) < 0) {
                 printf(" failed! mbedtls_ssl_write returned -0x%04x\n", -ret);
                 goto exit;
             }
 
-            printf(" %d bytes\n", ret);
 #if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+            printf(" %d bytes\n", ret);
             print_hex(response, input_size);
-#endif
             fflush(stdout);
+#endif
         }
 
         free(request);
         free(response);
     }
+
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+    printf(" ok");
+#endif
 
     // Close connection
     printf("\nClosing the connection....................");
@@ -334,8 +346,10 @@ int main(int argc, char **argv) {
     printf("\n\nFinal status:");
     printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
     printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
+#endif
     printf("\n");
 
 exit:

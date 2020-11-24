@@ -68,11 +68,11 @@
 /**
  * mbed TLS ciphersuites
  */
-// #define MBEDTLS_SSL_CIPHERSUITES 
+#define MBEDTLS_SSL_CIPHERSUITES \
+                MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
 //                 MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
 //                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
 //                 MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
-//                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256,        
 //                 MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
 //                 MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
 //                 MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       

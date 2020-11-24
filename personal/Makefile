@@ -17,10 +17,10 @@ CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/test_cipher/config_cipher.h>'
 
 .PHONY: lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher \
 		progs \
-		psk_server run_psk_server psk_client run_psk_client psk_tls \
-		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi psk_tls_papi \
-		rsa_server run_rsa_server rsa_client run_rsa_client rsa_tls \
-		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi rsa_tls_papi \
+		psk_server run_psk_server psk_client run_psk_client tls_psk \
+		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi tls_psk_papi \
+		rsa_server run_rsa_server rsa_client run_rsa_client tls_rsa \
+		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi tls_rsa_papi \
 		cipher run_cipher \
 		cipher_papi run_cipher_papi \
 		clean_local clean
@@ -74,7 +74,7 @@ psk_client: lib_psk
 run_psk_client: psk_client
 	./tls_psk/psk_client.out
 
-psk_tls: clean psk_server psk_client
+tls_psk: clean psk_server psk_client
 
 ### MAKE TLS PSK PAPI ###
 psk_server_papi: lib_psk_papi
@@ -91,7 +91,7 @@ psk_client_papi: lib_psk_papi
 run_psk_client_papi: psk_client_papi
 	./tls_psk/psk_client.out
 
-psk_tls_papi: clean psk_server_papi psk_client_papi
+tls_psk_papi: clean psk_server_papi psk_client_papi
 
 ### MAKE TLS RSA ###
 rsa_server: lib_rsa
@@ -108,7 +108,7 @@ rsa_client: lib_rsa
 run_rsa_client: rsa_client
 	./tls_rsa/rsa_client.out
 
-rsa_tls: clean rsa_server rsa_client
+tls_rsa: clean rsa_server rsa_client
 
 ### MAKE TLS RSA PAPI ###
 rsa_server_papi: lib_rsa_papi
@@ -125,7 +125,7 @@ rsa_client_papi: lib_rsa_papi
 run_rsa_client_papi: rsa_client_papi
 	./tls_rsa/rsa_client.out
 
-rsa_tls_papi: clean rsa_server_papi rsa_client_papi
+tls_rsa_papi: clean rsa_server_papi rsa_client_papi
 
 ### MAKE TEST CIPHER ###
 cipher: lib_cipher
