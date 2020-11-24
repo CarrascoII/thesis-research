@@ -58,13 +58,13 @@
 #endif
 
 #if defined(MEASURE_CIPHER)
-char cipher_fname[50] = "../docs/";
+char cipher_fname[100] = "../docs/";
 #endif
 #if defined(MEASURE_MD)
-char md_fname[50] = "../docs/";
+char md_fname[100] = "../docs/";
 #endif
 #if defined(MEASURE_KE)
-char ke_fname[50] = "../docs/";
+char ke_fname[100] = "../docs/";
 #endif
 
 #if defined(PAPI_CIPHER)

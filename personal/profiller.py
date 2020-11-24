@@ -11,13 +11,13 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout):
                f'  -Suite being used:          {ciphersuite}']
     strout = stdout.decode('utf-8')
     strout = strout.strip('\n')
-    last_out = strout.split('\n')[-4:]
+    last_out = strout.split('\n')[-2:]
 
     for i in range(0, len(last_msg)):
         if last_msg[i] != last_out[i]:
-            # print(f'\t{endpoint}\'s last message was an unexpected one. Setting return code to -1...')
-            # print(f'\n\tExpected:\n\t{last_msg[0]}\n\t{last_msg[1]}\n\t{last_msg[2]}')
-            # print(f'\n\tObtained:\n\t{last_out[0]}\n\t{last_out[1]}\n\t{last_out[2]}')
+            print(f'\n\t{endpoint}\'s last message was an unexpected one. Setting return code to -1...')
+            print(f'\n\tExpected:\n\t{last_msg[0]}\n\t{last_msg[1]}')
+            print(f'\n\tObtained:\n\t{last_out[0]}\n\t{last_out[1]}')
             return -1
 
     # print(f'\t{endpoint}\'s last message was the expected one. Setting return code to 0...')
@@ -130,7 +130,7 @@ def exec_tls(filename, timeout, max_size, n_tests):
         plotter.make_graphs(md_file)
         print(f'ok')
 
-    print(f'Data aquisition and analysis has ended.')
+    print(f'\nData aquisition and analysis has ended.')
     print(f'You can check all the csv data and png graph files in the docs/<ciphersuite> directory.')
 
 

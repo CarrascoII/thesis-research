@@ -96,18 +96,18 @@
 /**
  * Program flags
  */
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_IN_USEC
 
-// #define PRINT_HANDSHAKE_STEPS
+#define PRINT_HANDSHAKE_STEPS
 
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  16
-#define MAX_INPUT_SIZE                  4096
-#define N_TESTS                         500
+#define MAX_INPUT_SIZE                  1024
+#define N_TESTS                         1
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
 #endif
