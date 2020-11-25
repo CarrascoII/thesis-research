@@ -57,12 +57,6 @@
 #include "papi.h"
 #endif
 
-#if defined(MEASURE_CIPHER)
-char cipher_fname[100] = "../docs/";
-#endif
-#if defined(MEASURE_MD)
-char md_fname[100] = "../docs/";
-#endif
 #if defined(MEASURE_KE)
 char ke_fname[100] = "../docs/";
 #endif
@@ -1607,22 +1601,25 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            printf("\nMD: digest, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+            printf(", %lld", usec_cpu);
 #endif
 
-            csv = fopen(md_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
-            }
+            if(md_fname != NULL) {
+                csv = fopen(md_fname, "a+");
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                    fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                } else {
+                    fprintf(csv, "\nserver,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                }
 #if defined(MEASURE_IN_USEC)
-            fprintf(csv, ",%lld", usec_cpu);
+                fprintf(csv, ",%lld", usec_cpu);
 #endif
-            fclose(csv);
-
-//            printf("\nMD: digest, %lld, %lld", cycles_cpu, usec_cpu);
+                fclose(csv);
+            }
 #endif
 
             memcpy( ssl->out_msg + ssl->out_msglen, mac, ssl->transform_out->maclen );
@@ -1679,22 +1676,26 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        printf("\nCIPHER: encrypt, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+        printf(", %lld", usec_cpu);
 #endif
 
-        csv = fopen(cipher_fname, "a+");
-        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
-        } else {
-            fprintf(csv, "\nserver,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
-        }
+        if(cipher_fname != NULL) {
+            csv = fopen(cipher_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nclient,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
+            } else {
+                fprintf(csv, "\nserver,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
+            }
 #if defined(MEASURE_IN_USEC)
-        fprintf(csv, ",%lld", usec_cpu);
+            fprintf(csv, ",%lld", usec_cpu);
 #endif
-        fclose(csv);
-
-//        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
+            fclose(csv);
+        }
+        
         if(ret != 0)
 #endif
         {
@@ -1887,22 +1888,26 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
+
 #if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+        printf(", %lld", usec_cpu);
 #endif
 
-        csv = fopen(cipher_fname, "a+");
-        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,encrypt,%d,%lld", enc_msglen, cycles_cpu);
-        } else {
-            fprintf(csv, "\nserver,encrypt,%d,%lld", enc_msglen, cycles_cpu);
-        }
+        if(cipher_fname != NULL) {
+            csv = fopen(cipher_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nclient,encrypt,%d,%lld", enc_msglen, cycles_cpu);
+            } else {
+                fprintf(csv, "\nserver,encrypt,%d,%lld", enc_msglen, cycles_cpu);
+            }
 #if defined(MEASURE_IN_USEC)
-        fprintf(csv, ",%lld", usec_cpu);
+            fprintf(csv, ",%lld", usec_cpu);
 #endif
-        fclose(csv);
+            fclose(csv);
+        }
 
-//        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
         if(ret != 0)
 #endif
 
@@ -1973,22 +1978,25 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            printf("\nMD: digest, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+            printf(", %lld", usec_cpu);
 #endif
 
-            csv = fopen(md_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
-            }
+            if(md_fname != NULL) {   
+                csv = fopen(md_fname, "a+");
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                    fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                } else {
+                    fprintf(csv, "\nserver,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                }
 #if defined(MEASURE_IN_USEC)
-            fprintf(csv, ",%lld", usec_cpu);
+                fprintf(csv, ",%lld", usec_cpu);
 #endif
-            fclose(csv);
-
-//            printf("\nMD: digest, %lld, %lld", cycles_cpu, usec_cpu);
+                fclose(csv);
+            }
 #endif
 
             memcpy( ssl->out_iv + ssl->out_msglen, mac,
@@ -2096,22 +2104,26 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+        printf(", %lld", usec_cpu);
 #endif
 
-        csv = fopen(cipher_fname, "a+");
-        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
-        } else {
-            fprintf(csv, "\nserver,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
-        }
+        if(cipher_fname != NULL) {
+            csv = fopen(cipher_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nclient,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
+            } else {
+                fprintf(csv, "\nserver,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
+            }
 #if defined(MEASURE_IN_USEC)
-        fprintf(csv, ",%lld", usec_cpu);
+            fprintf(csv, ",%lld", usec_cpu);
 #endif
-        fclose(csv);
+            fclose(csv);
+        }
 
-//        printf("\nCIPHER: decrypt, %lld, %lld", cycles_cpu, usec_cpu);
         if(ret != 0)
 #endif
 
@@ -2308,22 +2320,25 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            printf("\nMD: verify, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+            printf(", %lld", usec_cpu);
 #endif
 
-            csv = fopen(md_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
-            }
+            if(md_fname != NULL) {   
+                csv = fopen(md_fname, "a+");
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                    fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                } else {
+                    fprintf(csv, "\nserver,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                }
 #if defined(MEASURE_IN_USEC)
-            fprintf(csv, ",%lld", usec_cpu);
+                fprintf(csv, ",%lld", usec_cpu);
 #endif
-            fclose(csv);
-
-//            printf("\nMD: verify, %lld, %lld", cycles_cpu, usec_cpu);
+                fclose(csv);
+            }
 #endif
 
             MBEDTLS_SSL_DEBUG_BUF( 4, "message  mac", ssl->in_iv + ssl->in_msglen,
@@ -2391,22 +2406,26 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+        printf(", %lld", usec_cpu);
 #endif
 
-        csv = fopen(cipher_fname, "a+");
-        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            fprintf(csv, "\nclient,decrypt,%d,%lld", dec_msglen, cycles_cpu);
-        } else {
-            fprintf(csv, "\nserver,decrypt,%d,%lld", dec_msglen, cycles_cpu);
-        }
+        if(cipher_fname != NULL) {
+            csv = fopen(cipher_fname, "a+");
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                fprintf(csv, "\nclient,decrypt,%d,%lld", dec_msglen, cycles_cpu);
+            } else {
+                fprintf(csv, "\nserver,decrypt,%d,%lld", dec_msglen, cycles_cpu);
+            }
 #if defined(MEASURE_IN_USEC)
-        fprintf(csv, ",%lld", usec_cpu);
+            fprintf(csv, ",%lld", usec_cpu);
 #endif
-        fclose(csv);
+            fclose(csv);
+        }
 
-//        printf("\nCIPHER: decrypt, %lld, %lld", cycles_cpu, usec_cpu);
         if(ret != 0)
 #endif
         {
@@ -2655,22 +2674,25 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            printf("\nMD: verify, %lld", cycles_cpu);
+
 #if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+            printf(", %lld", usec_cpu);
 #endif
 
-            csv = fopen(md_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
-            }
+            if(md_fname != NULL) {                
+                csv = fopen(md_fname, "a+");
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                    fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                } else {
+                    fprintf(csv, "\nserver,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                }
 #if defined(MEASURE_IN_USEC)
-            fprintf(csv, ",%lld", usec_cpu);
+                fprintf(csv, ",%lld", usec_cpu);
 #endif
-            fclose(csv);
-
-//            printf("\nMD: verify, %lld, %lld", cycles_cpu, usec_cpu);
+                fclose(csv);
+            }
 #endif
 
             /* Make sure we access all the memory that could contain the MAC,
@@ -8532,8 +8554,13 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_CIPHER)
+            cipher_fname = (char *) malloc((CIPHER_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
+            strcpy(cipher_fname, FILE_PATH);
+            printf("Current cipher_fname = %s", cipher_fname);
             strcat(cipher_fname, suite_info->name);
-            strcat(cipher_fname, "/cipher_data.csv");
+            printf("Current cipher_fname = %s", cipher_fname);
+            strcat(cipher_fname, CIPHER_EXTENTION);
+            printf("Current cipher_fname = %s", cipher_fname);
 
             csv = fopen(cipher_fname, "w");
             fprintf(csv, "endpoint,operation,data_size,cycles");
@@ -8553,8 +8580,13 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
+            md_fname = (char *) malloc(MD_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
+            strcpy(md_fname, FILE_PATH)
+            printf("Current md_fname = %s", md_fname);
             strcat(md_fname, suite_info->name);
-            strcat(md_fname, "/md_data.csv");
+            printf("Current md_fname = %s", md_fname);
+            strcat(md_fname, MD_EXTENSION);
+            printf("Current md_fname = %s", md_fname);
 
             csv = fopen(md_fname, "w");
             fprintf(csv, "endpoint,operation,data_size,cycles");

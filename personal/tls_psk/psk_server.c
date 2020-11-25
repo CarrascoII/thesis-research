@@ -374,5 +374,16 @@ exit:
     mbedtls_net_free(&client);
     mbedtls_net_free(&server);
 
+#if defined(MEASURE_CIPHER)
+    if(cipher_fname != NULL) {
+        free(cipher_fname);
+    }
+#endif
+#if defined(MEASURE_MD)
+    if(md_fname != NULL) {
+        free(md_fname);
+    }
+#endif
+
     return(ret);
 }

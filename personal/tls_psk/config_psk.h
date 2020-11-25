@@ -16,7 +16,6 @@
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 
-#define MBEDTLS_ARC4_C
 #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
 // #define MBEDTLS_AES_ENCRYPT_ALT
@@ -96,17 +95,17 @@
 /**
  * Program flags
  */
-#define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 // #define MEASURE_IN_USEC
 
-#define PRINT_HANDSHAKE_STEPS
+// #define PRINT_HANDSHAKE_STEPS
 
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  16
-#define MAX_INPUT_SIZE                  1024
+#define MAX_INPUT_SIZE                  16
 #define N_TESTS                         1
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
@@ -114,4 +113,18 @@
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#define FILE_PATH                       "../docs/"
+#if defined(MEASURE_CIPHER)
+#define CIPHER_EXTENSION                "/cipher_data.csv"
+#define CIPHER_FNAME_SIZE               8 + 16 + 1
+extern char *cipher_fname;
+#endif
+#if defined(MEASURE_MD)
+#define MD_EXTENSION                    "/md_data.csv"
+#define MD_FNAME_SIZE                   8 + 12 + 1
+extern char *md_fname;
+#endif
+#endif
+
 #endif /* MBEDTLS_CONFIG_H */
