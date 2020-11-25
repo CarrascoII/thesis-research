@@ -15,14 +15,12 @@ TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
 TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
 CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/test_cipher/config_cipher.h>'
 
-.PHONY: lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher \
-		progs \
+.PHONY: lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
 		psk_server run_psk_server psk_client run_psk_client tls_psk \
 		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi tls_psk_papi \
 		rsa_server run_rsa_server rsa_client run_rsa_client tls_rsa \
 		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi tls_rsa_papi \
-		cipher run_cipher \
-		cipher_papi run_cipher_papi \
+		cipher run_cipher cipher_papi run_cipher_papi \
 		clean_local clean
 
 ### MAKE MBEDTLS LIBRARY ###
@@ -61,69 +59,69 @@ progs: lib_mbedtls
 
 ### MAKE TLS PSK ###
 psk_server: lib_psk
-	rm -f tls_psk/psk_server.out
-	gcc $(ALL_CFLAGS) tls_psk/psk_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/psk_server.out
+	rm -f tls_psk/server.out
+	gcc $(ALL_CFLAGS) tls_psk/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/server.out
 
 run_psk_server: psk_server
-	./tls_psk/psk_server.out
+	./tls_psk/server.out
 
 psk_client: lib_psk
-	rm -f tls_psk/psk_client.out
-	gcc $(ALL_CFLAGS) tls_psk/psk_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/psk_client.out
+	rm -f tls_psk/client.out
+	gcc $(ALL_CFLAGS) tls_psk/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/client.out
 
 run_psk_client: psk_client
-	./tls_psk/psk_client.out
+	./tls_psk/client.out
 
 tls_psk: clean psk_server psk_client
 
 ### MAKE TLS PSK PAPI ###
 psk_server_papi: lib_psk_papi
-	rm -f tls_psk/psk_server.out
-	gcc $(ALL_CFLAGS) tls_psk/psk_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/psk_server.out
+	rm -f tls_psk/server.out
+	gcc $(ALL_CFLAGS) tls_psk/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/server.out
 
 run_psk_server_papi: psk_server_papi
-	./tls_psk/psk_server.out
+	./tls_psk/server.out
 
 psk_client_papi: lib_psk_papi
-	rm -f tls_psk/psk_client.out
-	gcc $(ALL_CFLAGS) tls_psk/psk_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/psk_client.out
+	rm -f tls_psk/client.out
+	gcc $(ALL_CFLAGS) tls_psk/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/client.out
 
 run_psk_client_papi: psk_client_papi
-	./tls_psk/psk_client.out
+	./tls_psk/client.out
 
 tls_psk_papi: clean psk_server_papi psk_client_papi
 
 ### MAKE TLS RSA ###
 rsa_server: lib_rsa
-	rm -f tls_rsa/rsa_server.out
-	gcc $(ALL_CFLAGS) tls_rsa/rsa_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/rsa_server.out
+	rm -f tls_rsa/server.out
+	gcc $(ALL_CFLAGS) tls_rsa/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/server.out
 
 run_rsa_server: rsa_server
-	./tls_rsa/rsa_server.out
+	./tls_rsa/server.out
 
 rsa_client: lib_rsa
-	rm -f tls_rsa/rsa_client.out
-	gcc $(ALL_CFLAGS) tls_rsa/rsa_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/rsa_client.out
+	rm -f tls_rsa/client.out
+	gcc $(ALL_CFLAGS) tls_rsa/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/client.out
 
 run_rsa_client: rsa_client
-	./tls_rsa/rsa_client.out
+	./tls_rsa/client.out
 
 tls_rsa: clean rsa_server rsa_client
 
 ### MAKE TLS RSA PAPI ###
 rsa_server_papi: lib_rsa_papi
-	rm -f tls_rsa/rsa_server.out
-	gcc $(ALL_CFLAGS) tls_rsa/rsa_server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/rsa_server.out
+	rm -f tls_rsa/server.out
+	gcc $(ALL_CFLAGS) tls_rsa/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/server.out
 
 run_rsa_server_papi: rsa_server_papi
-	./tls_rsa/rsa_server.out
+	./tls_rsa/server.out
 
 rsa_client_papi: lib_rsa_papi
-	rm -f tls_rsa/rsa_client.out
-	gcc $(ALL_CFLAGS) tls_rsa/rsa_client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/rsa_client.out
+	rm -f tls_rsa/client.out
+	gcc $(ALL_CFLAGS) tls_rsa/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/client.out
 
 run_rsa_client_papi: rsa_client_papi
-	./tls_rsa/rsa_client.out
+	./tls_rsa/client.out
 
 tls_rsa_papi: clean rsa_server_papi rsa_client_papi
 
@@ -145,10 +143,10 @@ run_cipher_papi: cipher_papi
 
 ### CLEAN ###
 clean_local:
-	rm -f tls_psk/psk_server.out
-	rm -f tls_psk/psk_client.out
-	rm -f tls_rsa/rsa_server.out
-	rm -f tls_rsa/rsa_client.out
+	rm -f tls_psk/server.out
+	rm -f tls_psk/client.out
+	rm -f tls_rsa/server.out
+	rm -f tls_rsa/client.out
 	rm -f test_cipher/cipher.out
 	
 clean: clean_local

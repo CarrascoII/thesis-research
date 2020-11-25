@@ -53,15 +53,12 @@
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 #include "mbedtls/oid.h"
 #endif
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "papi.h"
-#endif
 
-#if defined(MEASURE_KE)
-char ke_fname[100] = "../docs/";
+#include "papi.h"
 #endif
 
 #if defined(PAPI_CIPHER)
@@ -8528,6 +8525,9 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         if(ssl->state == MBEDTLS_SSL_SERVER_CERTIFICATE) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
+            strcat(path, suite_info->name);
+            mkdir(path, 0777);
+
 #if defined(PAPI_KE)
             strcat(ke_fname, suite_info->name);
             strcat(ke_fname, ".csv");
@@ -8538,8 +8538,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_KE)
-            strcat(ke_fname, suite_info->name);
-            strcat(ke_fname, "/ke_data.csv");
+            strcpy(ke_fname, path);
+            strcat(ke_fname, KE_EXTENSION);
 
             csv = fopen(ke_fname, "w");
             fprintf(csv, "endpoint,operation,cycles");

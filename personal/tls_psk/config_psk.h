@@ -95,11 +95,6 @@
 /**
  * Program flags
  */
-#define MEASURE_CIPHER
-#define MEASURE_MD
-// #define MEASURE_IN_USEC
-
-// #define PRINT_HANDSHAKE_STEPS
 
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
@@ -109,24 +104,36 @@
 #define N_TESTS                         1
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
+#define PRINT_HANDSHAKE_STEPS
 #endif
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-#define FILE_PATH                       "../docs/"
+
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
+// #define MEASURE_KE
+// #define MEASURE_IN_USEC
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#define FILE_PATH           "../docs/"
 
 #if defined(MEASURE_CIPHER)
-#define CIPHER_EXTENSION                "/cipher_data.csv"
-#define CIPHER_FNAME_SIZE               8 + 16 + 1
+#define CIPHER_EXTENSION    "/cipher_data.csv"
+#define CIPHER_FNAME_SIZE   25 /* = len(FILE_PATH) + len(CIPHER_EXTENSION) + len("\0") */
 char *cipher_fname;
 #endif /* MEASURE_CIPHER */
 
 #if defined(MEASURE_MD)
-#define MD_EXTENSION                    "/md_data.csv"
-#define MD_FNAME_SIZE                   8 + 12 + 1
+#define MD_EXTENSION        "/md_data.csv"
+#define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(MD_EXTENSION) + len("\0") */
 char *md_fname;
 #endif /* MEASURE_MD */
-#endif /* MEASURE_CIPHER || MEASURE_MD */
+
+#if defined(MEASURE_KE)
+#define MD_EXTENSION        "/ke_data.csv"
+#define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(KE_EXTENSION) + len("\0") */
+char *ke_fname;
+#endif /* MEASURE_KE */
+#endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
 
 #endif /* MBEDTLS_CONFIG_H */
