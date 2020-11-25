@@ -1609,7 +1609,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-            if(md_fname != NULL) {
+            if(ssl->out_msgtype != 23) {
                 csv = fopen(md_fname, "a+");
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                     fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
@@ -1685,7 +1685,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-        if(cipher_fname != NULL) {
+        if(ssl->out_msgtype != 23) {
             csv = fopen(cipher_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                 fprintf(csv, "\nclient,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
@@ -1898,7 +1898,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-        if(cipher_fname != NULL) {
+        if(ssl->out_msgtype != 23) {
             csv = fopen(cipher_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                 fprintf(csv, "\nclient,encrypt,%d,%lld", enc_msglen, cycles_cpu);
@@ -1989,7 +1989,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-            if(md_fname != NULL) {   
+            if(ssl->out_msgtype != 23) {   
                 csv = fopen(md_fname, "a+");
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                     fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
@@ -2116,7 +2116,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-        if(cipher_fname != NULL) {
+        if(ssl->in_msgtype != 23) {
             csv = fopen(cipher_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                 fprintf(csv, "\nclient,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
@@ -2333,7 +2333,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-            if(md_fname != NULL) {   
+            if(ssl->in_msgtype != 23) {   
                 csv = fopen(md_fname, "a+");
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                     fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
@@ -2420,7 +2420,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-        if(cipher_fname != NULL) {
+        if(ssl->in_msgtype != 23) {
             csv = fopen(cipher_fname, "a+");
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                 fprintf(csv, "\nclient,decrypt,%d,%lld", dec_msglen, cycles_cpu);
@@ -2689,7 +2689,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif /* MBEDTLS_DEBUG_C */
 
-            if(md_fname != NULL) {                
+            if(ssl->in_msgtype != 23) {                
                 csv = fopen(md_fname, "a+");
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
                     fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
