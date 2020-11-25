@@ -54,6 +54,9 @@
 #include "mbedtls/oid.h"
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "papi.h"
 #endif
 
@@ -1598,15 +1601,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
             end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            printf("\nMD: digest, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+            printf("\nMD: digest, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
             printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
             if(md_fname != NULL) {
                 csv = fopen(md_fname, "a+");
@@ -1673,15 +1677,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
         end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
         end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        printf("\nCIPHER: encrypt, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf("\nCIPHER: encrypt, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
         printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
         if(cipher_fname != NULL) {
             csv = fopen(cipher_fname, "a+");
@@ -1885,15 +1890,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
         end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
         end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
-
-#if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf("\nCIPHER: encrypt, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
         printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
         if(cipher_fname != NULL) {
             csv = fopen(cipher_fname, "a+");
@@ -1975,15 +1981,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
             end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            printf("\nMD: digest, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+            printf("\nMD: digest, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
             printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
             if(md_fname != NULL) {   
                 csv = fopen(md_fname, "a+");
@@ -2101,15 +2108,16 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
         end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
         printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
         if(cipher_fname != NULL) {
             csv = fopen(cipher_fname, "a+");
@@ -2317,15 +2325,16 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
             end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            printf("\nMD: verify, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+            printf("\nMD: verify, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
             printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
             if(md_fname != NULL) {   
                 csv = fopen(md_fname, "a+");
@@ -2403,15 +2412,16 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
         end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
         usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
         printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
         if(cipher_fname != NULL) {
             csv = fopen(cipher_fname, "a+");
@@ -2671,15 +2681,16 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             end_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
             end_usec_cpu = PAPI_get_virt_usec();
-#endif
-
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            printf("\nMD: verify, %lld", cycles_cpu);
-
-#if defined(MEASURE_IN_USEC)
             usec_cpu = end_usec_cpu - start_usec_cpu;
+#endif
+            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+
+#if defined(MBEDTLS_DEBUG_C)
+            printf("\nMD: verify, %lld", cycles_cpu);
+#if defined(MEASURE_IN_USEC)
             printf(", %lld", usec_cpu);
 #endif
+#endif /* MBEDTLS_DEBUG_C */
 
             if(md_fname != NULL) {                
                 csv = fopen(md_fname, "a+");
@@ -8498,6 +8509,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
     defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     FILE *csv;
     const mbedtls_ssl_ciphersuite_t *suite_info;
+    char path[40] = FILE_PATH;
 #endif
 
     if( ssl == NULL || ssl->conf == NULL )
@@ -8543,6 +8555,9 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
     defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
+            
+            strcat(path, suite_info->name);
+            mkdir(path, 0777);
 
 #if defined(PAPI_CIPHER)
             strcat(cipher_fname, suite_info->name + 4);
@@ -8555,13 +8570,9 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
             cipher_fname = (char *) malloc((CIPHER_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
-            strcpy(cipher_fname, FILE_PATH);
-            printf("Current cipher_fname = %s", cipher_fname);
-            strcat(cipher_fname, suite_info->name);
-            printf("Current cipher_fname = %s", cipher_fname);
-            strcat(cipher_fname, CIPHER_EXTENTION);
-            printf("Current cipher_fname = %s", cipher_fname);
-
+            strcpy(cipher_fname, path);
+            strcat(cipher_fname, CIPHER_EXTENSION);
+            
             csv = fopen(cipher_fname, "w");
             fprintf(csv, "endpoint,operation,data_size,cycles");
 #if defined(MEASURE_IN_USEC)
@@ -8580,13 +8591,9 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            md_fname = (char *) malloc(MD_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
-            strcpy(md_fname, FILE_PATH)
-            printf("Current md_fname = %s", md_fname);
-            strcat(md_fname, suite_info->name);
-            printf("Current md_fname = %s", md_fname);
+            md_fname = (char *) malloc((MD_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
+            strcpy(md_fname, path);
             strcat(md_fname, MD_EXTENSION);
-            printf("Current md_fname = %s", md_fname);
 
             csv = fopen(md_fname, "w");
             fprintf(csv, "endpoint,operation,data_size,cycles");

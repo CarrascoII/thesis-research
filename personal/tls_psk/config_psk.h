@@ -95,8 +95,8 @@
 /**
  * Program flags
  */
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_IN_USEC
 
 // #define PRINT_HANDSHAKE_STEPS
@@ -115,16 +115,18 @@
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define FILE_PATH                       "../docs/"
+
 #if defined(MEASURE_CIPHER)
 #define CIPHER_EXTENSION                "/cipher_data.csv"
 #define CIPHER_FNAME_SIZE               8 + 16 + 1
-extern char *cipher_fname;
-#endif
+char *cipher_fname;
+#endif /* MEASURE_CIPHER */
+
 #if defined(MEASURE_MD)
 #define MD_EXTENSION                    "/md_data.csv"
 #define MD_FNAME_SIZE                   8 + 12 + 1
-extern char *md_fname;
-#endif
-#endif
+char *md_fname;
+#endif /* MEASURE_MD */
+#endif /* MEASURE_CIPHER || MEASURE_MD */
 
 #endif /* MBEDTLS_CONFIG_H */
