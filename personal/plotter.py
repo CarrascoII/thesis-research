@@ -96,7 +96,7 @@ def calc_statistics(out_op, in_op):
     for key in out_op:
         data_size.append(key)
 
-#        print(f'out_op for {key}:\n{out_op[key]}')
+#        print(f'\nout_op for {key}:\n{out_op[key]}')
         mean = statistics.mean(out_op[key])
         stdev = statistics.pstdev(out_op[key])
         median = statistics.median(out_op[key])
@@ -108,7 +108,7 @@ def calc_statistics(out_op, in_op):
         median_out.append(median)
         mode_out.append(mode)
 
-#        print(f'in_op for {key}:\n{in_op[key]}')
+#        print(f'\nin_op for {key}:\n{in_op[key]}')
         mean = statistics.mean(in_op[key])
         stdev = statistics.pstdev(in_op[key])
         median = statistics.median(in_op[key])
@@ -133,32 +133,32 @@ def make_graphs(filename, usec=False):
 
         print(f'Parsing {filename}... ', end='')
         data, cycles_out, cycles_in, usec_out, usec_in = parser.csv_to_data(filename, parse_usec=usec)
-        print(f'Done')
+        print(f'ok')
 
         print(f'Calculating statistics (CPU cycles) from {filename}... ', end='')
         statistics = calc_statistics(cycles_out, cycles_in)
-        print(f'Done')
+        print(f'ok')
 
         print(f'Making plot (CPU cycles) from {filename}... ', end='')
         plot('cycles', path, statistics)
-        print(f'Done')
+        print(f'ok')
 
         print(f'Making scatter (CPU cycles) from {filename}... ', end='')
         scatter('cycles', path, data, statistics)
-        print(f'Done')
+        print(f'ok')
 
         if usec_out != None and usec_in != None:
             print(f'Calculating statistics (useconds) from {filename}... ', end='')
             statistics = calc_statistics(usec_out, usec_in)
-            print(f'Done')
+            print(f'ok')
 
             print(f'Making plot (useconds) from {filename}... ', end='')
             plot('usec', path, statistics)
-            print(f'Done')
+            print(f'ok')
 
             print(f'Making scatter (useconds) from {filename}... ', end='')
             scatter('usec', path, data, statistics)
-            print(f'Done')
+            print(f'ok')
 
 def main(argv):
     try:

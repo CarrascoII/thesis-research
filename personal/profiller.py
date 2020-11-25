@@ -24,7 +24,7 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout):
     return 0
     
 def run_cli(max_size, n_tests, ciphersuite):
-    args = ['./tls_psk/psk_client.out', 'input_size=' + max_size,
+    args = ['./tls_psk/client.out', 'input_size=' + max_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -37,7 +37,7 @@ def run_cli(max_size, n_tests, ciphersuite):
     
 
 def run_srv(max_size, n_tests, ciphersuite):
-    args = ['./tls_psk/psk_server.out', 'input_size=' + max_size,
+    args = ['./tls_psk/server.out', 'input_size=' + max_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -88,21 +88,36 @@ def exec_tls(filename, timeout, max_size, n_tests):
         cli_ret = async_result_cli.get()
 
         if srv_ret != 0 or cli_ret != 0:
-            print(f'ERROR!!!\n\tNon-zero return code from {ciphersuite}:')
+            print(f'error\n\tNon-zero return code from {ciphersuite}:')
             print(f'\t\tServer returned: {srv_ret}')
             print(f'\t\tClient returned: {cli_ret}')
 
             error_ciphersuites.append(ciphersuite)
             n_error += 1
         else:
-            print(f'ok\n\tData successfully obtained')
+            print(f'ok\n\tData successfully obtained!!!')
             
             success_ciphersuites.append(ciphersuite)
             n_success += 1
 
-        break
+    #Step 5: Analyse and create plots for ciphersuites that ended successfully
+    current = 1
 
-    #Step 5: Report final status
+    for ciphersuite in success_ciphersuites:
+        print(f'\nCreating graphs for: {ciphersuite} ({current}/{n_success})')
+        current +=1
+
+        print(f'\tCreating encryption graphs....... ', end='')
+        cipher_file = '../docs/' + ciphersuite + '/cipher_data.csv'
+        plotter.make_graphs(cipher_file)
+        print(f'ok')
+
+        print(f'\tCreating MAC graphs.............. ', end='')
+        md_file = '../docs/' + ciphersuite + '/md_data.csv'
+        plotter.make_graphs(md_file)
+        print(f'ok')
+
+    #Step 6: Report final status
     print(f'\nFinal status:')
     print(f'\t-Number of ciphersuites: {n_total}')
     print(f'\t-Number of successes: {n_success}')
@@ -112,23 +127,6 @@ def exec_tls(filename, timeout, max_size, n_tests):
         print(f'\t-Error ciphersuites:')
         for ciphersuite in error_ciphersuites:
             print(f'\t\t{ciphersuite}')
-
-    #Step 6: Analyse and create plots for ciphersuites that ended successfully
-    current = 1
-
-    for ciphersuite in success_ciphersuites:
-        print(f'\nCreating graphs for: {ciphersuite} ({current}/{n_success})')
-        current +=1
-
-        print(f'\tCreating encryption graphs....... ', end='')
-        cipher_file = ciphersuite.replace('TLS', 'CIPHER') + '.csv'
-        plotter.make_graphs(cipher_file)
-        print(f'ok')
-
-        print(f'\tCreating MAC graphs.............. ', end='')
-        md_file = ciphersuite.replace('TLS', 'MD') + '.csv'
-        plotter.make_graphs(md_file)
-        print(f'ok')
 
     print(f'\nData aquisition and analysis has ended.')
     print(f'You can check all the csv data and png graph files in the docs/<ciphersuite> directory.')

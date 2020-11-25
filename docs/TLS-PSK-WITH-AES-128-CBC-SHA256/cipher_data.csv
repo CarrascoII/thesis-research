@@ -1,7 +1,7 @@
 endpoint,operation,data_size,cycles
-client,encrypt,64,5186
-server,decrypt,64,12965
-server,encrypt,64,2593
-server,encrypt,48,2593
-client,decrypt,64,7779
+client,encrypt,64,15558
+server,decrypt,64,25930
+server,encrypt,64,7779
+server,encrypt,48,5186
+client,decrypt,64,10372
 client,encrypt,48,5186

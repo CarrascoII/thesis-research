@@ -1,0 +1,7 @@
+endpoint,operation,data_size,cycles
+client,encrypt,80,7779
+server,decrypt,80,20744
+server,encrypt,80,7779
+server,encrypt,64,5186
+client,decrypt,80,0
+client,encrypt,64,5186

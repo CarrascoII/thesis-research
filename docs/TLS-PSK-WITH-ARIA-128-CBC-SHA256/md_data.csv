@@ -1,0 +1,7 @@
+endpoint,operation,data_size,cycles
+client,digest,16,889399
+server,verify,16,20744
+server,digest,16,12965
+client,verify,16,12965
+client,digest,2,10372
+server,digest,2,12965
