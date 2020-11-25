@@ -22,14 +22,11 @@ def csv_to_data(filename, parse_usec=False):
 #            print(f'row: {row["endpoint"]}, {row["operation"]}, {row["data_size"]}, {row["cycles"]}, {row["usec"]}')            
             key = row['data_size']
 
-            if key == 'close' or key == '48' or key == '2': # TODO: Change 48 and 2 to close
-                continue
-
-            elif not int(key) in data['output_size']:
+            if not int(key) in data['output_size']:
                 cycles_out[key] = []
                 if parse_usec:
                     usec_out[key] = []
-
+                    
             elif not int(key) in data['input_size']:
                 cycles_in[key] = []
                 if parse_usec:
@@ -39,6 +36,7 @@ def csv_to_data(filename, parse_usec=False):
                 data['output_size'].append(int(key))
                 data['cycles_out'].append(int(row['cycles']))
                 cycles_out[key].append(int(row['cycles']))
+
                 if parse_usec:
                     usec_out[key].append(int(row['usec']))
 
@@ -46,6 +44,7 @@ def csv_to_data(filename, parse_usec=False):
                 data['input_size'].append(int(key))
                 data['cycles_in'].append(int(row['cycles']))
                 cycles_in[key].append(int(row['cycles']))
+
                 if parse_usec:
                     usec_in[key].append(int(row['usec']))
 

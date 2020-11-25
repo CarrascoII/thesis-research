@@ -53,7 +53,7 @@ def scatter(ylabel, file_path, data, stats):
     ax4 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax4, title=operations[1], ylabel=ylabel, kwargs=params4)
 
     fig.tight_layout()
-    fig.savefig(file_path + '_' + ylabel + '_distribution.png')
+    fig.savefig(file_path + ylabel + '_distribution.png')
     
     plt.cla()
 
@@ -63,6 +63,7 @@ def plot(ylabel, file_path, stats):
     params1 = {'color': 'red', 'linestyle': '-'}
     params2 = {'color': 'blue', 'linestyle': '--'}
 
+    print(f'file_path = {file_path}')
     if file_path.find('cipher'):
         params1['label'] = 'encryption'
         params2['label'] = 'decryption'
@@ -78,7 +79,7 @@ def plot(ylabel, file_path, stats):
                                 ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     fig.tight_layout()
-    fig.savefig(file_path + '_' + ylabel + '.png')
+    fig.savefig(file_path + ylabel + '.png')
     
     plt.cla()
 

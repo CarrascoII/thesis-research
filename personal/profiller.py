@@ -129,7 +129,7 @@ def exec_tls(filename, timeout, max_size, n_tests):
             print(f'\t\t{ciphersuite}')
 
     print(f'\nData aquisition and analysis has ended.')
-    print(f'You can check all the csv data and png graph files in the docs/<ciphersuite> directory.')
+    print(f'You can check all the csv data and png graph files in the docs/<ciphersuite> directories.')
 
 
 def main(argv):
