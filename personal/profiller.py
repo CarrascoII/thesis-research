@@ -1,3 +1,4 @@
+import os
 import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
@@ -6,21 +7,28 @@ import parser
 import plotter
 
 
-def check_return_code(return_code, endpoint, ciphersuite, stdout):
-    last_msg = ['  -TLS version being used:    TLSv1.2',
-               f'  -Suite being used:          {ciphersuite}']
-    strout = stdout.decode('utf-8')
-    strout = strout.strip('\n')
+def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
+    last_msg = ['Final status:', f'  -Suite being used:          {ciphersuite}']
+    strout = stdout.decode('utf-8').strip('\n')
     last_out = strout.split('\n')[-2:]
+    strerr = stderr.decode('utf-8').strip('\n')
+    last_err = strerr.split('\n')
+
+    print(f'\tChecking {endpoint} return code.............. ', end='')
+
+    if last_err[0] != '':
+        print(f'error\n\tAn unexpected error occured!!!')
+        print(f'\n\tDetails:\n\t\t{last_err}')
+        return -1
 
     for i in range(0, len(last_msg)):
         if last_msg[i] != last_out[i]:
-            print(f'\n\t{endpoint}\'s last message was an unexpected one. Setting return code to -1...')
-            print(f'\n\tExpected:\n\t{last_msg[0]}\n\t{last_msg[1]}')
-            print(f'\n\tObtained:\n\t{last_out[0]}\n\t{last_out[1]}')
+            print(f'error\n\tLast message was not the expected one!!!')
+            print(f'\n\t\tExpected:\n\t\t{last_msg[0]}\n\t\t{last_msg[1]}')
+            print(f'\n\t\tObtained:\n\t\t{last_out[0]}\n\t\t{last_out[1]}')
             return -1
 
-    # print(f'\t{endpoint}\'s last message was the expected one. Setting return code to 0...')
+    print(f'ok')
     return 0
     
 def run_cli(max_size, n_tests, ciphersuite):
@@ -30,10 +38,8 @@ def run_cli(max_size, n_tests, ciphersuite):
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode
-    # print(f'\n\tClient stdout:\n{stdout}')
-    # print(f'\n\tClient stderr:\n{stderr}')
 
-    return check_return_code(ret, 'Client', ciphersuite, stdout)
+    return check_return_code(ret, 'client', ciphersuite, stdout, stderr)
     
 
 def run_srv(max_size, n_tests, ciphersuite):
@@ -44,14 +50,14 @@ def run_srv(max_size, n_tests, ciphersuite):
     stdout, stderr = p.communicate()
     ret = p.returncode
 
-    # print(f'\n\tServer stdout:\n{stdout}')
-    # print(f'\n\tServer stderr:\n{stderr}')
-
-    return check_return_code(ret, 'Server', ciphersuite, stdout)
+    return check_return_code(ret, 'server', ciphersuite, stdout, stderr)
 
 def exec_tls(filename, timeout, max_size, n_tests):
+    os.system('clear')
+
     #Step 1: Parse ciphersuite list
-    print(f'Parsing ciphersuites from {filename}.... ', end='')    
+    print(f'--- STARTING CIPHERSUITE SELECTION PROCESS ---')
+    print(f'\nParsing ciphersuites from {filename}....... ', end='')    
     
     total_ciphersuites = parser.txt_to_list(filename)
     n_total = len(total_ciphersuites)
@@ -61,72 +67,71 @@ def exec_tls(filename, timeout, max_size, n_tests):
     n_error = 0
     current = 1
     
-    print(f'ok\n\nGot {n_total} ciphersuites')
-    print(f'Running with options:')
+    print(f'ok\nGot {n_total} ciphersuites')
+    print(f'\nRunning with options:')
     print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Maximum input size: {max_size} bytes')
 
+    print(f'\n--- STARTING DATA ACQUISITION PROCESS ---')
     pool = ThreadPool(processes=2)
+
     for ciphersuite in total_ciphersuites:
         print(f'\nStarting analysis for: {ciphersuite} ({current}/{n_total})')
         current += 1
 
     #Step 2: Start server in thread 1
-        print(f'\tStarting server.................... ', end='')
+        print(f'\tStarting server.......................... ', end='')
         async_result_srv = pool.apply_async(run_srv, (max_size, n_tests, ciphersuite))
         print(f'ok')
 
         time.sleep(timeout)
 
     #Step 3: Start client in thread 2
-        print(f'\tStarting client.................... ', end='')
+        print(f'\tStarting client.......................... ', end='')
         async_result_cli = pool.apply_async(run_cli, (max_size, n_tests, ciphersuite))
         print(f'ok')
 
     #Step 4: Verify result from server and client
-        print(f'\tChecking endpoints return code..... ', end='')
         srv_ret = async_result_srv.get()
         cli_ret = async_result_cli.get()
 
         if srv_ret != 0 or cli_ret != 0:
-            print(f'error\n\tNon-zero return code from {ciphersuite}:')
-            print(f'\t\tServer returned: {srv_ret}')
-            print(f'\t\tClient returned: {cli_ret}')
-
             error_ciphersuites.append(ciphersuite)
             n_error += 1
         else:
-            print(f'ok\n\tData successfully obtained!!!')
+            print(f'\n\tData successfully obtained!!!')
             
             success_ciphersuites.append(ciphersuite)
             n_success += 1
 
     #Step 5: Analyse and create plots for ciphersuites that ended successfully
+    print(f'\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     current = 1
 
     for ciphersuite in success_ciphersuites:
         print(f'\nCreating graphs for: {ciphersuite} ({current}/{n_success})')
         current +=1
 
-        print(f'\tCreating encryption graphs....... ', end='')
-        cipher_file = '../docs/' + ciphersuite + '/cipher_data.csv'
-        plotter.make_graphs(cipher_file)
-        print(f'ok')
+        print(f'\n    Cipher algorithm:')
+        plotter.make_graphs('../docs/' + ciphersuite + '/cipher_data.csv', spacing='\t')
 
-        print(f'\tCreating MAC graphs.............. ', end='')
-        md_file = '../docs/' + ciphersuite + '/md_data.csv'
-        plotter.make_graphs(md_file)
-        print(f'ok')
+        print(f'\n    MAC algorithm:')
+        plotter.make_graphs('../docs/' + ciphersuite + '/md_data.csv', spacing='\t')
 
     #Step 6: Report final status
-    print(f'\nFinal status:')
+    print(f'\n--- FINAL STATUS ---')
+
+    print(f'\nData generation:')
     print(f'\t-Number of ciphersuites: {n_total}')
     print(f'\t-Number of successes: {n_success}')
     print(f'\t-Number of errors: {n_error}')
-    
+
     if n_error > 0:
         print(f'\t-Error ciphersuites:')
         for ciphersuite in error_ciphersuites:
             print(f'\t\t{ciphersuite}')
+
+    print(f'\nPlots generation:')
+    print(f'\t-Number of ciphersuites: {n_success}')
 
     print(f'\nData aquisition and analysis has ended.')
     print(f'You can check all the csv data and png graph files in the docs/<ciphersuite> directories.')

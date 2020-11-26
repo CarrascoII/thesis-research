@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
 /*
  *  Print for the generated inputs
  */
@@ -24,11 +24,14 @@ void print_hex(unsigned char array[], int size) {
     int i;
 
     for(i = 0; i < size; i++) {
-        printf("%.2x", array[i]);
+        printf("%.2x ", array[i]);
+
+        if(((i + 1) % 16) == 0) {
+            printf("\n");
+        }
     }
-    printf("\n");
 }
-#endif
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
 typedef struct _psk_entry psk_entry;
 struct _psk_entry {
@@ -146,7 +149,9 @@ int main(int argc, char **argv) {
     for(i = 1; i < argc; i++) {
         p = argv[i];
         if((q = strchr(p, '=')) == NULL) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
             printf("To assign own variables, run with <variable>=X\n");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
             return 1;
         }
 
@@ -154,13 +159,18 @@ int main(int argc, char **argv) {
         if(strcmp(p, "n_tests") == 0) {
 			n_tests = atoi(q);
             if(n_tests < 1 || n_tests > 1000) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
                 printf("Number of tests must be between 1 and 1000\n");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
                 return 1;
             }
 		} else if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
             if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
-                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
+                printf("Input size must be multiple of %d, between %d and %d \n", \
+                        MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
                 return 1;
             }
         } 
@@ -168,22 +178,28 @@ int main(int argc, char **argv) {
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
             if(debug < 0 || debug > 5) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
                 printf("Debug level must be int between 0 and 5\n");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
                 return 1;
             }
         }
 #endif
         else if(strcmp(p, "ciphersuite") == 0) {
 			if((suite_id = mbedtls_ssl_get_ciphersuite_id(q)) == 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
                 printf("%s is not an available ciphersuite\n", q);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
                 return 1;
             }
 		} else {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
 			printf("Available options are input_size, n_tests");
 #if defined(MBEDTLS_DEBUG_C) 
             printf(", debug_level");
 #endif
             printf(" and ciphersuite\n");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 			return 1;
 		}
 	}
@@ -200,44 +216,61 @@ int main(int argc, char **argv) {
 #endif
 
     // Load psk list
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf("\nLoading the psk list......................");
     fflush(stdout);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     if((psk_info = psk_parse(test_psk, sizeof(test_psk))) == NULL) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf("psk_list invalid");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
+        ret = -1;
         goto exit;
     }
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
     
     // Seed the RNG
     printf("\nSeeding the random number generator.......");
     fflush(stdout);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     if((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *) pers, strlen(pers))) != 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf(" failed! mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         goto exit;
     }
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
 
     // Create and bind socket
     printf("\nBinding server to tcp/%s/%s......", SERVER_IP, SERVER_PORT);
     fflush(stdout);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     if((ret = mbedtls_net_bind(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf(" failed! mbedtls_net_bind returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         goto exit;      
     }
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
 
     // Setup ssl session
     printf("\nSetting up TLS session....................");
     fflush(stdout);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     if((ret = mbedtls_ssl_config_defaults(&tls_conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf(" failed! mbedtls_ssl_config_defaults returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         goto exit;
     }
 
@@ -253,28 +286,36 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf(" failed! mbedtls_ssl_setup returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         goto exit;
     }
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
 
     // Listen and accept client
     printf("\nWaiting for client to connect.............");
     fflush(stdout);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     if((ret = mbedtls_net_accept(&server, &client, NULL, 0, NULL)) != 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf(" failed! mbedtls_net_accept returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         goto exit; 
     }
 
     mbedtls_ssl_set_bio(&tls, &client, mbedtls_net_send, mbedtls_net_recv, NULL);
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
 
     // Handshake
     printf("\nPerforming TLS handshake..................");
     fflush(stdout);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     while((ret = mbedtls_ssl_handshake(&tls)) != 0) {
         if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
@@ -283,12 +324,9 @@ int main(int argc, char **argv) {
         }
     }
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
-
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    printf("\nPerforming TLS record.....................");    
-    fflush(stdout);
-#endif
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
@@ -298,7 +336,9 @@ int main(int argc, char **argv) {
         memset(response, 0, input_size);
 
         if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, response, input_size)) != 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
             printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
             goto exit;
         }
 
@@ -307,15 +347,17 @@ int main(int argc, char **argv) {
             // Receive request
             printf("\n\n> Read from client:");
             fflush(stdout);
-#endif
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
             memset(request, 0, input_size);
 
             if((ret = mbedtls_ssl_read(&tls, request, input_size)) < 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
                 printf(" failed! mbedtls_ssl_read returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
                 goto exit;
             }
 
-#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
             printf(" %d bytes\n", ret);
             print_hex(request, input_size);
             fflush(stdout);
@@ -323,46 +365,52 @@ int main(int argc, char **argv) {
             // Send response
             printf("\n< Write to client:");
             fflush(stdout);
-#endif
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
             if((ret = mbedtls_ssl_write(&tls, response, input_size)) < 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
                 printf(" failed! mbedtls_ssl_write returned -0x%04x\n", -ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
                 goto exit;
             }
 
-#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
             printf(" %d bytes\n", ret);
             print_hex(response, input_size);
             fflush(stdout);
-#endif
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         }
 
         free(request);
         free(response);
     }
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    printf(" ok");
-#endif
-
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     // Close connection
     printf("\nClosing the connection....................");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     if((ret = mbedtls_ssl_close_notify(&tls)) < 0) {
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
         printf(" failed! mbedtls_ssl_close_notify returned -0x%04x\n",-ret);
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
         goto exit;
     }
 
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf(" ok");
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
 
     // Final connection status
     printf("\n\nFinal status:");
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
     printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
     printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
-// #if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
-//     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
-//     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
-// #endif
+#if !defined(MEASURE_CIPHER) || !defined(MEASURE_MD)
+    printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
+    printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
+#endif /* !MEASURE_CIPHER || !MEASURE_MD */
     printf("\n");
 
 exit:

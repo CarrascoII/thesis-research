@@ -42,9 +42,9 @@ def scatter(ylabel, file_path, data, stats):
     params3 = {'color': 'blue', 'marker': '.'}
     params4 = {'color': 'blue', 'fmt': 'o'}
 
-    if file_path.find('cipher'):
+    if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
-    elif file_path.find('md'):
+    elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
     ax1 = custom_scatter(data['output_size'], data['cycles_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
@@ -54,7 +54,7 @@ def scatter(ylabel, file_path, data, stats):
 
     fig.tight_layout()
     fig.savefig(file_path + ylabel + '_distribution.png')
-    
+    plt.close(fig)
     plt.cla()
 
 def plot(ylabel, file_path, stats):
@@ -63,11 +63,10 @@ def plot(ylabel, file_path, stats):
     params1 = {'color': 'red', 'linestyle': '-'}
     params2 = {'color': 'blue', 'linestyle': '--'}
 
-    print(f'file_path = {file_path}')
-    if file_path.find('cipher'):
+    if file_path.find('cipher') != -1:
         params1['label'] = 'encryption'
         params2['label'] = 'decryption'
-    elif file_path.find('md'):
+    elif file_path.find('md') != -1:
         params1['label'] = 'digest'
         params2['label'] = 'verify'
 
@@ -80,7 +79,7 @@ def plot(ylabel, file_path, stats):
 
     fig.tight_layout()
     fig.savefig(file_path + ylabel + '.png')
-    
+    plt.close(fig)
     plt.cla()
 
 def calc_statistics(out_op, in_op):
@@ -129,35 +128,29 @@ def calc_statistics(out_op, in_op):
         'mode_out': mode_out, 'mode_in': mode_in
     }
 
-def make_graphs(filename, usec=False):
+def make_graphs(filename, usec=False, spacing=''):
         path = filename.replace('data.csv', '')
 
-        print(f'Parsing {filename}... ', end='')
+        print(spacing + f'Parsing obtained data.................... ', end='')
         data, cycles_out, cycles_in, usec_out, usec_in = parser.csv_to_data(filename, parse_usec=usec)
         print(f'ok')
 
-        print(f'Calculating statistics (CPU cycles) from {filename}... ', end='')
+        print(spacing + f'Calculating statistics (CPU cycles)...... ', end='')
         statistics = calc_statistics(cycles_out, cycles_in)
         print(f'ok')
 
-        print(f'Making plot (CPU cycles) from {filename}... ', end='')
+        print(spacing + f'Generating plots (CPU cycles)............ ', end='')
         plot('cycles', path, statistics)
-        print(f'ok')
-
-        print(f'Making scatter (CPU cycles) from {filename}... ', end='')
         scatter('cycles', path, data, statistics)
         print(f'ok')
 
         if usec_out != None and usec_in != None:
-            print(f'Calculating statistics (useconds) from {filename}... ', end='')
+            print(spacing + f'Calculating statistics (useconds)........ ', end='')
             statistics = calc_statistics(usec_out, usec_in)
             print(f'ok')
 
-            print(f'Making plot (useconds) from {filename}... ', end='')
+            print(spacing + f'Generating plots (useconds).............. ', end='')
             plot('usec', path, statistics)
-            print(f'ok')
-
-            print(f'Making scatter (useconds) from {filename}... ', end='')
             scatter('usec', path, data, statistics)
             print(f'ok')
 
