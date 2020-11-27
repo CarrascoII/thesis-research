@@ -6,8 +6,8 @@ def csv_to_data(filename, parse_usec=False):
         csv_reader = csv.DictReader(fl)
         
         data = {
-             'output_size': [], 'input_size': [],
-            'cycles_out': [], 'cycles_in': []
+             'output_size': [], 'cycles_out': [],
+             'input_size': [], 'cycles_in': []
         }
         cycles_out = {}
         cycles_in = {}

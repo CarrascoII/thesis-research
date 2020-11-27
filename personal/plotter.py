@@ -8,16 +8,7 @@ def custom_errorbar(x, y, e, ax=None, title=None, xlabel=None, ylabel=None, kwar
     if ax is None:
         ax = plt.gca()
 
-    ax.errorbar(x, y, yerr=e, **kwargs)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
-
-    return(ax)
-
-def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
-    if ax is None:
-        ax = plt.gca()
-
-    ax.scatter(x, y, **kwargs)
+    ax.errorbar(x, y, yerr=e, fmt='.', capsize=5, barsabove=True, **kwargs)
     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
 
     return(ax)
@@ -33,31 +24,36 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={
 
     return(ax)
 
-def scatter(ylabel, file_path, data, stats):
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(20, 5))
+def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
+    if ax is None:
+        ax = plt.gca()
+
+    ax.scatter(x, y, marker='.', **kwargs)
+    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
+
+    return(ax)
+
+def make_errorbar(ylabel, file_path, data, stats):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     
     operations = None
-    params1 = {'color': 'red', 'marker': '.'}
-    params2 = {'color': 'red', 'fmt': 'o'}
-    params3 = {'color': 'blue', 'marker': '.'}
-    params4 = {'color': 'blue', 'fmt': 'o'}
+    params2 = {'color': 'red'}
+    params4 = {'color': 'blue'}
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = custom_scatter(data['output_size'], data['cycles_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
-    ax2 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax2, title=operations[0], ylabel=ylabel, kwargs=params2)
-    ax3 = custom_scatter(data['input_size'], data['cycles_in'], ax=ax3, title=operations[1], ylabel=ylabel, kwargs=params3)
-    ax4 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax4, title=operations[1], ylabel=ylabel, kwargs=params4)
+    ax1 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params2)
+    ax2 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params4)
 
     fig.tight_layout()
-    fig.savefig(file_path + ylabel + '_distribution.png')
+    fig.savefig(file_path + ylabel + '_deviation.png')
     plt.close(fig)
     plt.cla()
 
-def plot(ylabel, file_path, stats):
+def make_plot(ylabel, file_path, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
     
     params1 = {'color': 'red', 'linestyle': '-'}
@@ -78,7 +74,30 @@ def plot(ylabel, file_path, stats):
                                 ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     fig.tight_layout()
-    fig.savefig(file_path + ylabel + '.png')
+    fig.savefig(file_path + ylabel + '_statistics.png')
+    plt.close(fig)
+    plt.cla()
+
+def make_scatter(ylabel, file_path, data):
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+
+    y = [n for n in range(len(data['cycles_out']))]
+    operations = None
+    params1 = {'color': 'red'}
+    params2 = {'color': 'blue'}
+
+    if file_path.find('cipher') != -1:
+        operations = ['cipher', 'decipher']
+    elif file_path.find('md') != -1:
+        operations = ['hash', 'verify']
+
+    ax1 = custom_scatter(data['output_size'], data['cycles_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
+    ax2 = custom_scatter(y, data['cycles_out'], ax=ax2, title=operations[0], ylabel=ylabel, kwargs=params1)
+    ax3 = custom_scatter(data['input_size'], data['cycles_in'], ax=ax3, title=operations[1], ylabel=ylabel, kwargs=params2)
+    ax4 = custom_scatter(y, data['cycles_in'], ax=ax4, title=operations[1], ylabel=ylabel, kwargs=params2)
+
+    fig.tight_layout()
+    fig.savefig(file_path + ylabel + '_distribution.png')
     plt.close(fig)
     plt.cla()
 
@@ -102,6 +121,7 @@ def calc_statistics(out_op, in_op):
         median = statistics.median(out_op[key])
         mode = statistics.mode(out_op[key])
 #        print(f'out_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
+#        print(f'\nout_op({key}) = {mean} +/- {stdev}')
 
         mean_out.append(mean)
         stdev_out.append(stdev)
@@ -114,6 +134,7 @@ def calc_statistics(out_op, in_op):
         median = statistics.median(in_op[key])
         mode = statistics.mode(in_op[key])
 #        print(f'in_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
+#        print(f'in_op({key}) = {mean} +/- {stdev}')
 
         mean_in.append(mean)
         stdev_in.append(stdev)
@@ -128,7 +149,7 @@ def calc_statistics(out_op, in_op):
         'mode_out': mode_out, 'mode_in': mode_in
     }
 
-def make_graphs(filename, usec=False, spacing=''):
+def make_figs(filename, usec=False, spacing=''):
         path = filename.replace('data.csv', '')
 
         print(spacing + f'Parsing obtained data.................... ', end='')
@@ -139,9 +160,10 @@ def make_graphs(filename, usec=False, spacing=''):
         statistics = calc_statistics(cycles_out, cycles_in)
         print(f'ok')
 
-        print(spacing + f'Generating plots (CPU cycles)............ ', end='')
-        plot('cycles', path, statistics)
-        scatter('cycles', path, data, statistics)
+        print(spacing + f'Generating figures (CPU cycles).......... ', end='')
+        make_scatter('cycles', path, data)
+        make_plot('cycles', path, statistics)
+        make_errorbar('cycles', path, data, statistics)
         print(f'ok')
 
         if usec_out != None and usec_in != None:
@@ -149,9 +171,10 @@ def make_graphs(filename, usec=False, spacing=''):
             statistics = calc_statistics(usec_out, usec_in)
             print(f'ok')
 
-            print(spacing + f'Generating plots (useconds).............. ', end='')
-            plot('usec', path, statistics)
-            scatter('usec', path, data, statistics)
+            print(spacing + f'Generating figures (useconds)............ ', end='')
+            make_scatter('usec', path, data)
+            make_plot('usec', path, statistics)
+            make_errorbar('usec', path, data, statistics)
             print(f'ok')
 
 def main(argv):
@@ -175,7 +198,7 @@ def main(argv):
         if opt in ('-s', '--useconds'):
             usec = True
         elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
-            make_graphs(arg, usec)
+            make_figs(arg, usec)
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)

@@ -112,10 +112,10 @@ def exec_tls(filename, timeout, max_size, n_tests):
         current +=1
 
         print(f'\n    Cipher algorithm:')
-        plotter.make_graphs('../docs/' + ciphersuite + '/cipher_data.csv', spacing='\t')
+        plotter.make_figs('../docs/' + ciphersuite + '/cipher_data.csv', spacing='\t')
 
         print(f'\n    MAC algorithm:')
-        plotter.make_graphs('../docs/' + ciphersuite + '/md_data.csv', spacing='\t')
+        plotter.make_figs('../docs/' + ciphersuite + '/md_data.csv', spacing='\t')
 
     #Step 6: Report final status
     print(f'\n--- FINAL STATUS ---')
