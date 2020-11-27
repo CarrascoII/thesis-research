@@ -1,6 +1,5 @@
 import sys, getopt
 import matplotlib.pyplot as plt
-import statistics
 import parser
 
 
@@ -28,12 +27,27 @@ def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={
     if ax is None:
         ax = plt.gca()
 
+    # ticks = []
+    # ticks_unique = []
+    # ticks_label = []
+    # counter = 0
+    # for val in x:
+    #     if val not in ticks_label:
+    #         ticks_label.append(val)
+    #         counter += 1
+    #         ticks_unique.append(counter)
+    #     ticks.append(counter)
+
     ax.scatter(x, y, marker='.', **kwargs)
+    ax.set_xscale('log', base=2)
+#    ax.scatter(ticks, y, marker='.', **kwargs)
+#    ax.set_xticks(ticks_unique)
+#    ax.set_xticklabels(ticks_label)
     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
 
     return(ax)
 
-def make_errorbar(ylabel, file_path, data, stats):
+def make_errorbar(ylabel, file_path, stats):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     
     operations = None
@@ -79,10 +93,11 @@ def make_plot(ylabel, file_path, stats):
     plt.cla()
 
 def make_scatter(ylabel, file_path, data):
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
-    y = [n for n in range(len(data['cycles_out']))]
     operations = None
+    keys = [ylabel + '_out', ylabel + '_in']
+
     params1 = {'color': 'red'}
     params2 = {'color': 'blue'}
 
@@ -91,63 +106,13 @@ def make_scatter(ylabel, file_path, data):
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = custom_scatter(data['output_size'], data['cycles_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
-    ax2 = custom_scatter(y, data['cycles_out'], ax=ax2, title=operations[0], ylabel=ylabel, kwargs=params1)
-    ax3 = custom_scatter(data['input_size'], data['cycles_in'], ax=ax3, title=operations[1], ylabel=ylabel, kwargs=params2)
-    ax4 = custom_scatter(y, data['cycles_in'], ax=ax4, title=operations[1], ylabel=ylabel, kwargs=params2)
+    ax1 = custom_scatter(data['output_size'], data[keys[0]], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
+    ax2 = custom_scatter(data['input_size'], data[keys[1]], ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
 
     fig.tight_layout()
     fig.savefig(file_path + ylabel + '_distribution.png')
     plt.close(fig)
     plt.cla()
-
-def calc_statistics(out_op, in_op):
-    data_size = []
-    mean_out = []
-    stdev_out = []
-    median_out = []
-    mode_out = []
-    mean_in = []
-    stdev_in = []
-    median_in = []
-    mode_in = []
-
-    for key in out_op:
-        data_size.append(key)
-
-#        print(f'\nout_op for {key}:\n{out_op[key]}')
-        mean = statistics.mean(out_op[key])
-        stdev = statistics.pstdev(out_op[key])
-        median = statistics.median(out_op[key])
-        mode = statistics.mode(out_op[key])
-#        print(f'out_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
-#        print(f'\nout_op({key}) = {mean} +/- {stdev}')
-
-        mean_out.append(mean)
-        stdev_out.append(stdev)
-        median_out.append(median)
-        mode_out.append(mode)
-
-#        print(f'\nin_op for {key}:\n{in_op[key]}')
-        mean = statistics.mean(in_op[key])
-        stdev = statistics.pstdev(in_op[key])
-        median = statistics.median(in_op[key])
-        mode = statistics.mode(in_op[key])
-#        print(f'in_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
-#        print(f'in_op({key}) = {mean} +/- {stdev}')
-
-        mean_in.append(mean)
-        stdev_in.append(stdev)
-        median_in.append(median)
-        mode_in.append(mode)
-
-    return {
-        'data_size': data_size,
-        'mean_out': mean_out, 'mean_in': mean_in,
-        'stdev_out': stdev_out, 'stdev_in': stdev_in,
-        'median_out': median_out, 'median_in': median_in,
-        'mode_out': mode_out, 'mode_in': mode_in
-    }
 
 def make_figs(filename, usec=False, spacing=''):
         path = filename.replace('data.csv', '')
@@ -157,24 +122,24 @@ def make_figs(filename, usec=False, spacing=''):
         print(f'ok')
 
         print(spacing + f'Calculating statistics (CPU cycles)...... ', end='')
-        statistics = calc_statistics(cycles_out, cycles_in)
+        statistics = parser.calc_statistics(cycles_out, cycles_in)
         print(f'ok')
 
         print(spacing + f'Generating figures (CPU cycles).......... ', end='')
         make_scatter('cycles', path, data)
         make_plot('cycles', path, statistics)
-        make_errorbar('cycles', path, data, statistics)
+        make_errorbar('cycles', path, statistics)
         print(f'ok')
 
         if usec_out != None and usec_in != None:
             print(spacing + f'Calculating statistics (useconds)........ ', end='')
-            statistics = calc_statistics(usec_out, usec_in)
+            statistics = parser.calc_statistics(usec_out, usec_in)
             print(f'ok')
 
             print(spacing + f'Generating figures (useconds)............ ', end='')
             make_scatter('usec', path, data)
             make_plot('usec', path, statistics)
-            make_errorbar('usec', path, data, statistics)
+            make_errorbar('usec', path, statistics)
             print(f'ok')
 
 def main(argv):

@@ -3,8 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import parser
-import plotter
+import parser, plotter
 
 
 def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
