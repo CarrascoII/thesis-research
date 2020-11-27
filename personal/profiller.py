@@ -158,7 +158,7 @@ def main(argv):
         sys.exit(2)
 
     timeout = 2
-    max_size = '4096'
+    max_size = '16'
     n_tests = '500'
     usec = False
 
