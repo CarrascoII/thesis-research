@@ -3362,6 +3362,8 @@ curve_matching_done:
         fclose(csv);
 
         printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
+        PAPI_shutdown();
+
         if(ret != 0)
 #endif
         {
@@ -3575,6 +3577,8 @@ static int ssl_parse_client_dh_public( mbedtls_ssl_context *ssl, unsigned char *
     fclose(csv);
 
     printf("\nKE: read_public, %lld, %lld", cycles_cpu, usec_cpu);
+    PAPI_shutdown();
+
     if(ret != 0)
 #endif
     {
@@ -3967,6 +3971,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         fclose(csv);
 
         printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, usec_cpu);
+        PAPI_shutdown();
+
         if(ret != 0)
 #endif
         {
@@ -4423,6 +4429,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     fclose(csv);
 
     printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
+    PAPI_shutdown();
+    
     if(ret != 0)
 #endif
     {

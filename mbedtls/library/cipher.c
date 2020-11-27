@@ -65,10 +65,6 @@
 #define mbedtls_free   free
 #endif
 
-#if defined(PAPI_CIPHER)
-#include "papi.h"
-#endif
-
 #define CIPHER_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA )
 #define CIPHER_VALIDATE( cond )        \
@@ -1002,26 +998,6 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
 {
     int ret;
     size_t finish_olen;
-#if defined(PAPI_CIPHER)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
     CIPHER_VALIDATE_RET( ctx != NULL );
     CIPHER_VALIDATE_RET( iv_len == 0 || iv != NULL );
@@ -1044,28 +1020,6 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
         return( ret );
 
     *olen += finish_olen;
-
-#if defined(PAPI_CIPHER)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(cipher_fname, "a+");
-    if(ctx->operation == MBEDTLS_DECRYPT) {
-        fprintf(csv, "\ndecrypt,%lld,%lld", cycles_cpu, usec_cpu);
-    } else {
-        fprintf(csv, "\nencrypt,%lld,%lld", cycles_cpu, usec_cpu);
-    }
-    fclose(csv);
-
-    if(ctx->operation == MBEDTLS_DECRYPT) {
-        printf("\nCIPHER: decrypt, %lld, %lld", cycles_cpu, usec_cpu);
-    } else {
-        printf("\nCIPHER: encrypt, %lld, %lld", cycles_cpu, usec_cpu);
-    }
-#endif
 
     return( 0 );
 }

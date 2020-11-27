@@ -111,7 +111,7 @@
 #endif
 
 // #define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_MD
 // #define MEASURE_IN_USEC
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)

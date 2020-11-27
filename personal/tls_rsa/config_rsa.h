@@ -98,10 +98,6 @@
 /**
  * Program flags
  */
-// #define PAPI_CIPHER
-// #define PAPI_MD
-// #define PAPI_KE
-
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
 // #define MEASURE_KE
@@ -117,16 +113,6 @@
 #define N_TESTS         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL     1
-#endif
-
-#if defined(PAPI_CIPHER)
-extern char cipher_fname[50];
-#endif
-#if defined(PAPI_MD)
-extern char md_fname[50];
-#endif
-#if defined(PAPI_KE) || defined(MEASURE_KE)
-extern char ke_fname[50];
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

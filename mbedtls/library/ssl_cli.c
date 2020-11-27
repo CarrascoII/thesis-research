@@ -2040,6 +2040,8 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
     fclose(csv);
 
     printf("\nKE: read_params, %lld, %lld", cycles_cpu, usec_cpu);
+    PAPI_shutdown();
+
     if(ret != 0)
 #endif
     {
@@ -2743,6 +2745,8 @@ start_processing:
         fclose(csv);
 
         printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
+        PAPI_shutdown();
+
         if(ret != 0)
 #endif
         {
@@ -3090,6 +3094,8 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         fclose(csv);
 
         printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, usec_cpu);
+        PAPI_shutdown();
+
         if(ret != 0)
 #endif
         {
@@ -3258,6 +3264,7 @@ ecdh_calc_secret:
             fclose(csv);
 
             printf("\nKE: make_public, %lld, %lld", cycles_cpu, usec_cpu);
+            PAPI_shutdown();
 #endif
 
             if( ret != 0 )
@@ -3599,6 +3606,8 @@ sign:
     fclose(csv);
 
     printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
+    PAPI_shutdown();
+    
     if(ret != 0)
 #endif
     {

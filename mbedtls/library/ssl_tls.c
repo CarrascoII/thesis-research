@@ -61,71 +61,6 @@
 #include "papi.h"
 #endif
 
-#if defined(PAPI_CIPHER)
-char cipher_fname[50] = "../docs/CIPHER-";
-static const char* cipher_lst[] = {
-    "NONE", "NULL",
-    "AES-128-ECB", "AES-192-ECB", "AES-256-ECB",
-    "AES-128-CBC", "AES-192-CBC", "AES-256-CBC",
-    "AES-128-CFB128", "AES-192-CFB128", "AES-256-CFB128",
-    "AES-128-CTR", "AES-192-CTR", "AES-256-CTR",
-    "AES-128-GCM", "AES-192-GCM", "AES-256-GCM",
-    "CAMELLIA-128-ECB", "CAMELLIA-192-ECB", "CAMELLIA-256-ECB",
-    "CAMELLIA-128-CBC", "CAMELLIA-192-CBC", "CAMELLIA-256-CBC",
-    "CAMELLIA-128-CFB128", "CAMELLIA-192-CFB128", "CAMELLIA-256-CFB128",
-    "CAMELLIA-128-CTR", "CAMELLIA-192-CTR", "CAMELLIA-256-CTR",
-    "CAMELLIA-128-GCM", "CAMELLIA-192-GCM", "CAMELLIA-256-GCM",
-    "DES-ECB", "DES-CBC",
-    "DES-EDE-ECB", "DES-EDE-CBC",
-    "DES-EDE3-ECB", "DES-EDE3-CBC",
-    "BLOWFISH-ECB",
-    "BLOWFISH-CBC",
-    "BLOWFISH-CFB64",
-    "BLOWFISH-CTR",
-    "ARC4-128",
-    "AES-128-CCM", "AES-192-CCM", "AES-256-CCM",
-    "CAMELLIA-128-CCM", "CAMELLIA-192-CCM", "CAMELLIA-256-CCM",
-    "ARIA-128-ECB", "ARIA-192-ECB", "ARIA-256-ECB",
-    "ARIA-128-CBC", "ARIA-192-CBC", "ARIA-256-CBC",
-    "ARIA-128-CFB128", "ARIA-192-CFB128", "ARIA-256-CFB128",
-    "ARIA-128-CTR", "ARIA-192-CTR", "ARIA-256-CTR",
-    "ARIA-128-GCM", "ARIA-192-GCM", "ARIA-256-GCM",
-    "ARIA-128-CCM", "ARIA-192-CCM", "ARIA-256-CCM",
-    "AES-128-OFB", "AES-192-OFB", "AES-256-OFB",
-    "AES-128-XTS", "AES-256-XTS",
-    "CHACHA20",
-    "CHACHA20-POLY1305"
-};
-#endif
-
-#if defined(PAPI_MD)
-char md_fname[50] = "../docs/MD-";
-static const char* md_lst[] = {
-    "NONE",
-    "MD2", "MD4", "MD5",
-    "SHA1", "SHA224", "SHA256", "SHA384", "SHA512",
-    "RIPEMD160"
-};
-#endif
-
-#if defined(PAPI_KE)
-char ke_fname[50] = "../docs/KE-";
-static const char* ke_lst[] = {
-    "NONE",
-    "RSA",
-    "DHE-RSA",
-    "ECDHE-RSA",
-    "ECDHE-ECDSA",
-    "PSK",
-    "DHE-PSK",
-    "RSA-PSK",
-    "ECDHE-PSK",
-    "ECDH-RSA",
-    "ECDH-ECDSA",
-    "ECJPAKE"
-};
-#endif
-
 static void ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl );
 static uint32_t ssl_get_hs_total_len( mbedtls_ssl_context const *ssl );
 
@@ -1697,7 +1632,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
             fclose(csv);
         }
-        
+
         if(ret != 0)
 #endif
         {
@@ -2027,6 +1962,10 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= encrypt buf" ) );
+
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+    PAPI_shutdown();
+#endif
 
     return( 0 );
 }
@@ -2652,7 +2591,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #if defined(MEASURE_MD)    
             start_cycles_cpu = PAPI_get_virt_cyc();
 #if defined(MEASURE_IN_USEC)
-        start_usec_cpu = PAPI_get_virt_usec();
+            start_usec_cpu = PAPI_get_virt_usec();
 #endif
 #endif
 
@@ -2799,6 +2738,10 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= decrypt buf" ) );
+
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+    PAPI_shutdown();
+#endif
 
     return( 0 );
 }
@@ -8502,8 +8445,7 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
-#if defined(PAPI_CIPHER) || defined(PAPI_MD) || defined(PAPI_KE) || \
-    defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     FILE *csv;
     const mbedtls_ssl_ciphersuite_t *suite_info;
     char path[40] = FILE_PATH;
@@ -8521,23 +8463,13 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
         if( ret != 0 )
             break;
 
-#if defined(PAPI_KE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE)
         if(ssl->state == MBEDTLS_SSL_SERVER_CERTIFICATE) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
             strcat(path, suite_info->name);
             mkdir(path, 0777);
 
-#if defined(PAPI_KE)
-            strcat(ke_fname, suite_info->name);
-            strcat(ke_fname, ".csv");
-
-            csv = fopen(ke_fname, "w");
-            fprintf(csv, "endpoint,operation,cycles,usec\n");
-            fclose(csv);
-#endif
-
-#if defined(MEASURE_KE)
             strcpy(ke_fname, path);
             strcat(ke_fname, KE_EXTENSION);
 
@@ -8547,26 +8479,15 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             fprintf(csv, ",usec");
 #endif
             fclose(csv);
-#endif
         }
 #endif
 
-#if defined(PAPI_CIPHER) || defined(PAPI_MD) || \
-    defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
             
             strcat(path, suite_info->name);
             mkdir(path, 0777);
-
-#if defined(PAPI_CIPHER)
-            strcat(cipher_fname, suite_info->name + 4);
-            strcat(cipher_fname, ".csv");
-
-            csv = fopen(cipher_fname, "w");
-            fprintf(csv, "operation,cycles,usec,endpoint,data_size");
-            fclose(csv);
-#endif
 
 #if defined(MEASURE_CIPHER)
             cipher_fname = (char *) malloc((CIPHER_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
@@ -8578,15 +8499,6 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #if defined(MEASURE_IN_USEC)
             fprintf(csv, ",usec");
 #endif
-            fclose(csv);
-#endif
-
-#if defined(PAPI_MD)
-            strcat(md_fname, suite_info->name + 4);
-            strcat(md_fname, ".csv");
-
-            csv = fopen(md_fname, "w");
-            fprintf(csv, "operation,cycles,usec,endpoint,data_size");
             fclose(csv);
 #endif
 
@@ -8603,7 +8515,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             fclose(csv);
 #endif
         }
-#endif
+#endif /* MEASURE_CIPHER || MEASURE_MD */
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= handshake" ) );

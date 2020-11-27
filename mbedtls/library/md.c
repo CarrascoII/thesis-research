@@ -49,10 +49,6 @@
 #include <stdio.h>
 #endif
 
-#if defined(PAPI_MD)
-#include "papi.h"
-#endif
-
 /*
  * Reminder: update profiles in x509_crt.c when adding a new hash!
  */
@@ -326,27 +322,6 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
     unsigned char sum[MBEDTLS_MD_MAX_SIZE];
     unsigned char *ipad, *opad;
     size_t i;
-#if defined(PAPI_MD)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
@@ -385,71 +360,16 @@ int mbedtls_md_hmac_starts( mbedtls_md_context_t *ctx, const unsigned char *key,
 cleanup:
     mbedtls_platform_zeroize( sum, sizeof( sum ) );
 
-#if defined(PAPI_MD)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(md_fname, "a+");    
-    fprintf(csv, "\nstarts,%lld,%lld", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nMD: starts, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
-
     return( ret );
 }
 
 int mbedtls_md_hmac_update( mbedtls_md_context_t *ctx, const unsigned char *input, size_t ilen )
 {
-#if defined(PAPI_MD)
-    int ret;
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
-#if !defined(PAPI_MD)
     return( ctx->md_info->update_func( ctx->md_ctx, input, ilen ) );
-#else
-    if( ( ctx->md_info->update_func( ctx->md_ctx, input, ilen ) ) != 0 )
-        return( ret );
-
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(md_fname, "a+");
-    fprintf(csv, "\nupdate,%lld,%lld", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nMD: update, %lld, %lld", cycles_cpu, usec_cpu);
-
-    return( ret );
-#endif
 }
 
 int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
@@ -457,27 +377,6 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
     int ret;
     unsigned char tmp[MBEDTLS_MD_MAX_SIZE];
     unsigned char *opad;
-#if defined(PAPI_MD)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
@@ -495,52 +394,13 @@ int mbedtls_md_hmac_finish( mbedtls_md_context_t *ctx, unsigned char *output )
                                            ctx->md_info->size ) ) != 0 )
         return( ret );
 
-#if !defined(PAPI_MD)
     return( ctx->md_info->finish_func( ctx->md_ctx, output ) );
-#else
-    if( ( ret = ctx->md_info->finish_func( ctx->md_ctx, output ) ) != 0 )
-        return( ret );
-
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(md_fname, "a+");
-    fprintf(csv, "\nfinish,%lld,%lld", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nMD: finish, %lld, %lld", cycles_cpu, usec_cpu);
-    return( ret );
-#endif
 }
 
 int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
 {
     int ret;
     unsigned char *ipad;
-#if defined(PAPI_MD)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
@@ -549,27 +409,8 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
 
     if( ( ret = ctx->md_info->starts_func( ctx->md_ctx ) ) != 0 )
         return( ret );
-#if !defined(PAPI_MD)
     return( ctx->md_info->update_func( ctx->md_ctx, ipad,
                                        ctx->md_info->block_size ) );
-#else
-    if( ( ret = ctx->md_info->update_func( ctx->md_ctx, ipad,
-                                       ctx->md_info->block_size ) ) != 0 )
-        return( ret );
-    
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(md_fname, "a+");
-    fprintf(csv, "\nreset,%lld,%lld", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nMD: reset, %lld, %lld", cycles_cpu, usec_cpu);    
-    return( ret );
-#endif
 }
 
 int mbedtls_md_hmac( const mbedtls_md_info_t *md_info,

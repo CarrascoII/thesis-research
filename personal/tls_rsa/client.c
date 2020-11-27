@@ -17,8 +17,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#if !defined(PAPI_CIPHER) && !defined(PAPI_MD) && \
-    !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
 /*
  *  Print for the generated inputs
  */
@@ -72,9 +71,6 @@ int main(int argc, char **argv) {
     const char *pers = "tls_client generate request";
     char *p, *q;
     uint32_t flags;
-#if defined(PAPI_CIPHER) || defined(PAPI_MD)
-    FILE *csv;
-#endif
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
@@ -288,23 +284,10 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(PAPI_CIPHER) && !defined(PAPI_MD) && \
-    !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
             print_hex(request, input_size);
 #endif
             fflush(stdout);
-
-#if defined(PAPI_CIPHER)
-            csv = fopen(cipher_fname, "a+");    
-            fprintf(csv, ",client,%d", input_size);
-            fclose(csv);
-#endif
-
-#if defined(PAPI_MD)
-            csv = fopen(md_fname, "a+");    
-            fprintf(csv, ",client,%d", input_size);
-            fclose(csv);
-#endif
 
             // Receive response
             printf("\n> Read from server:");
@@ -318,23 +301,10 @@ int main(int argc, char **argv) {
             }
 
             printf(" %d bytes\n", ret);
-#if !defined(PAPI_CIPHER) && !defined(PAPI_MD) && \
-    !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
             print_hex(response, input_size);
 #endif
             fflush(stdout);
-
-#if defined(PAPI_CIPHER)
-            csv = fopen(cipher_fname, "a+");    
-            fprintf(csv, ",client,%d", input_size);
-            fclose(csv);
-#endif
-
-#if defined(PAPI_MD)
-            csv = fopen(md_fname, "a+");    
-            fprintf(csv, ",client,%d", input_size);
-            fclose(csv);
-#endif
         }
 
         free(request);
@@ -350,18 +320,6 @@ int main(int argc, char **argv) {
     }
 
     printf(" ok");
-
-#if defined(PAPI_CIPHER)
-    csv = fopen(cipher_fname, "a+");
-    fprintf(csv, ",client,close");
-    fclose(csv);
-#endif
-
-#if defined(PAPI_MD)
-    csv = fopen(md_fname, "a+");
-    fprintf(csv, ",client,close");
-    fclose(csv);
-#endif
 
     // Final connection status
     printf("\n\nFinal status:");

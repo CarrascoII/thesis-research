@@ -44,13 +44,6 @@
 #include <limits.h>
 #include <stdint.h>
 
-#if defined(PAPI_KE)
-#include <stdio.h>
-#include <string.h>
-
-#include "papi.h"
-#endif
-
 /* Parameter validation macros based on platform_util.h */
 #define PK_VALIDATE_RET( cond )    \
     MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_PK_BAD_INPUT_DATA )
@@ -250,29 +243,6 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
                const unsigned char *sig, size_t sig_len,
                mbedtls_pk_restart_ctx *rs_ctx )
 {
-#if defined(PAPI_KE)
-    int ret;
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
-
     PK_VALIDATE_RET( ctx != NULL );
     PK_VALIDATE_RET( ( md_alg == MBEDTLS_MD_NONE && hash_len == 0 ) ||
                      hash != NULL );
@@ -299,20 +269,6 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
 
-#if defined(PAPI_KE)
-        end_cycles_cpu = PAPI_get_virt_cyc();
-        end_usec_cpu = PAPI_get_virt_usec();
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        usec_cpu = end_usec_cpu - start_usec_cpu;
-
-        csv = fopen(ke_fname, "a+");
-        fprintf(csv, ",verify,%lld,%lld\n", cycles_cpu, usec_cpu);
-        fclose(csv);
-
-        printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
-
         return( ret );
     }
 #else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
@@ -322,28 +278,8 @@ int mbedtls_pk_verify_restartable( mbedtls_pk_context *ctx,
     if( ctx->pk_info->verify_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
-#if !defined(PAPI_KE)
     return( ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                        sig, sig_len ) );
-#else
-    if( ( ret = ctx->pk_info->verify_func( ctx->pk_ctx, md_alg, hash, hash_len,
-                                       sig, sig_len ) ) != 0 )
-        return( ret );
-
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, ",verify,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
-
-    return( ret );
-#endif
 }
 
 /*
@@ -430,29 +366,6 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
              int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
              mbedtls_pk_restart_ctx *rs_ctx )
 {
-#if defined(PAPI_KE)
-    int ret;
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
-
     PK_VALIDATE_RET( ctx != NULL );
     PK_VALIDATE_RET( ( md_alg == MBEDTLS_MD_NONE && hash_len == 0 ) ||
                      hash != NULL );
@@ -479,20 +392,6 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
         if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
             mbedtls_pk_restart_free( rs_ctx );
 
-#if defined(PAPI_KE)
-        end_cycles_cpu = PAPI_get_virt_cyc();
-        end_usec_cpu = PAPI_get_virt_usec();
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        usec_cpu = end_usec_cpu - start_usec_cpu;
-
-        csv = fopen(ke_fname, "a+");
-        fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
-        fclose(csv);
-
-        printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
-
         return( ret );
     }
 #else /* MBEDTLS_ECDSA_C && MBEDTLS_ECP_RESTARTABLE */
@@ -502,28 +401,8 @@ int mbedtls_pk_sign_restartable( mbedtls_pk_context *ctx,
     if( ctx->pk_info->sign_func == NULL )
         return( MBEDTLS_ERR_PK_TYPE_MISMATCH );
 
-#if !defined(PAPI_KE)
     return( ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
                                      sig, sig_len, f_rng, p_rng ) );
-#else
-    if( ( ret = ctx->pk_info->sign_func( ctx->pk_ctx, md_alg, hash, hash_len,
-                                     sig, sig_len, f_rng, p_rng ) ) != 0 )
-        return( ret );
-
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, ",sign,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
-
-    return( ret );
-#endif
 }
 
 /*

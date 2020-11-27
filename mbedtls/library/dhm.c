@@ -58,10 +58,6 @@
 #define mbedtls_free       free
 #endif
 
-#if defined(PAPI_KE)
-#include "papi.h"
-#endif
-
 #if !defined(MBEDTLS_DHM_ALT)
 
 #define DHM_VALIDATE_RET( cond )    \
@@ -142,27 +138,6 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
                      const unsigned char *end )
 {
     int ret;
-#if defined(PAPI_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( p != NULL && *p != NULL );
     DHM_VALIDATE_RET( end != NULL );
@@ -176,20 +151,6 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
         return( ret );
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
-
-#if defined(PAPI_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,read_params,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: read_params, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
 
     return( 0 );
 }
@@ -205,27 +166,6 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
     int ret, count = 0;
     size_t n1, n2, n3;
     unsigned char *p;
-#if defined(PAPI_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( output != NULL );
     DHM_VALIDATE_RET( olen != NULL );
@@ -284,20 +224,6 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
 
     ctx->len = n1;
 
-#if defined(PAPI_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "server,make_params,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: make_params, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
-
 cleanup:
 
     if( ret != 0 )
@@ -315,27 +241,6 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 {
 
     int ret;
-#if defined(PAPI_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( P != NULL );
     DHM_VALIDATE_RET( G != NULL );
@@ -348,20 +253,6 @@ int mbedtls_dhm_set_group( mbedtls_dhm_context *ctx,
 
     ctx->len = mbedtls_mpi_size( &ctx->P );
 
-#if defined(PAPI_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "server,set_group,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: set_group, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
-
     return( 0 );
 }
 
@@ -372,27 +263,6 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
                      const unsigned char *input, size_t ilen )
 {
     int ret;
-#if defined(PAPI_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( input != NULL );
 
@@ -401,20 +271,6 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
 
     if( ( ret = mbedtls_mpi_read_binary( &ctx->GY, input, ilen ) ) != 0 )
         return( MBEDTLS_ERR_DHM_READ_PUBLIC_FAILED + ret );
-
-#if defined(PAPI_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "server,read_public,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: read_public, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
 
     return( 0 );
 }
@@ -428,27 +284,6 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
                      void *p_rng )
 {
     int ret, count = 0;
-#if defined(PAPI_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( output != NULL );
     DHM_VALIDATE_RET( f_rng != NULL );
@@ -481,20 +316,6 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
         return( ret );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->GX, output, olen ) );
-
-#if defined(PAPI_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: make_public, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
 
 cleanup:
 
@@ -579,27 +400,6 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
 {
     int ret;
     mbedtls_mpi GYb;
-#if defined(PAPI_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-    
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
-#endif
     DHM_VALIDATE_RET( ctx != NULL );
     DHM_VALIDATE_RET( output != NULL );
     DHM_VALIDATE_RET( olen != NULL );
@@ -636,20 +436,6 @@ int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
     *olen = mbedtls_mpi_size( &ctx->K );
 
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &ctx->K, output, *olen ) );
-
-#if defined(PAPI_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, ",calc_secret,%lld,%lld\n", cycles_cpu, usec_cpu);
-    fclose(csv);
-
-    printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, usec_cpu);
-#endif
 
 cleanup:
     mbedtls_mpi_free( &GYb );
