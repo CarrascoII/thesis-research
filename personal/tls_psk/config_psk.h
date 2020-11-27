@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
+// #define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -104,16 +104,15 @@
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-#define PRINT_HANDSHAKE_STEPS
+// #define PRINT_HANDSHAKE_STEPS
 #endif
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
 // #define MEASURE_CIPHER
-// #define MEASURE_MD
-// #define MEASURE_KE
-//#define MEASURE_IN_USEC
+#define MEASURE_MD
+// #define MEASURE_IN_USEC
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define FILE_PATH           "../docs/"
@@ -131,8 +130,8 @@ char *md_fname;
 #endif
 
 #if defined(MEASURE_KE)
-#define MD_EXTENSION        "/ke_data.csv"
-#define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(KE_EXTENSION) + len("\0") */
+#define KE_EXTENSION        "/ke_data.csv"
+#define KE_FNAME_SIZE       21 /* = len(FILE_PATH) + len(KE_EXTENSION) + len("\0") */
 char *ke_fname;
 #endif
 #endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
