@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import parser, plotter
+import utils, plotter
 
 
 def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
@@ -63,7 +63,7 @@ def exec_tls(filename, timeout, max_size, n_tests, usec):
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}....... ', end='')    
     
-    total_ciphersuites = parser.txt_to_list(filename)
+    total_ciphersuites = utils.parse_txt_to_list(filename)
     n_total = len(total_ciphersuites)
     success_ciphersuites = []
     n_success = 0

@@ -1,6 +1,6 @@
 import sys, getopt
 import matplotlib.pyplot as plt
-import parser
+import utils
 
 
 def save_fig(fig, fname):
@@ -110,25 +110,25 @@ def make_figs(filename, usec=False, spacing=''):
         path = filename.replace('data.csv', '')
 
         print(spacing + f'Parsing obtained data.................... ', end='')
-        data, cycles_out, cycles_in, usec_out, usec_in = parser.csv_to_data(filename, parse_usec=usec)
+        data, cycles_out, cycles_in, usec_out, usec_in = utils.parse_csv_to_data(filename, parse_usec=usec)
         print(f'ok')
 
-        print(spacing + f'Calculating statistics (CPU cycles)...... ', end='')
-        statistics = parser.calc_statistics(cycles_out, cycles_in)
+        print(spacing + f'Calculating statistics (cycles).......... ', end='')
+        statistics = utils.calc_statistics(cycles_out, cycles_in)
         print(f'ok')
 
-        print(spacing + f'Generating figures (CPU cycles).......... ', end='')
+        print(spacing + f'Generating figures (cycles).............. ', end='')
         make_scatter('cycles', path, data)
         make_plot('cycles', path, statistics)
         make_errorbar('cycles', path, statistics)
         print(f'ok')
 
-        if usec_out != None and usec_in != None:
-            print(spacing + f'Calculating statistics (useconds)........ ', end='')
-            statistics = parser.calc_statistics(usec_out, usec_in)
+        if usec_out != {} and usec_in != {}:
+            print(spacing + f'Calculating statistics (time)............ ', end='')
+            statistics = utils.calc_statistics(usec_out, usec_in)
             print(f'ok')
 
-            print(spacing + f'Generating figures (useconds)............ ', end='')
+            print(spacing + f'Generating figures (time)................ ', end='')
             make_scatter('usec', path, data)
             make_plot('usec', path, statistics)
             make_errorbar('usec', path, statistics)

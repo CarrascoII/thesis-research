@@ -2,22 +2,19 @@ import csv
 import statistics
 
 
-def csv_to_data(filename, parse_usec=False):
+def parse_csv_to_data(filename, parse_usec=False):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
         
         data = {
-            'output_size': [], 'cycles_out': [],
-            'input_size': [], 'cycles_in': []
+            'output_size': [], 'input_size': [],
+            'cycles_out': [], 'cycles_in': [],
+            'usec_out': [], 'usec_in': []
         }
         cycles_out = {}
         cycles_in = {}
-        usec_out = None
-        usec_in = None
-
-        if parse_usec:
-            usec_out = {}
-            usec_in = {}
+        usec_out = {}
+        usec_in = {}
 
         for row in csv_reader:
 #            print(f'row: {row["endpoint"]}, {row["operation"]}, {row["data_size"]}, {row["cycles"]}, {row["usec"]}')            
@@ -40,6 +37,7 @@ def csv_to_data(filename, parse_usec=False):
                 
                 if parse_usec:
                     usec_out[key].append(int(row['usec']))
+                    data['usec_out'].append(int(row['usec']))
 
             elif row['operation'] == 'decrypt' or row['operation'] == 'verify': 
                 data['input_size'].append(int(key))
@@ -48,6 +46,7 @@ def csv_to_data(filename, parse_usec=False):
                 
                 if parse_usec:
                     usec_in[key].append(int(row['usec']))
+                    data['usec_in'].append(int(row['usec']))
 
         return data, cycles_out, cycles_in, usec_out, usec_in
 
@@ -99,8 +98,10 @@ def calc_statistics(out_op, in_op):
         'mode_out': mode_out, 'mode_in': mode_in
     }
 
-def txt_to_list(filename):
+def parse_txt_to_list(filename):
     with open(filename, 'r') as fl:
         ciphersuites = [line.strip() for line in fl.readlines()]
 
         return ciphersuites
+
+#def filter_outlines(dicts, means, stds):
