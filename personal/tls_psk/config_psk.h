@@ -100,7 +100,7 @@
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  16
-#define MAX_INPUT_SIZE                  4096
+#define MAX_INPUT_SIZE                  8192
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

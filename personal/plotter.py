@@ -3,6 +3,12 @@ import matplotlib.pyplot as plt
 import parser
 
 
+def save_fig(fig, fname):
+    fig.tight_layout()
+    fig.savefig(fname)
+    plt.close(fig)
+    plt.cla()
+
 def custom_errorbar(x, y, e, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
@@ -27,25 +33,39 @@ def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={
     if ax is None:
         ax = plt.gca()
 
-    # ticks = []
-    # ticks_unique = []
-    # ticks_label = []
-    # counter = 0
-    # for val in x:
-    #     if val not in ticks_label:
-    #         ticks_label.append(val)
-    #         counter += 1
-    #         ticks_unique.append(counter)
-    #     ticks.append(counter)
+    x1 = []
+    ticks = []
+    labels = []
+    counter = 0
+    for val in x:
+        if val not in labels:
+            counter += 1
+            labels.append(val)
+            ticks.append(counter)
+        x1.append(counter)
 
-    ax.scatter(x, y, marker='.', **kwargs)
-    ax.set_xscale('log', base=2)
-#    ax.scatter(ticks, y, marker='.', **kwargs)
-#    ax.set_xticks(ticks_unique)
-#    ax.set_xticklabels(ticks_label)
+    ax.scatter(x1, y, marker='.', **kwargs)
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(labels)
     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
 
     return(ax)
+
+# def custom_scatter_v2(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
+#     if ax is None:
+#         ax = plt.gca()
+
+#     x1 = [n for n in range(1000)]
+#     labels = [x[i] for i in range(len(x)) if i % 1000 == 0]
+
+#     for i in range(9):
+#         y1 = y[i*1000:1000+i*1000]
+#         ax.scatter(x1, y1, marker='.', label=labels[i], **kwargs)
+
+#     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
+#     ax.legend()
+    
+#     return(ax)
 
 def make_errorbar(ylabel, file_path, stats):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -62,10 +82,7 @@ def make_errorbar(ylabel, file_path, stats):
     ax1 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params2)
     ax2 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params4)
 
-    fig.tight_layout()
-    fig.savefig(file_path + ylabel + '_deviation.png')
-    plt.close(fig)
-    plt.cla()
+    save_fig(fig, file_path + ylabel + '_deviation.png')
 
 def make_plot(ylabel, file_path, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
@@ -87,10 +104,7 @@ def make_plot(ylabel, file_path, stats):
     ax3 = multiple_custom_plots(stats['data_size'], stats['mode_out'], stats['mode_in'],
                                 ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-    fig.tight_layout()
-    fig.savefig(file_path + ylabel + '_statistics.png')
-    plt.close(fig)
-    plt.cla()
+    save_fig(fig, file_path + ylabel + '_statistics.png')
 
 def make_scatter(ylabel, file_path, data):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -98,21 +112,15 @@ def make_scatter(ylabel, file_path, data):
     operations = None
     keys = [ylabel + '_out', ylabel + '_in']
 
-    params1 = {'color': 'red'}
-    params2 = {'color': 'blue'}
-
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = custom_scatter(data['output_size'], data[keys[0]], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
-    ax2 = custom_scatter(data['input_size'], data[keys[1]], ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
+    ax1 = custom_scatter(data['output_size'], data[keys[0]], ax=ax1, title=operations[0], ylabel=ylabel, kwargs={'color': 'red'})
+    ax2 = custom_scatter(data['input_size'], data[keys[1]], ax=ax2, title=operations[1], ylabel=ylabel, kwargs={'color': 'blue'})
 
-    fig.tight_layout()
-    fig.savefig(file_path + ylabel + '_distribution.png')
-    plt.close(fig)
-    plt.cla()
+    save_fig(fig, file_path + ylabel + '_distribution.png')
 
 def make_figs(filename, usec=False, spacing=''):
         path = filename.replace('data.csv', '')
