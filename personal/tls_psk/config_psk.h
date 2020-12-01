@@ -115,7 +115,7 @@
 // #define MEASURE_KE
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
-#define MEASURE_IN_USEC
+#define MEASURE_TIME
 #define FILE_PATH           "../docs/"
 
 #if defined(MEASURE_CIPHER)

@@ -1996,8 +1996,8 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
 #if defined(MEASURE_KE)
     long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
+              start_time_cpu, end_time_cpu,
+              cycles_cpu, time_cpu;
     FILE *csv;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -2025,21 +2025,21 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
     if( ( ret = mbedtls_dhm_read_params( &ssl->handshake->dhm_ctx, p, end ) ) != 0 )
 #else
     start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
+    start_time_cpu = PAPI_get_virt_usec();
 
     ret = mbedtls_dhm_read_params( &ssl->handshake->dhm_ctx, p, end );
 
     end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
+    end_time_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
+    time_cpu = end_time_cpu - start_time_cpu;
 
     csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,read_params,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,read_params,%lld,%lld\n", cycles_cpu, time_cpu);
     fclose(csv);
 
-    printf("\nKE: read_params, %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nKE: read_params, %lld, %lld", cycles_cpu, time_cpu);
     PAPI_shutdown();
 
     if(ret != 0)
@@ -2381,8 +2381,8 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
     unsigned char *p = NULL, *end = NULL;
 #if defined(MEASURE_KE)
     long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
+              start_time_cpu, end_time_cpu,
+              cycles_cpu, time_cpu;
     FILE *csv;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -2666,23 +2666,23 @@ start_processing:
         {
 #if defined(MEASURE_KE)
             start_cycles_cpu = PAPI_get_virt_cyc();
-            start_usec_cpu = PAPI_get_virt_usec();
+            start_time_cpu = PAPI_get_virt_usec();
 #endif
             ret = mbedtls_ssl_get_key_exchange_md_tls1_2( ssl, hash, &hashlen,
                                                           params, params_len,
                                                           md_alg );
 #if defined(MEASURE_KE)
             end_cycles_cpu = PAPI_get_virt_cyc();
-            end_usec_cpu = PAPI_get_virt_usec();
+            end_time_cpu = PAPI_get_virt_usec();
 
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            usec_cpu = end_usec_cpu - start_usec_cpu;
+            time_cpu = end_time_cpu - start_time_cpu;
 
             csv = fopen(ke_fname, "a+");
-            fprintf(csv, "client,digest,%lld,%lld\n", cycles_cpu, usec_cpu);
+            fprintf(csv, "client,digest,%lld,%lld\n", cycles_cpu, time_cpu);
             fclose(csv);
 
-            printf("\nKE: digest, %lld, %lld", cycles_cpu, usec_cpu);
+            printf("\nKE: digest, %lld, %lld", cycles_cpu, time_cpu);
 #endif
 
             if( ret != 0 )
@@ -2728,23 +2728,23 @@ start_processing:
                         md_alg, hash, hashlen, p, sig_len, rs_ctx ) ) != 0 )
 #else
         start_cycles_cpu = PAPI_get_virt_cyc();
-        start_usec_cpu = PAPI_get_virt_usec();
+        start_time_cpu = PAPI_get_virt_usec();
 
         ret = mbedtls_pk_verify_restartable(
                     &ssl->session_negotiate->peer_cert->pk,
                     md_alg, hash, hashlen, p, sig_len, rs_ctx );
 
         end_cycles_cpu = PAPI_get_virt_cyc();
-        end_usec_cpu = PAPI_get_virt_usec();
+        end_time_cpu = PAPI_get_virt_usec();
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        usec_cpu = end_usec_cpu - start_usec_cpu;
+        time_cpu = end_time_cpu - start_time_cpu;
 
         csv = fopen(ke_fname, "a+");
-        fprintf(csv, "client,verify,%lld,%lld\n", cycles_cpu, usec_cpu);
+        fprintf(csv, "client,verify,%lld,%lld\n", cycles_cpu, time_cpu);
         fclose(csv);
 
-        printf("\nKE: verify, %lld, %lld", cycles_cpu, usec_cpu);
+        printf("\nKE: verify, %lld, %lld", cycles_cpu, time_cpu);
         PAPI_shutdown();
 
         if(ret != 0)
@@ -3003,8 +3003,8 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         ssl->transform_negotiate->ciphersuite_info;
 #if defined(MEASURE_KE)
     long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
+              start_time_cpu, end_time_cpu,
+              cycles_cpu, time_cpu;
     FILE *csv;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -3036,7 +3036,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_KE)
         start_cycles_cpu = PAPI_get_virt_cyc();
-        start_usec_cpu = PAPI_get_virt_usec();
+        start_time_cpu = PAPI_get_virt_usec();
 #endif
 
         ret = mbedtls_dhm_make_public( &ssl->handshake->dhm_ctx,
@@ -3046,16 +3046,16 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_KE)
         end_cycles_cpu = PAPI_get_virt_cyc();
-        end_usec_cpu = PAPI_get_virt_usec();
+        end_time_cpu = PAPI_get_virt_usec();
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        usec_cpu = end_usec_cpu - start_usec_cpu;
+        time_cpu = end_time_cpu - start_time_cpu;
 
         csv = fopen(ke_fname, "a+");
-        fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
+        fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, time_cpu);
         fclose(csv);
 
-        printf("\nKE: make_public, %lld, %lld", cycles_cpu, usec_cpu);
+        printf("\nKE: make_public, %lld, %lld", cycles_cpu, time_cpu);
 #endif
 
         if( ret != 0 )
@@ -3075,7 +3075,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
                                       ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
 #else
         start_cycles_cpu = PAPI_get_virt_cyc();
-        start_usec_cpu = PAPI_get_virt_usec();
+        start_time_cpu = PAPI_get_virt_usec();
 
         ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
                                     ssl->handshake->premaster,
@@ -3084,16 +3084,16 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
                                     ssl->conf->f_rng, ssl->conf->p_rng );
 
         end_cycles_cpu = PAPI_get_virt_cyc();
-        end_usec_cpu = PAPI_get_virt_usec();
+        end_time_cpu = PAPI_get_virt_usec();
 
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        usec_cpu = end_usec_cpu - start_usec_cpu;
+        time_cpu = end_time_cpu - start_time_cpu;
 
         csv = fopen(ke_fname, "a+");
-        fprintf(csv, "client,calc_secret,%lld,%lld\n", cycles_cpu, usec_cpu);
+        fprintf(csv, "client,calc_secret,%lld,%lld\n", cycles_cpu, time_cpu);
         fclose(csv);
 
-        printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, usec_cpu);
+        printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, time_cpu);
         PAPI_shutdown();
 
         if(ret != 0)
@@ -3244,7 +3244,7 @@ ecdh_calc_secret:
 
 #if defined(MEASURE_KE)
             start_cycles_cpu = PAPI_get_virt_cyc();
-            start_usec_cpu = PAPI_get_virt_usec();
+            start_time_cpu = PAPI_get_virt_usec();
 #endif
 
             ret = mbedtls_dhm_make_public( &ssl->handshake->dhm_ctx,
@@ -3254,16 +3254,16 @@ ecdh_calc_secret:
 
 #if defined(MEASURE_KE)
             end_cycles_cpu = PAPI_get_virt_cyc();
-            end_usec_cpu = PAPI_get_virt_usec();
+            end_time_cpu = PAPI_get_virt_usec();
 
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            usec_cpu = end_usec_cpu - start_usec_cpu;
+            time_cpu = end_time_cpu - start_time_cpu;
 
             csv = fopen(ke_fname, "a+");
-            fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, usec_cpu);
+            fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, time_cpu);
             fclose(csv);
 
-            printf("\nKE: make_public, %lld, %lld", cycles_cpu, usec_cpu);
+            printf("\nKE: make_public, %lld, %lld", cycles_cpu, time_cpu);
             PAPI_shutdown();
 #endif
 
@@ -3414,8 +3414,8 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     void *rs_ctx = NULL;
 #if defined(MEASURE_KE)
     long long start_cycles_cpu, end_cycles_cpu,
-              start_usec_cpu, end_usec_cpu,
-              cycles_cpu, usec_cpu;
+              start_time_cpu, end_time_cpu,
+              cycles_cpu, time_cpu;
     FILE *csv;
 
     ret = PAPI_library_init(PAPI_VER_CURRENT);
@@ -3483,23 +3483,23 @@ sign:
 
 #if defined(MEASURE_KE)
     start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
+    start_time_cpu = PAPI_get_virt_usec();
 #endif
 
     ssl->handshake->calc_verify( ssl, hash );
 
 #if defined(MEASURE_KE)
     end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
+    end_time_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
+    time_cpu = end_time_cpu - start_time_cpu;
 
     csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,digest,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,digest,%lld,%lld\n", cycles_cpu, time_cpu);
     fclose(csv);
 
-    printf("\nKE: digest, %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nKE: digest, %lld, %lld", cycles_cpu, time_cpu);
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
@@ -3588,7 +3588,7 @@ sign:
                          ssl->conf->f_rng, ssl->conf->p_rng, rs_ctx ) ) != 0 )
 #else
     start_cycles_cpu = PAPI_get_virt_cyc();
-    start_usec_cpu = PAPI_get_virt_usec();
+    start_time_cpu = PAPI_get_virt_usec();
 
     ret = mbedtls_pk_sign_restartable( mbedtls_ssl_own_key( ssl ),
                         md_alg, hash_start, hashlen,
@@ -3596,16 +3596,16 @@ sign:
                         ssl->conf->f_rng, ssl->conf->p_rng, rs_ctx );
 
     end_cycles_cpu = PAPI_get_virt_cyc();
-    end_usec_cpu = PAPI_get_virt_usec();
+    end_time_cpu = PAPI_get_virt_usec();
 
     cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    usec_cpu = end_usec_cpu - start_usec_cpu;
+    time_cpu = end_time_cpu - start_time_cpu;
 
     csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,sign,%lld,%lld\n", cycles_cpu, usec_cpu);
+    fprintf(csv, "client,sign,%lld,%lld\n", cycles_cpu, time_cpu);
     fclose(csv);
 
-    printf("\nKE: sign, %lld, %lld", cycles_cpu, usec_cpu);
+    printf("\nKE: sign, %lld, %lld", cycles_cpu, time_cpu);
     PAPI_shutdown();
     
     if(ret != 0)

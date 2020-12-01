@@ -1,4 +1,4 @@
-endpoint,operation,data_size,cycles,usec
+endpoint,operation,data_size,cycles,time
 client,encrypt,80,10372,3
 server,decrypt,80,15558,5
 server,encrypt,80,5186,3

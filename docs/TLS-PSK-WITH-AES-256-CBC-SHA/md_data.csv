@@ -1,4 +1,4 @@
-endpoint,operation,data_size,cycles,usec
+endpoint,operation,data_size,cycles,time
 client,digest,16,10372,4
 server,verify,16,15558,5
 server,digest,16,10372,3
