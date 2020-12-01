@@ -51,22 +51,6 @@ def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={
 
     return(ax)
 
-# def custom_scatter_v2(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
-#     if ax is None:
-#         ax = plt.gca()
-
-#     x1 = [n for n in range(1000)]
-#     labels = [x[i] for i in range(len(x)) if i % 1000 == 0]
-
-#     for i in range(9):
-#         y1 = y[i*1000:1000+i*1000]
-#         ax.scatter(x1, y1, marker='.', label=labels[i], **kwargs)
-
-#     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
-#     ax.legend()
-    
-#     return(ax)
-
 def make_errorbar(ylabel, file_path, stats):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     
