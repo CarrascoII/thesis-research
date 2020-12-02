@@ -52,8 +52,10 @@ def make_errorbar(ylabel, file_path, stats):
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params2)
-    ax2 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params4)
+    ax1 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1,
+                          title=operations[0], ylabel=ylabel, kwargs=params2)
+    ax2 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2,
+                          title=operations[1], ylabel=ylabel, kwargs=params4)
 
     save_fig(fig, file_path + ylabel + '_deviation.png')
 
@@ -79,13 +81,19 @@ def make_plot(ylabel, file_path, stats):
 
     save_fig(fig, file_path + ylabel + '_statistics.png')
 
-def make_scatter(ylabel, file_path, data, data_sizes):
+def make_scatter(ylabel, file_path, data_out, data_in):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
     operations = None
     x1 = []
+    y1 = []
+    xticks1 = [tick + 1 for tick in range(len(data_out))]
+    xtickslabels1 = list(data_out.keys())
+    
     x2 = []
-    xticks = [tick + 1 for tick in range(len(data_sizes))]
+    y2 = []
+    xticks2 = [tick + 1 for tick in range(len(data_in))]
+    xtickslabels2 = list(data_in.keys())
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
@@ -93,80 +101,50 @@ def make_scatter(ylabel, file_path, data, data_sizes):
         operations = ['hash', 'verify']
 
     i = 0
-    for val in data['size_out']:
-        while val != data_sizes[i]:
-            i += 1
-        x1.append(xticks[i])
-                
+    for key in data_out:
+        x1 += [xticks1[i] for j in range(len(data_out[key]))]
+        y1 += data_out[key]
+        i += 1
+    
     i = 0
-    for val in data['size_in']:
-        while val != data_sizes[i]:
-            i += 1
-        x2.append(xticks[i])
+    for key in data_in:
+        x2 += [xticks2[i] for j in range(len(data_in[key]))]
+        y2 += data_in[key]
+        i += 1
 
-    # print(f'\nx1:\n{x1}')
-    # print(f'\ny1:\n{data["val_out"]}')
-    # print(f'\nxticks:\n{xticks}')
-    # print(f'\nxtickslabels:\n{data_sizes}')
-
-    ax1 = custom_scatter(x1, data['val_out'], ax=ax1, title=operations[0], xticks=xticks, xtickslabels=data_sizes, ylabel=ylabel, kwargs={'color': 'red'})
-    ax2 = custom_scatter(x2, data['val_in'], ax=ax2, title=operations[1], xticks=xticks, xtickslabels=data_sizes, ylabel=ylabel, kwargs={'color': 'blue'})
+    ax1 = custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks1,
+                         xtickslabels=xtickslabels1, ylabel=ylabel, kwargs={'color': 'red'})
+    ax2 = custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks2,
+                         xtickslabels=xtickslabels2, ylabel=ylabel, kwargs={'color': 'blue'})
 
     save_fig(fig, file_path + ylabel + '_distribution.png')
 
-def make_figs(filename, parse_time=True, weight=2, spacing=''):
+def make_figs(filename, weight=2, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
 
-    print(spacing + f'Parsing obtained data.................... ', end='')
-    data, data_sizes, n_results = utils.parse_csv_to_data(filename, parse_time=parse_time)
+    print(spacing + f'Parsing obtained data'.ljust(strlen, '.'), end=' ')
+    data, headers = utils.parse_csv_to_data(filename)
     print(f'ok')
 
-    # print('')
-    # for i in range(len(data['size_out'])):
-    #     print(f'data({i}) = {data["size_out"][i]}:{data["cycles_out"][i]}')
-    # print('')
     if weight != 0:
-        print(spacing + f'Removing outliers from data.............. ', end='')
-        cycles_data, time_data = utils.filter_data(data, n_results, weight=weight)
-        print(f'ok')
-    
-    # print('')
-    # for i in range(len(cycles_data['size_out'])):
-    #     print(f'cycles_data({i}) = {cycles_data["size_out"][i]}:{cycles_data["val_out"][i]}')
-    # print('')
-
-    print(spacing + f'[cycles] Grouping data................... ', end='')
-    cycles_out, cycles_in = utils.group_data(cycles_data)
-    print(f'ok')
-
-    print(spacing + f'[cycles] Calculating statistics.......... ', end='')
-    statistics = utils.calc_statistics(cycles_out, cycles_in)
-    print(f'ok')
-
-    print(spacing + f'[cycles] Generating figures.............. ', end='')
-    make_scatter('cycles', path, cycles_data, data_sizes)
-    make_plot('cycles', path, statistics)
-    make_errorbar('cycles', path, statistics)
-    print(f'ok')
-
-    if parse_time:
-        print(spacing + f'[time] Grouping data..................... ', end='')
-        time_out, time_in = utils.group_data(time_data)
+        print(spacing + f'Removing outliers from data'.ljust(strlen, '.'), end=' ')
+        data = utils.filter_z_score(data, headers, weight=weight)
         print(f'ok')
 
-        print(spacing + f'[time] Calculating statistics............ ', end='')
-        statistics = utils.calc_statistics(time_out, time_in)
+    for header in headers:
+        print(spacing + f'[{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+        statistics = utils.calc_statistics(data[header + '_out'], data[header + '_in'])
         print(f'ok')
 
-        print(spacing + f'[time] Generating figures................ ', end='')
-        make_scatter('time', path, time_data, data_sizes)
-        make_plot('time', path, statistics)
-        make_errorbar('time', path, statistics)
+        print(spacing + f'[{header}] Generating figures'.ljust(strlen, '.'), end=' ')
+        make_scatter(header, path, data[header + '_out'], data[header + '_in'])
+        make_plot(header, path, statistics)
+        make_errorbar(header, path, statistics)
         print(f'ok')
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'htf:c:m:', ['help', 'no_time', 'filter=', 'cfile=', 'mfile='])
+        opts, args = getopt.getopt(argv, 'hf:c:m:', ['help', 'filter=', 'cfile=', 'mfile='])
     except getopt.GetoptError:
         print(f'One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
@@ -175,20 +153,17 @@ def main(argv):
         print(f'Could not parse {args}')
         sys.exit(2)
 
-    parse_time = True
     weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print(f'plotter.py [-t] [-f <weight>] [-c <cipher_file>] [-m <md_file>]')
-            print(f'plotter.py [--no_time] [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
+            print(f'plotter.py [-f <weight>] [-c <cipher_file>] [-m <md_file>]')
+            print(f'plotter.py [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
             sys.exit(0)
-        if opt in ('-t', '--no_time'):
-            parse_time = False
         if opt in ('-f', '--nfilter'):
             weight = int(arg)
         elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
-            make_figs(arg, parse_time, weight)
+            make_figs(arg, weight=weight)
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)

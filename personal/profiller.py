@@ -5,6 +5,8 @@ import subprocess
 import time
 import utils, plotter
 
+strlen = 40
+
 
 def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     last_msg = ['Final status:', f'  -Suite being used:          {ciphersuite}']
@@ -13,7 +15,7 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     strerr = stderr.decode('utf-8').strip('\n')
     last_err = strerr.split('\n')
 
-    print(f'\tChecking {endpoint} return code.............. ', end='')
+    print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ')
 
     if return_code != 0:
         print('error\n\tGot an unexpected return code!!!' + 
@@ -56,12 +58,12 @@ def run_srv(min_size, n_tests, ciphersuite):
 
     return check_return_code(ret, 'server', ciphersuite, stdout, stderr)
 
-def exec_tls(filename, parse_time, timeout, min_size, n_tests, weight):
+def exec_tls(filename, timeout, min_size, n_tests, weight):
     os.system('clear')
 
     #Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
-    print(f'\nParsing ciphersuites from {filename}....... ', end='')    
+    print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
     
     total_ciphersuites = utils.parse_txt_to_list(filename)
     n_total = len(total_ciphersuites)
@@ -83,14 +85,14 @@ def exec_tls(filename, parse_time, timeout, min_size, n_tests, weight):
         current += 1
 
     #Step 2: Start server in thread 1
-        print('\tStarting server.......................... ', end='')
+        print('\tStarting server'.ljust(strlen, '.'), end=' ')
         async_result_srv = pool.apply_async(run_srv, (min_size, n_tests, ciphersuite))
         print('ok')
 
         time.sleep(timeout)
 
     #Step 3: Start client in thread 2
-        print('\tStarting client.......................... ', end='')
+        print('\tStarting client'.ljust(strlen, '.'), end=' ')
         async_result_cli = pool.apply_async(run_cli, (min_size, n_tests, ciphersuite))
         print('ok')
 
@@ -116,10 +118,10 @@ def exec_tls(filename, parse_time, timeout, min_size, n_tests, weight):
         current +=1
 
         print('\n    Cipher algorithm:')
-        plotter.make_figs('../docs/' + ciphersuite + '/cipher_data.csv', parse_time=parse_time, weight=weight, spacing='\t')
+        plotter.make_figs('../docs/' + ciphersuite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
         print('\n    MAC algorithm:')
-        plotter.make_figs('../docs/' + ciphersuite + '/md_data.csv', parse_time=parse_time, weight=weight, spacing='\t')
+        plotter.make_figs('../docs/' + ciphersuite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
     #Step 6: Report final status
     print('\n--- FINAL STATUS ---')
@@ -138,12 +140,11 @@ def exec_tls(filename, parse_time, timeout, min_size, n_tests, weight):
     print(f'\t-Number of ciphersuites: {n_success}')
 
     print('\nData aquisition and analysis has ended.')
-    print('You can check all the csv data and png graph files in the docs/<ciphersuite_name> directories.')
-
+    print('You can check all the csv data and png figure files in the docs/<ciphersuite_name> directories.')
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'htw:m:n:f:', ['help', 'no_time', 'wait_time=', 'min_size=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'hw:m:n:f:', ['help', 'wait_time=', 'min_size=', 'n_tests=', 'filter='])
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "profiller.py -h" for help')
         sys.exit(2)
@@ -156,7 +157,6 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    parse_time = True
     timeout = 2
     min_size = '16'
     n_tests = '500'
@@ -164,12 +164,10 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('profiller.py [-t] [-w <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <ciphersuite_list>')
-            print('profiller.py [--no_time] [--wait_time=<timeout>] [--min_size=<min_input_size>] ' +
+            print('profiller.py [-w <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <ciphersuite_list>')
+            print('profiller.py [--wait_time=<timeout>] [--min_size=<min_input_size>] ' +
                   '[--n_tests=<n_tests>] [--filter=<weight>] <ciphersuite_list>')
             sys.exit(0)
-        if opt in ('-t', '--no_time'):
-            parse_time = False
         if opt in ('-w', '--wait_time'):
             timeout = int(arg)
         if opt in ('-m', '--min_size'):
@@ -179,7 +177,7 @@ def main(argv):
         if opt in ('-f', '--filter'):
             weight = int(arg)
 
-    exec_tls(args[0], parse_time, timeout, min_size, n_tests, weight)
+    exec_tls(args[0], timeout, min_size, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
