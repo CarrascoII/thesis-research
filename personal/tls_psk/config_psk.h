@@ -67,8 +67,8 @@
 /**
  * mbed TLS ciphersuites
  */
-#define MBEDTLS_SSL_CIPHERSUITES \
-                MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
+// #define MBEDTLS_SSL_CIPHERSUITES 
+//                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
 //                 MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
 //                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
 //                 MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
@@ -104,14 +104,14 @@
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-// #define PRINT_HANDSHAKE_STEPS
+#define PRINT_HANDSHAKE_STEPS
 #endif
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-#define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 // #define MEASURE_KE
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)

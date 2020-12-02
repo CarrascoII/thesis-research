@@ -29,24 +29,13 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={
 
     return(ax)
 
-def custom_scatter(x, y, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
+def custom_scatter(x, y, ax=None, title=None, xlabel=None, xticks=None, xtickslabels=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
 
-    x1 = []
-    ticks = []
-    labels = []
-    counter = 0
-    for val in x:
-        if val not in labels:
-            counter += 1
-            labels.append(val)
-            ticks.append(counter)
-        x1.append(counter)
-
-    ax.scatter(x1, y, marker='.', **kwargs)
-    ax.set_xticks(ticks)
-    ax.set_xticklabels(labels)
+    ax.scatter(x, y, marker='.', **kwargs)
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xtickslabels)
     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
 
     return(ax)
@@ -90,53 +79,94 @@ def make_plot(ylabel, file_path, stats):
 
     save_fig(fig, file_path + ylabel + '_statistics.png')
 
-def make_scatter(ylabel, file_path, data):
+def make_scatter(ylabel, file_path, data, data_sizes):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
     operations = None
-    keys = [ylabel + '_out', ylabel + '_in']
+    x1 = []
+    x2 = []
+    xticks = [tick + 1 for tick in range(len(data_sizes))]
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = custom_scatter(data['output_size'], data[keys[0]], ax=ax1, title=operations[0], ylabel=ylabel, kwargs={'color': 'red'})
-    ax2 = custom_scatter(data['input_size'], data[keys[1]], ax=ax2, title=operations[1], ylabel=ylabel, kwargs={'color': 'blue'})
+    i = 0
+    for val in data['size_out']:
+        while val != data_sizes[i]:
+            i += 1
+        x1.append(xticks[i])
+                
+    i = 0
+    for val in data['size_in']:
+        while val != data_sizes[i]:
+            i += 1
+        x2.append(xticks[i])
+
+    # print(f'\nx1:\n{x1}')
+    # print(f'\ny1:\n{data["val_out"]}')
+    # print(f'\nxticks:\n{xticks}')
+    # print(f'\nxtickslabels:\n{data_sizes}')
+
+    ax1 = custom_scatter(x1, data['val_out'], ax=ax1, title=operations[0], xticks=xticks, xtickslabels=data_sizes, ylabel=ylabel, kwargs={'color': 'red'})
+    ax2 = custom_scatter(x2, data['val_in'], ax=ax2, title=operations[1], xticks=xticks, xtickslabels=data_sizes, ylabel=ylabel, kwargs={'color': 'blue'})
 
     save_fig(fig, file_path + ylabel + '_distribution.png')
 
-def make_figs(filename, usec=False, spacing=''):
-        path = filename.replace('data.csv', '')
+def make_figs(filename, parse_time=True, weight=2, spacing=''):
+    path = filename.replace('data.csv', '')
 
-        print(spacing + f'Parsing obtained data.................... ', end='')
-        data, cycles_out, cycles_in, usec_out, usec_in = utils.parse_csv_to_data(filename, parse_usec=usec)
+    print(spacing + f'Parsing obtained data.................... ', end='')
+    data, data_sizes, n_results = utils.parse_csv_to_data(filename, parse_time=parse_time)
+    print(f'ok')
+
+    # print('')
+    # for i in range(len(data['size_out'])):
+    #     print(f'data({i}) = {data["size_out"][i]}:{data["cycles_out"][i]}')
+    # print('')
+    if weight != 0:
+        print(spacing + f'Removing outliers from data.............. ', end='')
+        cycles_data, time_data = utils.filter_data(data, n_results, weight=weight)
+        print(f'ok')
+    
+    # print('')
+    # for i in range(len(cycles_data['size_out'])):
+    #     print(f'cycles_data({i}) = {cycles_data["size_out"][i]}:{cycles_data["val_out"][i]}')
+    # print('')
+
+    print(spacing + f'[cycles] Grouping data................... ', end='')
+    cycles_out, cycles_in = utils.group_data(cycles_data)
+    print(f'ok')
+
+    print(spacing + f'[cycles] Calculating statistics.......... ', end='')
+    statistics = utils.calc_statistics(cycles_out, cycles_in)
+    print(f'ok')
+
+    print(spacing + f'[cycles] Generating figures.............. ', end='')
+    make_scatter('cycles', path, cycles_data, data_sizes)
+    make_plot('cycles', path, statistics)
+    make_errorbar('cycles', path, statistics)
+    print(f'ok')
+
+    if parse_time:
+        print(spacing + f'[time] Grouping data..................... ', end='')
+        time_out, time_in = utils.group_data(time_data)
         print(f'ok')
 
-        print(spacing + f'Calculating statistics (cycles).......... ', end='')
-        statistics = utils.calc_statistics(cycles_out, cycles_in)
+        print(spacing + f'[time] Calculating statistics............ ', end='')
+        statistics = utils.calc_statistics(time_out, time_in)
         print(f'ok')
 
-        print(spacing + f'Generating figures (cycles).............. ', end='')
-        make_scatter('cycles', path, data)
-        make_plot('cycles', path, statistics)
-        make_errorbar('cycles', path, statistics)
+        print(spacing + f'[time] Generating figures................ ', end='')
+        make_scatter('time', path, time_data, data_sizes)
+        make_plot('time', path, statistics)
+        make_errorbar('time', path, statistics)
         print(f'ok')
-
-        if usec_out != {} and usec_in != {}:
-            print(spacing + f'Calculating statistics (time)............ ', end='')
-            statistics = utils.calc_statistics(usec_out, usec_in)
-            print(f'ok')
-
-            print(spacing + f'Generating figures (time)................ ', end='')
-            make_scatter('usec', path, data)
-            make_plot('usec', path, statistics)
-            make_errorbar('usec', path, statistics)
-            print(f'ok')
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hsc:m:', ['help', 'useconds', 'cfile=', 'mfile='])
+        opts, args = getopt.getopt(argv, 'htf:c:m:', ['help', 'no_time', 'filter=', 'cfile=', 'mfile='])
     except getopt.GetoptError:
         print(f'One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
@@ -145,17 +175,20 @@ def main(argv):
         print(f'Could not parse {args}')
         sys.exit(2)
 
-    usec = False
+    parse_time = True
+    weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print(f'plotter.py [-s] [-c <cipher_file>] [-m <md_file>]')
-            print(f'plotter.py [--useconds] [--cfile=<cipher_file>] [--mfile=<md_file>]')
+            print(f'plotter.py [-t] [-f <weight>] [-c <cipher_file>] [-m <md_file>]')
+            print(f'plotter.py [--no_time] [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
             sys.exit(0)
-        if opt in ('-s', '--useconds'):
-            usec = True
+        if opt in ('-t', '--no_time'):
+            parse_time = False
+        if opt in ('-f', '--nfilter'):
+            weight = int(arg)
         elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
-            make_figs(arg, usec)
+            make_figs(arg, parse_time, weight)
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
