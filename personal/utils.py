@@ -46,8 +46,8 @@ def filter_z_score(data, headers, weight=2):
             
             for key in op_dict:
                 tmp = []
-                mean = statistics.mean(op_dict[key])
-                stdev = statistics.pstdev(op_dict[key])
+                mean = np.mean(op_dict[key])
+                stdev = np.std(op_dict[key])
                 # print(f'\nInitial {entry}[{key}]: len = {len(op_dict[key])}, vals = {op_dict[key]}')
                 # print(f'Statistics = {mean} +/- {stdev}')
                 for val in op_dict[key]:
@@ -106,9 +106,9 @@ def calc_statistics(out_op, in_op):
         stats['data_size'].append(key)
 
 #        print(f'\nout_op for {key}:\n{out_op[key]}')
-        mean = statistics.mean(out_op[key])
-        stdev = statistics.pstdev(out_op[key])
-        median = statistics.median(out_op[key])
+        mean = np.mean(out_op[key])
+        stdev = np.std(out_op[key])
+        median = np.median(out_op[key])
         mode = statistics.mode(out_op[key])
 #        print(f'out_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
 #        print(f'\nout_op({key}) = {mean} +/- {stdev}')
@@ -119,9 +119,9 @@ def calc_statistics(out_op, in_op):
         stats['mode_out'].append(mode)
 
 #        print(f'\nin_op for {key}:\n{in_op[key]}')
-        mean = statistics.mean(in_op[key])
-        stdev = statistics.pstdev(in_op[key])
-        median = statistics.median(in_op[key])
+        mean = np.mean(in_op[key])
+        stdev = np.std(in_op[key])
+        median = np.median(in_op[key])
         mode = statistics.mode(in_op[key])
 #        print(f'in_op: key = {key}, mean = {mean}, median = {median}, mode = {mode}')
 #        print(f'in_op({key}) = {mean} +/- {stdev}')
