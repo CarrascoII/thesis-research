@@ -133,6 +133,24 @@ def calc_statistics(out_op, in_op):
 
     return stats
 
-def parse_txt_to_list(filename):
+def parse_ciphersuites(filename):
     with open(filename, 'r') as fl:
         return [line.strip() for line in fl.readlines()]
+
+def parse_algorithms(filename):
+    with open(filename, 'r') as fl:
+        algs = {'CIPHER': [], 'MD': [], 'KE': []}
+
+        for line in fl.readlines():
+            line = line.split(',')
+            algs[line[0].strip()] += [line[1].strip()]
+
+        ciphersuites = []
+        for ke in algs['KE']:
+            for cipher in algs['CIPHER']:
+                for md in algs['MD']:
+                    ciphersuites.append('TLS-' + ke + '-WITH-' + cipher + '-' + md)
+
+        return ciphersuites
+        # for ciphersuite in ciphersuites:
+        #     print(f'{ciphersuite}')

@@ -20,7 +20,7 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     if return_code != 0:
         print('error\n\tGot an unexpected return code!!!' + 
              f'\n\tDetails: {return_code}')
-        return -1
+        return return_code
 
     if last_err[0] != '':
         print('error\n\tAn unexpected error occured!!!' +
@@ -35,7 +35,7 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
             return -1
 
     print('ok')
-    return 0
+    return return_code
     
 def run_cli(min_size, n_tests, ciphersuite):
     args = ['./tls_psk/client.out', 'input_size=' + min_size,
@@ -65,10 +65,13 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
     
-    total_ciphersuites = utils.parse_txt_to_list(filename)
+    # total_ciphersuites = utils.parse_ciphersuites(filename)
+    total_ciphersuites = utils.parse_algorithms(filename)
     n_total = len(total_ciphersuites)
     success_ciphersuites = []
     n_success = 0
+    not_ciphersuites = []
+    n_not = 0
     error_ciphersuites = []
     n_error = 0
     current = 1
@@ -100,12 +103,14 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
         srv_ret = async_result_srv.get()
         cli_ret = async_result_cli.get()
 
-        if srv_ret != 0 or cli_ret != 0:
+        if srv_ret == 1 and cli_ret == 1:
+            not_ciphersuites.append(ciphersuite)
+            n_not += 1
+        elif srv_ret != 0 or cli_ret != 0:
             error_ciphersuites.append(ciphersuite)
             n_error += 1
         else:
             print('\n\tData successfully obtained!!!')
-            
             success_ciphersuites.append(ciphersuite)
             n_success += 1
 
@@ -129,7 +134,13 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     print('\nData generation:')
     print(f'\t-Number of ciphersuites: {n_total}')
     print(f'\t-Number of successes: {n_success}')
+    print(f'\t-Number of n/a: {n_not}')
     print(f'\t-Number of errors: {n_error}')
+
+    if n_not > 0:
+        print('\t-N/A ciphersuites:')
+        for ciphersuite in not_ciphersuites:
+            print(f'\t\t{ciphersuite}')
 
     if n_error > 0:
         print('\t-Error ciphersuites:')
@@ -144,7 +155,7 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:m:n:f:', ['help', 'wait_time=', 'min_size=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'ht:m:n:f:', ['help', 'timeout=', 'min_size=', 'n_tests=', 'filter='])
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "profiller.py -h" for help')
         sys.exit(2)
@@ -164,11 +175,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('profiller.py [-w <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <ciphersuite_list>')
-            print('profiller.py [--wait_time=<timeout>] [--min_size=<min_input_size>] ' +
+            print('profiller.py [-t <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <ciphersuite_list>')
+            print('profiller.py [--timeout=<timeout>] [--min_size=<min_input_size>] ' +
                   '[--n_tests=<n_tests>] [--filter=<weight>] <ciphersuite_list>')
             sys.exit(0)
-        if opt in ('-w', '--wait_time'):
+        if opt in ('-t', '--timeout'):
             timeout = int(arg)
         if opt in ('-m', '--min_size'):
             min_size = arg

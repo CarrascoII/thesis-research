@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
             printf("To assign own variables, run with <variable>=X\n");
 #endif 
-            return 1;
+            return(1);
         }
 
         *q++ = '\0';
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Number of tests must be between 1 and 1000\n");
 #endif 
-                return 1;
+                return(1);
             }
 		} else if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
                 printf("Input size must be multiple of %d, between %d and %d \n", \
                         MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif 
-                return 1;
+                return(1);
             }
         } 
 #if defined(MBEDTLS_DEBUG_C) 
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
             debug = atoi(q);
             if(debug < 0 || debug > 5) {
                 printf("Debug level must be int between 0 and 5\n");
-                return 1;
+                return(1);
             }
         }
 #endif
@@ -188,13 +188,13 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("%s is not an available ciphersuite\n", q);
 #endif 
-                return 1;
+                return(1);
             }
 		} else {
 #if defined(MBEDTLS_DEBUG_C)
 			printf("Available options are input_size, n_tests, debug_level and ciphersuite\n");
 #endif 
-			return 1;
+			return(1);
 		}
 	}
 
