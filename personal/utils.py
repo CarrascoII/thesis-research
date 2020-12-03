@@ -1,5 +1,6 @@
 import csv
 import statistics
+import numpy as np
 
 
 def parse_csv_to_data(filename):
@@ -44,10 +45,10 @@ def filter_z_score(data, headers, weight=2):
             op_dict = data[entry]
             
             for key in op_dict:
+                tmp = []
                 mean = statistics.mean(op_dict[key])
                 stdev = statistics.pstdev(op_dict[key])
-                tmp = []
-                # print(f'\nAnalysing data[{entry}][{key}] = {op_dict[key]}')
+                # print(f'\nInitial {entry}[{key}]: len = {len(op_dict[key])}, vals = {op_dict[key]}')
                 # print(f'Statistics = {mean} +/- {stdev}')
                 for val in op_dict[key]:
                     stdw = weight * stdev
@@ -60,6 +61,35 @@ def filter_z_score(data, headers, weight=2):
                         tmp.append(val)
                 
                 data[entry][key] = tmp
+                # print(f'Final {entry}[{key}]: len = {len(tmp)}, vals = {tmp}')
+
+    return data
+
+def filter_iqr(data, headers, weight=1.5):
+    for header in headers:
+        for ext in ['_out', '_in']:
+            entry = header + ext
+            op_dict = data[entry]
+            
+            for key in op_dict:
+                tmp = []
+                q1 = np.quantile(op_dict[key], 0.25)
+                q3 = np.quantile(op_dict[key], 0.75)
+                iqr = q3 - q1 
+                # print(f'\nInitial {entry}[{key}]: len = {len(op_dict[key])}, vals = {op_dict[key]}')
+                # print(f'Numpy = ({q1},{q3}) +/- {iqr}')
+                for val in op_dict[key]:
+                    iqrw = weight * iqr
+
+                    if val > (q3 + iqrw):
+                        continue
+                    elif val < (q1 - iqrw):
+                        continue
+                    else:
+                        tmp.append(val)
+                
+                data[entry][key] = tmp
+                # print(f'Final {entry}[{key}]: len = {len(tmp)}, vals = {tmp}')
 
     return data
 

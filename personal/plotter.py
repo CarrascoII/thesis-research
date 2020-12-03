@@ -154,6 +154,7 @@ def main(argv):
         sys.exit(2)
 
     weight = 2
+    algs = {}
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
@@ -163,10 +164,13 @@ def main(argv):
         if opt in ('-f', '--nfilter'):
             weight = int(arg)
         elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
-            make_figs(arg, weight=weight)
+            algs[opt] = arg
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
+
+    for key in algs:
+        make_figs(algs[key], weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
