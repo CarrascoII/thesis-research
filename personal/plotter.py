@@ -1,6 +1,7 @@
 import sys, getopt
 import matplotlib.pyplot as plt
 import utils
+import seaborn as sns
 
 
 def save_fig(fig, fname):
@@ -21,13 +22,29 @@ def custom_errorbar(x, y, e, ax=None, title=None, xlabel=None, ylabel=None, kwar
 def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={}, kwargs2={}):
     if ax is None:
         ax = plt.gca()
-    
+
     ax.plot(x, y1, **kwargs1)
     ax.plot(x, y2, **kwargs2)
     ax.set(xlabel='data_size', ylabel=ylabel, title=title)
     ax.legend()
 
     return(ax)
+
+# def custom_hist(x, ax=None, title=None, ylabel=None, kwargs={}):
+#     if ax is None:
+#         ax = plt.gca()
+
+#     # Alt.1 Using simple histogram
+#     ax.hist(x, **kwargs)
+
+#     # Alt.2 Using a kernel density estimation
+#     for i in range(len(x)):
+#         sns.kdeplot(x[i], ax=ax, label=kwargs['label'][i])
+
+#     ax.set(xlabel=ylabel, title=title)
+#     ax.legend()
+
+#     return(ax)
 
 def custom_scatter(x, y, ax=None, title=None, xlabel=None, xticks=None, xtickslabels=None, ylabel=None, kwargs={}):
     if ax is None:
@@ -42,7 +59,7 @@ def custom_scatter(x, y, ax=None, title=None, xlabel=None, xticks=None, xticksla
 
 def make_errorbar(ylabel, file_path, stats):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-    
+
     operations = None
     params2 = {'color': 'red'}
     params4 = {'color': 'blue'}
@@ -61,7 +78,7 @@ def make_errorbar(ylabel, file_path, stats):
 
 def make_plot(ylabel, file_path, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
-    
+
     params1 = {'color': 'red', 'linestyle': '-'}
     params2 = {'color': 'blue', 'linestyle': '--'}
 
@@ -81,6 +98,31 @@ def make_plot(ylabel, file_path, stats):
 
     save_fig(fig, file_path + ylabel + '_statistics.png')
 
+# def make_hist(ylabel, file_path, data_out, data_in):
+#     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+
+#     operations = None
+#     x1 = []
+#     x2 = []
+#     params1 = {'label': list(data_out.keys())}
+#     params2 = {'label': list(data_in.keys())}
+
+#     if file_path.find('cipher') != -1:
+#         operations = ['cipher', 'decipher']
+#     elif file_path.find('md') != -1:
+#         operations = ['hash', 'verify']
+
+#     for key in data_out:
+#         x1.append(data_out[key])
+
+#     for key in data_in:
+#         x2.append(data_in[key])
+
+#     ax1 = custom_hist(x1, ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
+#     ax2 = custom_hist(x2, ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
+
+#     save_fig(fig, file_path + ylabel + '_hist.png')
+
 def make_scatter(ylabel, file_path, data_out, data_in):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
@@ -89,7 +131,7 @@ def make_scatter(ylabel, file_path, data_out, data_in):
     y1 = []
     xticks1 = [tick + 1 for tick in range(len(data_out))]
     xtickslabels1 = list(data_out.keys())
-    
+
     x2 = []
     y2 = []
     xticks2 = [tick + 1 for tick in range(len(data_in))]
@@ -105,7 +147,7 @@ def make_scatter(ylabel, file_path, data_out, data_in):
         x1 += [xticks1[i] for j in range(len(data_out[key]))]
         y1 += data_out[key]
         i += 1
-    
+
     i = 0
     for key in data_in:
         x2 += [xticks2[i] for j in range(len(data_in[key]))]
@@ -119,17 +161,46 @@ def make_scatter(ylabel, file_path, data_out, data_in):
 
     save_fig(fig, file_path + ylabel + '_distribution.png')
 
-def make_figs(filename, weight=2, strlen=40, spacing=''):
+def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
 
     print(spacing + f'Parsing obtained data'.ljust(strlen, '.'), end=' ')
     data, headers = utils.parse_csv_to_data(filename)
     print(f'ok')
 
+    # total1 = []
+    # for header in headers:
+    #     tmp = 0
+    #     for data_size in data[header + '_out']:
+    #         tmp += len(data[header + '_out'][data_size])
+    #     total1.append(tmp)
+
+    #     tmp = 0
+    #     for data_size in data[header + '_in']:
+    #         tmp += len(data[header + '_in'][data_size])
+    #     total1.append(tmp)
+
     if weight != 0:
         print(spacing + f'Removing outliers from data'.ljust(strlen, '.'), end=' ')
-        data = utils.filter_z_score(data, headers, weight=weight)
+        data = utils.filter_iqr(data, headers, weight=weight)
         print(f'ok')
+    
+    # total2 = []
+    # for header in headers:
+    #     tmp = 0
+    #     for data_size in data[header + '_out']:
+    #         tmp += len(data[header + '_out'][data_size])
+    #     total2.append(tmp)
+
+    #     tmp = 0
+    #     for data_size in data[header + '_in']:
+    #         tmp += len(data[header + '_in'][data_size])
+    #     total2.append(tmp)
+
+    # print(f'cycles_out: {total2[0]/total1[0]}')
+    # print(f'cycles_in: {total2[1]/total1[1]}')
+    # print(f'time_out: {total2[2]/total1[2]}')
+    # print(f'time_in: {total2[3]/total1[3]}')
 
     for header in headers:
         print(spacing + f'[{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
@@ -138,6 +209,7 @@ def make_figs(filename, weight=2, strlen=40, spacing=''):
 
         print(spacing + f'[{header}] Generating figures'.ljust(strlen, '.'), end=' ')
         make_scatter(header, path, data[header + '_out'], data[header + '_in'])
+        # make_hist(header, path, data[header + '_out'], data[header + '_in'])
         make_plot(header, path, statistics)
         make_errorbar(header, path, statistics)
         print(f'ok')
@@ -153,7 +225,7 @@ def main(argv):
         print(f'Could not parse {args}')
         sys.exit(2)
 
-    weight = 2
+    weight = 1.5
     algs = {}
 
     for opt, arg in opts:
@@ -162,7 +234,7 @@ def main(argv):
             print(f'plotter.py [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
             sys.exit(0)
         if opt in ('-f', '--nfilter'):
-            weight = int(arg)
+            weight = float(arg)
         elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
             algs[opt] = arg
         else:

@@ -171,7 +171,7 @@ def main(argv):
     timeout = 2
     min_size = '16'
     n_tests = '500'
-    weight = 2
+    weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
@@ -186,7 +186,7 @@ def main(argv):
         if opt in ('-n', '--n_tests'):
             n_tests = arg
         if opt in ('-f', '--filter'):
-            weight = int(arg)
+            weight = float(arg)
 
     exec_tls(args[0], timeout, min_size, n_tests, weight)
 
