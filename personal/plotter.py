@@ -1,7 +1,7 @@
 import sys, getopt
 import matplotlib.pyplot as plt
 import utils
-import seaborn as sns
+# import seaborn as sns
 
 
 def save_fig(fig, fname):
@@ -70,9 +70,9 @@ def make_errorbar(ylabel, file_path, stats):
         operations = ['hash', 'verify']
 
     ax1 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1,
-                          title=operations[0], ylabel=ylabel, kwargs=params2)
+                            title=operations[0], ylabel=ylabel, kwargs=params2)
     ax2 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2,
-                          title=operations[1], ylabel=ylabel, kwargs=params4)
+                            title=operations[1], ylabel=ylabel, kwargs=params4)
 
     save_fig(fig, file_path + ylabel + '_deviation.png')
 
@@ -155,9 +155,9 @@ def make_scatter(ylabel, file_path, data_out, data_in):
         i += 1
 
     ax1 = custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks1,
-                         xtickslabels=xtickslabels1, ylabel=ylabel, kwargs={'color': 'red'})
+                            xtickslabels=xtickslabels1, ylabel=ylabel, kwargs={'color': 'red'})
     ax2 = custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks2,
-                         xtickslabels=xtickslabels2, ylabel=ylabel, kwargs={'color': 'blue'})
+                            xtickslabels=xtickslabels2, ylabel=ylabel, kwargs={'color': 'blue'})
 
     save_fig(fig, file_path + ylabel + '_distribution.png')
 
