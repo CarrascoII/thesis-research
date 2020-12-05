@@ -1,7 +1,7 @@
 MBEDTLS_DIR = ../mbedtls
 PERSONAL_DIR = ../personal
-MY_SHA256 = sha256/sha256_alt
-MY_AES = aes/aes_alt
+MY_AES = my_aes/aes_alt
+MY_SHA256 = my_sha256/sha256_alt
 PAPI_DIR = ../papi/src/install
 
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_DIR)/library
@@ -13,7 +13,7 @@ PAPI_CFLAGS = -I${PAPI_DIR}/include -L${PAPI_DIR}/lib -lpapi
 
 TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
 TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
-CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/test_cipher/config_cipher.h>'
+CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
 
 .PHONY: lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
 		psk_server run_psk_server psk_client run_psk_client tls_psk \
@@ -127,19 +127,19 @@ tls_rsa_papi: clean rsa_server_papi rsa_client_papi
 
 ### MAKE TEST CIPHER ###
 cipher: lib_cipher
-	rm -f test_cipher/cipher.out
-	gcc $(ALL_CFLAGS) test_cipher/cipher.c -lm $(LOCAL_CFLAGS) -o test_cipher/cipher.out
+	rm -f cipher/cipher.out
+	gcc $(ALL_CFLAGS) cipher/cipher.c -lm $(LOCAL_CFLAGS) -o cipher/cipher.out
 
 run_cipher: cipher
-	./test_cipher/cipher.out
+	./cipher/cipher.out
 
 ### MAKE TEST CIPHER PAPI ###
 cipher_papi: lib_cipher
-	rm -f test_cipher/cipher.out
-	gcc $(ALL_CFLAGS) test_cipher/cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o test_cipher/cipher.out
+	rm -f cipher/cipher.out
+	gcc $(ALL_CFLAGS) cipher/cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher/cipher.out
 
 run_cipher_papi: cipher_papi
-	./test_cipher/cipher.out
+	./cipher/cipher.out
 
 ### CLEAN ###
 clean_local:
@@ -147,7 +147,7 @@ clean_local:
 	rm -f tls_psk/client.out
 	rm -f tls_rsa/server.out
 	rm -f tls_rsa/client.out
-	rm -f test_cipher/cipher.out
+	rm -f cipher/cipher.out
 	
 clean: clean_local
 	$(MBEDTLS_PROGS_MAKE) clean
