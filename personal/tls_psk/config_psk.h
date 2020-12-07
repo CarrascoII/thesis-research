@@ -18,10 +18,10 @@
 
 #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
-// #define MBEDTLS_AES_ENCRYPT_ALT
-// #define MBEDTLS_AES_DECRYPT_ALT
-// #define MBEDTLS_AES_SETKEY_ENC_ALT
-// #define MBEDTLS_AES_SETKEY_DEC_ALT
+#define MBEDTLS_AES_ENCRYPT_ALT
+#define MBEDTLS_AES_SETKEY_ENC_ALT
+#define MBEDTLS_AES_DECRYPT_ALT
+#define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_ARIA_C
 #define MBEDTLS_CAMELLIA_C
 // #define MBEDTLS_CHACHA20_C
@@ -35,7 +35,7 @@
 
 #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-// #define MBEDTLS_SHA256_PROCESS_ALT
+#define MBEDTLS_SHA256_PROCESS_ALT
 #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -67,8 +67,8 @@
 /**
  * mbed TLS ciphersuites
  */
-// #define MBEDTLS_SSL_CIPHERSUITES 
-//                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
+#define MBEDTLS_SSL_CIPHERSUITES \
+                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
 //                 MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
 //                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
 //                 MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
@@ -104,7 +104,8 @@
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-#define PRINT_HANDSHAKE_STEPS
+// #define PRINT_HANDSHAKE_STEPS
+// #define PRINT_RESULTS
 #endif
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE

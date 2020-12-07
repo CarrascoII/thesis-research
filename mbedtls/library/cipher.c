@@ -1015,7 +1015,6 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
     if( ( ret = mbedtls_cipher_update( ctx, input, ilen, output, olen ) ) != 0 )
         return( ret );
 
-
     if( ( ret = mbedtls_cipher_finish( ctx, output + *olen, &finish_olen ) ) != 0 )
         return( ret );
 

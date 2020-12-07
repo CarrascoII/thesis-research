@@ -252,7 +252,7 @@ WORD SubWord(WORD word)
 // "keysize" is the length in bits of "key", must be 128, 192, or 256.
 // void aes_key_setup(const BYTE key[], WORD w[], int keysize)
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
-	int Nb=4,Nr,Nk,idx;
+	int Nb=4, Nr, Nk, idx;
 	WORD temp,Rcon[]={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
 	                  0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
 	                  0xab000000,0x4d000000,0x9a000000};
@@ -283,7 +283,6 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 	}
 
 	ctx->rk = w;
-	free(w);
 
 	return 0;
 }
@@ -324,7 +323,6 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key, 
 	}
 
 	ctx->rk = w;
-	free(w);
 
 	return 0;
 }

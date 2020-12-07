@@ -5,10 +5,10 @@
  * mbed TLS modules
  */
 /* Cipher algorithm */
-// #define MBEDTLS_AES_ENCRYPT_ALT
-// #define MBEDTLS_AES_SETKEY_ENC_ALT
-// #define MBEDTLS_AES_DECRYPT_ALT
-// #define MBEDTLS_AES_SETKEY_DEC_ALT
+#define MBEDTLS_AES_ENCRYPT_ALT
+#define MBEDTLS_AES_SETKEY_ENC_ALT
+#define MBEDTLS_AES_DECRYPT_ALT
+#define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_AES_C
 #define MBEDTLS_CIPHER_MODE_CBC
 // #define MBEDTLS_CIPHER_MODE_CFB
@@ -24,7 +24,7 @@
 
 #include "mbedtls/check_config.h"
 
-#define USE_PAPI_CIPHER
+// #define USE_PAPI_CIPHER
 
 #define MIN_INPUT_SIZE  16
 #define MAX_INPUT_SIZE  1024

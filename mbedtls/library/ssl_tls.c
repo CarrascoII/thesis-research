@@ -1537,12 +1537,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
             printf("\nMD: digest, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
             printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
             if(ssl->out_msgtype == 23) {
                 csv = fopen(md_fname, "a+");
@@ -1613,12 +1613,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
         printf("\nCIPHER: encrypt, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
         printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
         if(ssl->out_msgtype == 23) {
             csv = fopen(cipher_fname, "a+");
@@ -1826,12 +1826,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
         printf("\nCIPHER: encrypt, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
         printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
         if(ssl->out_msgtype == 23) {
             csv = fopen(cipher_fname, "a+");
@@ -1917,12 +1917,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
             printf("\nMD: digest, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
             printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
             if(ssl->out_msgtype == 23) {   
                 csv = fopen(md_fname, "a+");
@@ -2048,12 +2048,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
         printf("\nCIPHER: decrypt, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
         printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
         if(ssl->in_msgtype == 23) {
             csv = fopen(cipher_fname, "a+");
@@ -2265,12 +2265,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
             printf("\nMD: verify, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
             printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
             if(ssl->in_msgtype == 23) {   
                 csv = fopen(md_fname, "a+");
@@ -2352,12 +2352,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
         cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
         printf("\nCIPHER: decrypt, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
         printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
         if(ssl->in_msgtype == 23) {
             csv = fopen(cipher_fname, "a+");
@@ -2621,12 +2621,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
             cycles_cpu = end_cycles_cpu - start_cycles_cpu;
 
-#if defined(MBEDTLS_DEBUG_C)
+#if defined(PRINT_RESULTS)
             printf("\nMD: verify, %lld", cycles_cpu);
 #if defined(MEASURE_TIME)
             printf(", %lld", time_cpu);
 #endif
-#endif /* MBEDTLS_DEBUG_C */
+#endif /* PRINT_RESULTS */
 
             if(ssl->in_msgtype == 23) {                
                 csv = fopen(md_fname, "a+");
