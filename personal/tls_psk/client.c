@@ -17,7 +17,7 @@
 #include <string.h>
 
 #if defined(MBEDTLS_DEBUG_C)
-#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if defined(PRINT_MSG_HEX)
 /*
  *  Print for the generated inputs
  */
@@ -259,7 +259,7 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
             printf(" %d bytes\n", ret);
-#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if defined(PRINT_MSG_HEX)
             print_hex(request, input_size);
 #endif 
             fflush(stdout);
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
             printf(" %d bytes\n", ret);
-#if !defined(MEASURE_CIPHER) && !defined(MEASURE_MD)
+#if defined(PRINT_MSG_HEX)
             print_hex(response, input_size);
 #endif 
             fflush(stdout);

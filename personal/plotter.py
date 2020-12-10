@@ -164,9 +164,9 @@ def make_scatter(ylabel, file_path, data_out, data_in):
 def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
 
-    print(spacing + f'Parsing obtained data'.ljust(strlen, '.'), end=' ')
+    print(spacing + 'Parsing obtained data'.ljust(strlen, '.'), end=' ')
     data, headers = utils.parse_csv_to_data(filename)
-    print(f'ok')
+    print('ok')
 
     # total1 = []
     # for header in headers:
@@ -181,9 +181,9 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     #     total1.append(tmp)
 
     if weight != 0:
-        print(spacing + f'Removing outliers from data'.ljust(strlen, '.'), end=' ')
+        print(spacing + 'Removing outliers from data'.ljust(strlen, '.'), end=' ')
         data = utils.filter_iqr(data, headers, weight=weight)
-        print(f'ok')
+        print('ok')
     
     # total2 = []
     # for header in headers:
@@ -205,20 +205,20 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     for header in headers:
         print(spacing + f'[{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
         statistics = utils.calc_statistics(data[header + '_out'], data[header + '_in'])
-        print(f'ok')
+        print('ok')
 
         print(spacing + f'[{header}] Generating figures'.ljust(strlen, '.'), end=' ')
         make_scatter(header, path, data[header + '_out'], data[header + '_in'])
         # make_hist(header, path, data[header + '_out'], data[header + '_in'])
         make_plot(header, path, statistics)
         make_errorbar(header, path, statistics)
-        print(f'ok')
+        print('ok')
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:c:m:', ['help', 'filter=', 'cfile=', 'mfile='])
     except getopt.GetoptError:
-        print(f'One of the options does not exit.\nUse: "plotter.py -h" for help')
+        print('One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
 
     if args:
@@ -230,8 +230,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print(f'plotter.py [-f <weight>] [-c <cipher_file>] [-m <md_file>]')
-            print(f'plotter.py [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
+            print('plotter.py [-f <weight>] [-c <cipher_file>] [-m <md_file>]')
+            print('plotter.py [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
             sys.exit(0)
         if opt in ('-f', '--nfilter'):
             weight = float(arg)

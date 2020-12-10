@@ -113,6 +113,9 @@
 #define N_TESTS         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL     1
+// #define PRINT_HANDSHAKE_STEPS
+// #define PRINT_MEASUREMENTS
+// #define PRINT_MSG_HEX
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

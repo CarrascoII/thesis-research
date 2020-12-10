@@ -31,38 +31,39 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
     path2 = '../docs/' + ciphersuite2 + '/'
 
     for alg in algs:
-        print(spacing + f'[{alg}] Parsing data'.ljust(strlen, '.'), end=' ')
+        print(spacing + f'{alg} algorithm:')
+        print(spacing + '    Parsing data'.ljust(strlen, '.'), end=' ')
         data1, headers1 = utils.parse_csv_to_data(path1 + alg + '_data.csv')
         data2, headers2 = utils.parse_csv_to_data(path2 + alg + '_data.csv')
        
         if headers1 != headers2:
             print('error')
-            print(spacing + f'Data has different headers. Cannot be compared!!!\n')
+            print(spacing + 'Data has different headers. Cannot be compared!!!\n')
             break
 
-        print(f'ok')
+        print('ok')
 
         if weight != 0:
-            print(spacing + f'[{alg}] Removing outliers from data'.ljust(strlen, '.'), end=' ')
+            print(spacing + '    Removing outliers from data'.ljust(strlen, '.'), end=' ')
             data1 = utils.filter_iqr(data1, headers1, weight=weight)
             data2 = utils.filter_iqr(data2, headers2, weight=weight)
-            print(f'ok')
+            print('ok')
 
         for header in headers1:
-            print(spacing + f'\t[{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+            print(spacing + f'        [{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
             statistics1 = utils.calc_statistics(data1[header + '_out'], data1[header + '_in'])
             statistics2 = utils.calc_statistics(data2[header + '_out'], data2[header + '_in'])
-            print(f'ok')
+            print('ok')
 
-            print(spacing + f'\t[{header}] Generating figures'.ljust(strlen, '.'), end=' ')
+            print(spacing + f'        [{header}] Generating figures'.ljust(strlen, '.'), end=' ')
             make_cmp_plot(alg, header, statistics1, ciphersuite1, statistics2, ciphersuite2)
-            print(f'ok')
+            print('ok')
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
     except getopt.GetoptError:
-        print(f'One of the options does not exit.\nUse: "plotter.py -h" for help')
+        print('One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -78,8 +79,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print(f'plotter.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
-            print(f'plotter.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
+            print('comparator.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
+            print('comparator.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
             sys.exit(0)
         if opt in ('-f', '--nfilter'):
             weight = float(arg)

@@ -16,14 +16,14 @@
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 
-#define MBEDTLS_DES_C
+// #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
 // #define MBEDTLS_AES_ENCRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_ENC_ALT
 // #define MBEDTLS_AES_DECRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
-#define MBEDTLS_ARIA_C
-#define MBEDTLS_CAMELLIA_C
+// #define MBEDTLS_ARIA_C
+// #define MBEDTLS_CAMELLIA_C
 // #define MBEDTLS_CHACHA20_C
 
 #define MBEDTLS_CIPHER_MODE_CBC
@@ -33,10 +33,10 @@
 /* Message authentication algorithms */
 #define MBEDTLS_MD_C
 
-#define MBEDTLS_SHA1_C
+// #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-// #define MBEDTLS_SHA256_PROCESS_ALT
-#define MBEDTLS_SHA512_C
+#define MBEDTLS_SHA256_PROCESS_ALT
+// #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
 /* AEAD algorithms */
@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -101,18 +101,19 @@
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  16
 #define MAX_INPUT_SIZE                  8192
-#define N_TESTS                         500
+#define N_TESTS                         1
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-// #define PRINT_HANDSHAKE_STEPS
-// #define PRINT_RESULTS
+#define PRINT_HANDSHAKE_STEPS
+// #define PRINT_MEASUREMENTS
+// #define PRINT_MSG_HEX
 #endif
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-#define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 // #define MEASURE_KE
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)

@@ -9,7 +9,10 @@ strlen = 40
 
 
 def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
-    last_msg = ['Final status:', f'  -Suite being used:          {ciphersuite}']
+    last_msg = [
+        'Final status:',
+        f'  -Suite being used:          {ciphersuite}'
+    ]
     strout = stdout.decode('utf-8').strip('\n')
     last_out = strout.split('\n')[-2:]
     strerr = stderr.decode('utf-8').strip('\n')
