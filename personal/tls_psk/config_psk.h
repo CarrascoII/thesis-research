@@ -35,7 +35,7 @@
 
 // #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-#define MBEDTLS_SHA256_PROCESS_ALT
+// #define MBEDTLS_SHA256_PROCESS_ALT
 // #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
+// #define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -101,7 +101,7 @@
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  16
 #define MAX_INPUT_SIZE                  8192
-#define N_TESTS                         1
+#define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
 #define PRINT_HANDSHAKE_STEPS
@@ -112,8 +112,8 @@
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_KE
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
