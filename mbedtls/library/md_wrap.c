@@ -129,6 +129,9 @@ const mbedtls_md_info_t mbedtls_md2_info = {
     md2_ctx_free,
     md2_clone_wrap,
     md2_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 #endif /* MBEDTLS_MD2_C */
@@ -191,6 +194,9 @@ const mbedtls_md_info_t mbedtls_md4_info = {
     md4_ctx_free,
     md4_clone_wrap,
     md4_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 #endif /* MBEDTLS_MD4_C */
@@ -253,6 +259,9 @@ const mbedtls_md_info_t mbedtls_md5_info = {
     md5_ctx_free,
     md5_clone_wrap,
     md5_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 #endif /* MBEDTLS_MD5_C */
@@ -318,6 +327,9 @@ const mbedtls_md_info_t mbedtls_ripemd160_info = {
     ripemd160_ctx_free,
     ripemd160_clone_wrap,
     ripemd160_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 #endif /* MBEDTLS_RIPEMD160_C */
@@ -382,6 +394,9 @@ const mbedtls_md_info_t mbedtls_sha1_info = {
     sha1_ctx_free,
     sha1_clone_wrap,
     sha1_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 #endif /* MBEDTLS_SHA1_C */
@@ -443,6 +458,12 @@ static int sha224_process_wrap( void *ctx, const unsigned char *data )
                                              data ) );
 }
 
+#if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
+static void sha224_set_hmac_size_wrap( void *ctx, size_t len ) {
+    mbedtls_sha256_set_hmac_size((mbedtls_sha256_context *) ctx, len);
+}
+#endif
+
 const mbedtls_md_info_t mbedtls_sha224_info = {
     MBEDTLS_MD_SHA224,
     "SHA224",
@@ -456,6 +477,13 @@ const mbedtls_md_info_t mbedtls_sha224_info = {
     sha224_ctx_free,
     sha224_clone_wrap,
     sha224_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
+    sha224_set_hmac_size_wrap,
+#else
+    NULL,
+#endif
+#endif
 };
 
 static int sha256_starts_wrap( void *ctx )
@@ -482,6 +510,13 @@ const mbedtls_md_info_t mbedtls_sha256_info = {
     sha224_ctx_free,
     sha224_clone_wrap,
     sha224_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+#if defined(MBEDTLS_SHA256_PROCESS_ALT)
+    sha224_set_hmac_size_wrap,
+#else
+    NULL,
+#endif
+#endif
 };
 
 #endif /* MBEDTLS_SHA256_C */
@@ -553,6 +588,9 @@ const mbedtls_md_info_t mbedtls_sha384_info = {
     sha384_ctx_free,
     sha384_clone_wrap,
     sha384_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 static int sha512_starts_wrap( void *ctx )
@@ -579,6 +617,9 @@ const mbedtls_md_info_t mbedtls_sha512_info = {
     sha384_ctx_free,
     sha384_clone_wrap,
     sha384_process_wrap,
+#if defined(NEW_MD_HMAC_ALT)
+    NULL,
+#endif
 };
 
 #endif /* MBEDTLS_SHA512_C */

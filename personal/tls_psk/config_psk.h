@@ -35,7 +35,7 @@
 
 // #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-// #define MBEDTLS_SHA256_PROCESS_ALT
+#define MBEDTLS_SHA256_PROCESS_ALT
 // #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -104,7 +104,7 @@
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-#define PRINT_HANDSHAKE_STEPS
+// #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MEASUREMENTS
 // #define PRINT_MSG_HEX
 #endif
@@ -112,9 +112,11 @@
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-#define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 // #define MEASURE_KE
+
+#define NEW_MD_HMAC_ALT
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define MEASURE_TIME
@@ -138,5 +140,9 @@ char *md_fname;
 char *ke_fname;
 #endif
 #endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
+
+#if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
+#define NEW_SHA256_PROCESS_ALT
+#endif
 
 #endif /* MBEDTLS_CONFIG_H */

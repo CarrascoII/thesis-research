@@ -1448,9 +1448,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 {
     mbedtls_cipher_mode_t mode;
     int auth_done = 0;
+#if defined(NEW_MD_HMAC_ALT)
+    size_t *hmac_total_size;
+#endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    int ret;
     FILE *csv;
+    int ret;
     long long start_cycles_cpu, end_cycles_cpu, cycles_cpu;
 #if defined(MEASURE_TIME)
     long long start_time_cpu, end_time_cpu, time_cpu;
@@ -1521,13 +1524,21 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif
 
+#if defined(NEW_MD_HMAC_ALT)
+            hmac_total_size = (size_t *) ssl->transform_out->md_ctx_enc.hmac_total;
+            *hmac_total_size = ssl->out_msglen;
+
+            mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+#endif
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, ssl->out_len, 2 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc,
                              ssl->out_msg, ssl->out_msglen );
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc, mac );
+#if !defined(NEW_MD_HMAC_ALT)
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+#endif
 
 #if defined(MEASURE_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
@@ -1903,11 +1914,19 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif
 
+#if defined(NEW_MD_HMAC_ALT)
+            hmac_total_size = (size_t *) ssl->transform_out->md_ctx_enc->hmac_total;
+            *hmac_total_size = ssl->out_msglen;
+
+            mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+#endif
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc, pseudo_hdr, 13 );
             mbedtls_md_hmac_update( &ssl->transform_out->md_ctx_enc,
                              ssl->out_iv, ssl->out_msglen );
             mbedtls_md_hmac_finish( &ssl->transform_out->md_ctx_enc, mac );
+#if !defined(NEW_MD_HMAC_ALT)
             mbedtls_md_hmac_reset( &ssl->transform_out->md_ctx_enc );
+#endif
 
 #if defined(MEASURE_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
@@ -1976,6 +1995,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     int auth_done = 0;
 #if defined(SSL_SOME_MODES_USE_MAC)
     size_t padlen = 0, correct = 1;
+#endif
+#if defined(NEW_MD_HMAC_ALT)
+    size_t *hmac_total_size;
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
     int ret;
@@ -2251,11 +2273,19 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif
 
+#if defined(NEW_MD_HMAC_ALT)
+            hmac_total_size = (size_t *) ssl->transform_in->md_ctx_dec->hmac_total;
+            *hmac_total_size = ssl->in_msglen;
+
+            mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+#endif
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, pseudo_hdr, 13 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec,
                              ssl->in_iv, ssl->in_msglen );
             mbedtls_md_hmac_finish( &ssl->transform_in->md_ctx_dec, mac_expect );
+#if !defined(NEW_MD_HMAC_ALT)
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+#endif
 
 #if defined(MEASURE_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();
@@ -2595,6 +2625,12 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 #endif
 
+#if defined(NEW_MD_HMAC_ALT)
+            hmac_total_size = (size_t *) ssl->transform_in->md_ctx_dec.hmac_total;
+            *hmac_total_size = ssl->in_msglen;
+
+            mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+#endif
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_ctr, 8 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_hdr, 3 );
             mbedtls_md_hmac_update( &ssl->transform_in->md_ctx_dec, ssl->in_len, 2 );
@@ -2611,7 +2647,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             for( j = 0; j < extra_run + 1; j++ )
                 mbedtls_md_process( &ssl->transform_in->md_ctx_dec, ssl->in_msg );
 
+#if !defined(NEW_MD_HMAC_ALT)
             mbedtls_md_hmac_reset( &ssl->transform_in->md_ctx_dec );
+#endif
 
 #if defined(MEASURE_MD)
             end_cycles_cpu = PAPI_get_virt_cyc();

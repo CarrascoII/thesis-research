@@ -235,6 +235,15 @@ int mbedtls_md_setup( mbedtls_md_context_t *ctx, const mbedtls_md_info_t *md_inf
             md_info->ctx_free_func( ctx->md_ctx );
             return( MBEDTLS_ERR_MD_ALLOC_FAILED );
         }
+
+#if defined(NEW_MD_HMAC_ALT)
+        ctx->hmac_total = mbedtls_calloc(1, sizeof(size_t));
+        if( ctx->hmac_total == NULL )
+        {
+            md_info->ctx_free_func( ctx->md_ctx );
+            return( MBEDTLS_ERR_MD_ALLOC_FAILED );
+        }
+#endif
     }
 
     ctx->md_info = md_info;
@@ -401,9 +410,17 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
 {
     int ret;
     unsigned char *ipad;
+#if defined(NEW_MD_HMAC_ALT)
+    size_t *hmac_total;
+#endif
 
     if( ctx == NULL || ctx->md_info == NULL || ctx->hmac_ctx == NULL )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
+
+#if defined(NEW_MD_HMAC_ALT)
+    hmac_total = (size_t *) ctx->hmac_total;
+    ctx->md_info->set_hmac_size_func(ctx->md_ctx, *hmac_total);
+#endif
 
     ipad = (unsigned char *) ctx->hmac_ctx;
 

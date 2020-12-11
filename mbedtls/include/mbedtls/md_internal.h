@@ -82,6 +82,10 @@ struct mbedtls_md_info_t
 
     /** Internal use only */
     int (*process_func)( void *ctx, const unsigned char *input );
+
+#if defined(NEW_MD_HMAC_ALT)
+    void (*set_hmac_size_func)(void *ctx, size_t len);
+#endif
 };
 
 #if defined(MBEDTLS_MD2_C)

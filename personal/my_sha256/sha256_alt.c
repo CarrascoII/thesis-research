@@ -45,7 +45,11 @@ static const WORD k[64] = {
 	0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
 };
 
+#if defined(NEW_SHA256_PROCESS_ALT)
 int internal_sha256_process_alt_1( mbedtls_sha256_context *ctx, const unsigned char data[64] ) {
+#else
+int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx, const unsigned char data[64] ) {
+#endif
 	WORD a, b, c, d, e, f, g, h, i, j, t1, t2, m[64];
 
 	for (i = 0, j = 0; i < 16; ++i, j += 4)
@@ -86,8 +90,8 @@ int internal_sha256_process_alt_1( mbedtls_sha256_context *ctx, const unsigned c
     return( 0 );
 }
 
+#if defined(NEW_SHA256_PROCESS_ALT)
 // mbedtls implementation
-
 #ifndef GET_UINT32_BE
 #define GET_UINT32_BE(n,b,i)                            \
 do {                                                    \
@@ -206,15 +210,18 @@ int internal_sha256_process_og( mbedtls_sha256_context *ctx,
 }
 
 int mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx, const unsigned char data[64]) {
-	int msg_len = ctx->total[0] - 64 - 13; // 64 = len(opad), 13 = len(ctr) + len(hdr)
-
-    if(msg_len < 1024) {
-        // printf("\nUsing OG (%d)", ctx->total[0]);
+    if(ctx->hmac_total < 1024) {
+        // printf("\nUsing OG (%d)", ctx->hmac_total);
         return internal_sha256_process_og(ctx, data);
     } else {
-        // printf("\nUsing ALT_1 (%d)", ctx->total[0]);
+        // printf("\nUsing ALT_1 (%d)", ctx->hmac_total);
     	return internal_sha256_process_alt_1(ctx, data);
     }
 }
+
+void mbedtls_sha256_set_hmac_size(mbedtls_sha256_context *ctx, size_t len) {
+    ctx->hmac_total = (uint32_t) len;
+}
+#endif
 
 #endif /* MBEDTLS_SHA256_PROCESS_ALT */

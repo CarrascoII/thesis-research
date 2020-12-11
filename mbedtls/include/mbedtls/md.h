@@ -92,6 +92,10 @@ typedef struct mbedtls_md_context_t
 
     /** The HMAC part of the context. */
     void *hmac_ctx;
+
+#if defined(NEW_MD_HMAC_ALT)
+    void *hmac_total;
+#endif
 } mbedtls_md_context_t;
 
 /**

@@ -62,6 +62,9 @@ typedef struct mbedtls_sha256_context
     unsigned char buffer[64];   /*!< The data block being processed. */
     int is224;                  /*!< Determines which function to use:
                                      0: Use SHA-256, or 1: Use SHA-224. */
+#if defined(NEW_SHA256_PROCESS_ALT)
+    uint32_t hmac_total;
+#endif
 }
 mbedtls_sha256_context;
 
@@ -138,6 +141,10 @@ int mbedtls_sha256_update_ret( mbedtls_sha256_context *ctx,
  */
 int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
                                unsigned char output[32] );
+
+#if defined(NEW_SHA256_PROCESS_ALT)
+void mbedtls_sha256_set_hmac_size(mbedtls_sha256_context *ctx, size_t len);
+#endif
 
 /**
  * \brief          This function processes a single data block within

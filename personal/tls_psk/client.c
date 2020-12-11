@@ -227,6 +227,7 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
+    printf("\nPerforming TLS record:");
 #endif 
 
     for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
@@ -246,7 +247,7 @@ int main(int argc, char **argv) {
         for(i = 0; i < n_tests; i++) {
 #if defined(MBEDTLS_DEBUG_C)
             // Send request
-            printf("\n< Write to server:");
+            printf("\n  < Write to server:");
             fflush(stdout);
 #endif 
 
@@ -265,7 +266,7 @@ int main(int argc, char **argv) {
             fflush(stdout);
 
             // Receive response
-            printf("\n> Read from server:");
+            printf("\n  > Read from server:");
             fflush(stdout);
 #endif 
 
