@@ -35,7 +35,7 @@
 
 // #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-#define MBEDTLS_SHA256_PROCESS_ALT
+// #define MBEDTLS_SHA256_PROCESS_ALT
 // #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
+// #define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -112,11 +112,9 @@
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_KE
-
-#define NEW_MD_HMAC_ALT
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define MEASURE_TIME
@@ -129,6 +127,7 @@ char *cipher_fname;
 #endif
 
 #if defined(MEASURE_MD)
+// #define NEW_MD_HMAC_ALT
 #define MD_EXTENSION        "/md_data.csv"
 #define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(MD_EXTENSION) + len("\0") */
 char *md_fname;
