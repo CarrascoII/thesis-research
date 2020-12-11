@@ -127,7 +127,7 @@ char *cipher_fname;
 #endif
 
 #if defined(MEASURE_MD)
-// #define NEW_MD_HMAC_ALT
+#define NEW_MD_HMAC_ALT
 #define MD_EXTENSION        "/md_data.csv"
 #define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(MD_EXTENSION) + len("\0") */
 char *md_fname;
@@ -142,6 +142,7 @@ char *ke_fname;
 
 #if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
 #define NEW_SHA256_PROCESS_ALT
+#define SHA256_THRESHOLD    1024
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

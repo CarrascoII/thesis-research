@@ -210,7 +210,7 @@ int internal_sha256_process_og( mbedtls_sha256_context *ctx,
 }
 
 int mbedtls_internal_sha256_process(mbedtls_sha256_context *ctx, const unsigned char data[64]) {
-    if(ctx->hmac_total < 1024) {
+    if(ctx->hmac_total <= SHA256_THRESHOLD) {
         // printf("\nUsing OG (%d)", ctx->hmac_total);
         return internal_sha256_process_og(ctx, data);
     } else {
