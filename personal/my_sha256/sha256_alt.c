@@ -20,11 +20,6 @@
 #define mbedtls_free       free
 #endif /* MBEDTLS_PLATFORM_C */
 
-#define SHA256_VALIDATE_RET(cond)                           \
-    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
-#define SHA256_VALIDATE(cond)  MBEDTLS_INTERNAL_VALIDATE( cond )
-
-#define ROTLEFT(a,b) (((a) << (b)) | ((a) >> (32-(b))))
 #define ROTRIGHT(a,b) (((a) >> (b)) | ((a) << (32-(b))))
 
 #define CH(x,y,z) (((x) & (y)) ^ (~(x) & (z)))
@@ -90,8 +85,11 @@ int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx, const unsigned
     return( 0 );
 }
 
+// mbedTLS implementation
 #if defined(NEW_SHA256_PROCESS_ALT)
-// mbedtls implementation
+#define SHA256_VALIDATE_RET(cond)                           \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_SHA256_BAD_INPUT_DATA )
+
 #ifndef GET_UINT32_BE
 #define GET_UINT32_BE(n,b,i)                            \
 do {                                                    \
@@ -223,5 +221,4 @@ void mbedtls_sha256_set_hmac_size(mbedtls_sha256_context *ctx, size_t len) {
     ctx->hmac_total = (uint32_t) len;
 }
 #endif
-
 #endif /* MBEDTLS_SHA256_PROCESS_ALT */
