@@ -1088,10 +1088,10 @@ int internal_aes_decrypt_og(mbedtls_aes_context *ctx, const unsigned char input[
 #if defined(NEW_AES_ENCRYPT_ALT)
 int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
     if(ctx->aes_total <= AES_THRESHOLD) {
-        printf("\nUsing ENC_OG (%d)", ctx->aes_total);
+        // printf("\nUsing ENC_OG (%d)", ctx->aes_total);
         return internal_aes_encrypt_og(ctx, input, output);
     } else {
-        printf("\nUsing ENC_ALT_1 (%d)", ctx->aes_total);
+        // printf("\nUsing ENC_ALT_1 (%d)", ctx->aes_total);
     	return internal_aes_encrypt_alt_1(ctx, input, output);
     }
 }
@@ -1100,10 +1100,10 @@ int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char i
 #if defined(NEW_AES_DECRYPT_ALT)
 int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
     if(ctx->aes_total <= AES_THRESHOLD) {
-        printf("\nUsing DEC_OG (%d)", ctx->aes_total);
+        // printf("\nUsing DEC_OG (%d)", ctx->aes_total);
         return internal_aes_decrypt_og(ctx, input, output);
     } else {
-        printf("\nUsing DEC_ALT_1 (%d)", ctx->aes_total);
+        // printf("\nUsing DEC_ALT_1 (%d)", ctx->aes_total);
     	return internal_aes_decrypt_alt_1(ctx, input, output);
     }
 }
