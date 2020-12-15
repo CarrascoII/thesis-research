@@ -35,7 +35,7 @@
 
 // #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-#define MBEDTLS_SHA256_PROCESS_ALT
+// #define MBEDTLS_SHA256_PROCESS_ALT
 // #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -121,6 +121,7 @@
 #define FILE_PATH           "../docs/"
 
 #if defined(MEASURE_CIPHER)
+#define NEW_CIPHER_ALG_ALT
 #define CIPHER_EXTENSION    "/cipher_data.csv"
 #define CIPHER_FNAME_SIZE   25 /* = len(FILE_PATH) + len(CIPHER_EXTENSION) + len("\0") */
 char *cipher_fname;
@@ -145,7 +146,24 @@ char *ke_fname;
 #define SHA256_THRESHOLD    1024
 #endif
 
-#define NEW_AES_SETKEY_ENC_AND_ENCRYPT_ALT
-#define NEW_AES_SETKEY_DEC_AND_DECRYPT_ALT
+#if defined(NEW_CIPHER_ALG_ALT)
+#if defined(MBEDTLS_AES_ENCRYPT_ALT)
+#define NEW_AES_ENCRYPT_ALT
+#endif
+
+#if defined(MBEDTLS_AES_SETKEY_ENC_ALT)
+#define NEW_AES_SETKEY_ENC_ALT
+#endif
+
+#if defined(MBEDTLS_AES_DECRYPT_ALT)
+#define NEW_AES_DECRYPT_ALT
+#endif
+
+#if defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#define NEW_AES_SETKEY_DEC_ALT
+#endif
+
+#define AES_THRESHOLD       1024 + 32 /* msg size + sum of size of blocks with extra record info  */
+#endif
 
 #endif /* MBEDTLS_CONFIG_H */

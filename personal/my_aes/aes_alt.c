@@ -26,12 +26,27 @@
 #else
 #include <stdio.h>
 #define mbedtls_printf printf
-#endif /* MBEDTLS_PLATFORM_C */
+#endif
 
+#if defined(NEW_AES_SETKEY_ENC_ALT) || defined(NEW_AES_ENCRYPT_ALT) || \
+	defined(NEW_AES_SETKEY_DEC_ALT) || defined(NEW_AES_DECRYPT_ALT)
+#ifndef GET_UINT32_LE
+#define GET_UINT32_LE(n,b,i)                            \
+{                                                       \
+    (n) = ( (uint32_t) (b)[(i)    ]       )             \
+        | ( (uint32_t) (b)[(i) + 1] <<  8 )             \
+        | ( (uint32_t) (b)[(i) + 2] << 16 )             \
+        | ( (uint32_t) (b)[(i) + 3] << 24 );            \
+}
+#endif
 
-#if defined(MBEDTLS_AES_SETKEY_ENC_ALT) || defined(MBEDTLS_AES_SETKEY_DEC_ALT) || defined(MBEDTLS_AES_ENCRYPT_ALT)
-// This is the specified AES SBox. To look up a substitution value, put the first
-// nibble in the first index (row) and the second nibble in the second index (column).
+static unsigned char FSb[256];
+static uint32_t FT0[256];
+static uint32_t FT1[256];
+static uint32_t FT2[256];
+static uint32_t FT3[256];
+#endif
+
 static const BYTE aes_sbox[16][16] = {
 	{0x63,0x7C,0x77,0x7B,0xF2,0x6B,0x6F,0xC5,0x30,0x01,0x67,0x2B,0xFE,0xD7,0xAB,0x76},
 	{0xCA,0x82,0xC9,0x7D,0xFA,0x59,0x47,0xF0,0xAD,0xD4,0xA2,0xAF,0x9C,0xA4,0x72,0xC0},
@@ -50,15 +65,26 @@ static const BYTE aes_sbox[16][16] = {
 	{0xE1,0xF8,0x98,0x11,0x69,0xD9,0x8E,0x94,0x9B,0x1E,0x87,0xE9,0xCE,0x55,0x28,0xDF},
 	{0x8C,0xA1,0x89,0x0D,0xBF,0xE6,0x42,0x68,0x41,0x99,0x2D,0x0F,0xB0,0x54,0xBB,0x16}
 };
-#endif /* MBEDTLS_AES_SETKEY_ENC_ALT || MBEDTLS_AES_SETKEY_DEC_ALT || MBEDTLS_AES_ENCRYPT_ALT */
 
 #if defined(MBEDTLS_AES_SETKEY_ENC_ALT) || defined(MBEDTLS_AES_SETKEY_DEC_ALT)
-// The least significant byte of the word is rotated to the end.
+#if defined(NEW_AES_SETKEY_ENC_ALT) || defined(NEW_AES_SETKEY_DEC_ALT)
+#define AES_VALIDATE_RET( cond )    \
+    MBEDTLS_INTERNAL_VALIDATE_RET( cond, MBEDTLS_ERR_AES_BAD_INPUT_DATA )
+
+static unsigned char RSb[256];
+static uint32_t RT0[256];
+static uint32_t RT1[256];
+static uint32_t RT2[256];
+static uint32_t RT3[256];
+
+#define AES_RT0(idx) RT0[idx]
+#define AES_RT1(idx) RT1[idx]
+#define AES_RT2(idx) RT2[idx]
+#define AES_RT3(idx) RT3[idx]
+#endif
 #define KE_ROTWORD(x) (((x) << 8) | ((x) >> 24))
 
-// Substitutes a word using the AES S-Box.
-WORD SubWord(WORD word)
-{
+WORD SubWord(WORD word) {
 	unsigned int result;
 
 	result = (int)aes_sbox[(word >> 4) & 0x0000000F][word & 0x0000000F];
@@ -67,14 +93,13 @@ WORD SubWord(WORD word)
 	result += (int)aes_sbox[(word >> 28) & 0x0000000F][(word >> 24) & 0x0000000F] << 24;
 	return(result);
 }
-#endif /* MBEDTLS_AES_SETKEY_ENC_ALT || MBEDTLS_AES_SETKEY_DEC_ALT */
 
 #if defined(MBEDTLS_AES_SETKEY_ENC_ALT)
-// Performs the action of generating the keys that will be used in every round of
-// encryption. "key" is the user-supplied input key, "w" is the output key schedule,
-// "keysize" is the length in bits of "key", must be 128, 192, or 256.
-// void aes_key_setup(const BYTE key[], WORD w[], int keysize)
+#if defined(NEW_AES_SETKEY_ENC_ALT)
+int aes_setkey_enc_alt_1(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+#else
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+#endif
 	int Nb = 4, Nr, Nk, idx;
 	WORD temp, Rcon[] = {0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
 						0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
@@ -105,19 +130,232 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 		w[idx] = w[idx-Nk] ^ temp;
 	}
 
+#if defined(NEW_AES_SETKEY_ENC_ALT)
+	ctx->rk_alt_1 = w;
+#else
 	ctx->rk = w;
-
-	// printf("\nRound Key Enc:");
-	// for(idx = 0; idx < Nr + 1; idx++) {
-	// 	printf("\n  %.8x%.8x%.8x%.8x", w[4*idx], w[4*idx + 1], w[4*idx + 2], w[4*idx + 3]);
-	// }
+#endif
 
 	return 0;
 }
+
+#if defined(NEW_AES_SETKEY_ENC_ALT)
+static uint32_t RCON[10];
+
+#define ROTL8(x) ( ( (x) << 8 ) & 0xFFFFFFFF ) | ( (x) >> 24 )
+#define XTIME(x) ( ( (x) << 1 ) ^ ( ( (x) & 0x80 ) ? 0x1B : 0x00 ) )
+#define MUL(x,y) ( ( (x) && (y) ) ? pow[(log[(x)]+log[(y)]) % 255] : 0 )
+
+static int aes_init_done = 0;
+
+static void aes_gen_tables( void )
+{
+    int i, x, y, z;
+    int pow[256];
+    int log[256];
+
+    /*
+     * compute pow and log tables over GF(2^8)
+     */
+    for( i = 0, x = 1; i < 256; i++ )
+    {
+        pow[i] = x;
+        log[x] = i;
+        x = ( x ^ XTIME( x ) ) & 0xFF;
+    }
+
+    /*
+     * calculate the round constants
+     */
+    for( i = 0, x = 1; i < 10; i++ )
+    {
+        RCON[i] = (uint32_t) x;
+        x = XTIME( x ) & 0xFF;
+    }
+
+    /*
+     * generate the forward and reverse S-boxes
+     */
+    FSb[0x00] = 0x63;
+    RSb[0x63] = 0x00;
+
+    for( i = 1; i < 256; i++ )
+    {
+        x = pow[255 - log[i]];
+
+        y  = x; y = ( ( y << 1 ) | ( y >> 7 ) ) & 0xFF;
+        x ^= y; y = ( ( y << 1 ) | ( y >> 7 ) ) & 0xFF;
+        x ^= y; y = ( ( y << 1 ) | ( y >> 7 ) ) & 0xFF;
+        x ^= y; y = ( ( y << 1 ) | ( y >> 7 ) ) & 0xFF;
+        x ^= y ^ 0x63;
+
+        FSb[i] = (unsigned char) x;
+        RSb[x] = (unsigned char) i;
+    }
+
+    /*
+     * generate the forward and reverse tables
+     */
+    for( i = 0; i < 256; i++ )
+    {
+        x = FSb[i];
+        y = XTIME( x ) & 0xFF;
+        z =  ( y ^ x ) & 0xFF;
+
+        FT0[i] = ( (uint32_t) y       ) ^
+                 ( (uint32_t) x <<  8 ) ^
+                 ( (uint32_t) x << 16 ) ^
+                 ( (uint32_t) z << 24 );
+
+#if !defined(MBEDTLS_AES_FEWER_TABLES)
+        FT1[i] = ROTL8( FT0[i] );
+        FT2[i] = ROTL8( FT1[i] );
+        FT3[i] = ROTL8( FT2[i] );
+#endif /* !MBEDTLS_AES_FEWER_TABLES */
+
+        x = RSb[i];
+
+        RT0[i] = ( (uint32_t) MUL( 0x0E, x )       ) ^
+                 ( (uint32_t) MUL( 0x09, x ) <<  8 ) ^
+                 ( (uint32_t) MUL( 0x0D, x ) << 16 ) ^
+                 ( (uint32_t) MUL( 0x0B, x ) << 24 );
+
+#if !defined(MBEDTLS_AES_FEWER_TABLES)
+        RT1[i] = ROTL8( RT0[i] );
+        RT2[i] = ROTL8( RT1[i] );
+        RT3[i] = ROTL8( RT2[i] );
+#endif /* !MBEDTLS_AES_FEWER_TABLES */
+    }
+}
+
+int aes_setkey_enc_og(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+    unsigned int i;
+    uint32_t *RK;
+
+    AES_VALIDATE_RET( ctx != NULL );
+    AES_VALIDATE_RET( key != NULL );
+
+    switch( keybits )
+    {
+        case 128: ctx->nr = 10; break;
+        case 192: ctx->nr = 12; break;
+        case 256: ctx->nr = 14; break;
+        default : return( MBEDTLS_ERR_AES_INVALID_KEY_LENGTH );
+    }
+
+    if( aes_init_done == 0 )
+    {
+        aes_gen_tables();
+        aes_init_done = 1;
+    }
+
+    ctx->rk = RK = ctx->buf;
+
+    for( i = 0; i < ( keybits >> 5 ); i++ )
+    {
+        GET_UINT32_LE( RK[i], key, i << 2 );
+    }
+
+    switch( ctx->nr )
+    {
+        case 10:
+
+            for( i = 0; i < 10; i++, RK += 4 )
+            {
+                RK[4]  = RK[0] ^ RCON[i] ^
+                ( (uint32_t) FSb[ ( RK[3] >>  8 ) & 0xFF ]       ) ^
+                ( (uint32_t) FSb[ ( RK[3] >> 16 ) & 0xFF ] <<  8 ) ^
+                ( (uint32_t) FSb[ ( RK[3] >> 24 ) & 0xFF ] << 16 ) ^
+                ( (uint32_t) FSb[ ( RK[3]       ) & 0xFF ] << 24 );
+
+                RK[5]  = RK[1] ^ RK[4];
+                RK[6]  = RK[2] ^ RK[5];
+                RK[7]  = RK[3] ^ RK[6];
+            }
+            break;
+
+        case 12:
+
+            for( i = 0; i < 8; i++, RK += 6 )
+            {
+                RK[6]  = RK[0] ^ RCON[i] ^
+                ( (uint32_t) FSb[ ( RK[5] >>  8 ) & 0xFF ]       ) ^
+                ( (uint32_t) FSb[ ( RK[5] >> 16 ) & 0xFF ] <<  8 ) ^
+                ( (uint32_t) FSb[ ( RK[5] >> 24 ) & 0xFF ] << 16 ) ^
+                ( (uint32_t) FSb[ ( RK[5]       ) & 0xFF ] << 24 );
+
+                RK[7]  = RK[1] ^ RK[6];
+                RK[8]  = RK[2] ^ RK[7];
+                RK[9]  = RK[3] ^ RK[8];
+                RK[10] = RK[4] ^ RK[9];
+                RK[11] = RK[5] ^ RK[10];
+            }
+            break;
+
+        case 14:
+
+            for( i = 0; i < 7; i++, RK += 8 )
+            {
+                RK[8]  = RK[0] ^ RCON[i] ^
+                ( (uint32_t) FSb[ ( RK[7] >>  8 ) & 0xFF ]       ) ^
+                ( (uint32_t) FSb[ ( RK[7] >> 16 ) & 0xFF ] <<  8 ) ^
+                ( (uint32_t) FSb[ ( RK[7] >> 24 ) & 0xFF ] << 16 ) ^
+                ( (uint32_t) FSb[ ( RK[7]       ) & 0xFF ] << 24 );
+
+                RK[9]  = RK[1] ^ RK[8];
+                RK[10] = RK[2] ^ RK[9];
+                RK[11] = RK[3] ^ RK[10];
+
+                RK[12] = RK[4] ^
+                ( (uint32_t) FSb[ ( RK[11]       ) & 0xFF ]       ) ^
+                ( (uint32_t) FSb[ ( RK[11] >>  8 ) & 0xFF ] <<  8 ) ^
+                ( (uint32_t) FSb[ ( RK[11] >> 16 ) & 0xFF ] << 16 ) ^
+                ( (uint32_t) FSb[ ( RK[11] >> 24 ) & 0xFF ] << 24 );
+
+                RK[13] = RK[5] ^ RK[12];
+                RK[14] = RK[6] ^ RK[13];
+                RK[15] = RK[7] ^ RK[14];
+            }
+            break;
+    }
+
+    return( 0 );
+}
+
+int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+    int ret, i, Nr = 10;
+
+	if((ret = aes_setkey_enc_og(ctx, key, keybits)) != 0) {
+		return ret;
+	}
+
+	// printf("\nRound Key Enc (OG):");
+	// for(i = 0; i < Nr + 1; i++) {
+	// 	printf("\n  %.8x%.8x%.8x%.8x", ctx->rk[4*i], ctx->rk[4*i + 1],
+	// 								   ctx->rk[4*i + 2], ctx->rk[4*i + 3]);
+	// }
+
+	if((ret = aes_setkey_enc_alt_1(ctx, key, keybits)) != 0) {
+		return ret;
+	}
+
+	// printf("\nRound Key Enc (ALT_1):");
+	// for(i = 0; i < Nr + 1; i++) {
+	// 	printf("\n  %.8x%.8x%.8x%.8x", ctx->rk_alt_1[4*i], ctx->rk_alt_1[4*i + 1],
+	// 								   ctx->rk_alt_1[4*i + 2], ctx->rk_alt_1[4*i + 3]);
+	// }
+
+    return ret;
+}
+#endif /* NEW_AES_SETKEY_ENC_ALT */
 #endif /* MBEDTLS_AES_SETKEY_ENC_ALT */
 
 #if defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(NEW_AES_SETKEY_DEC_ALT)
+int aes_setkey_dec_alt_1(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+#else
 int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+#endif
 	int Nb = 4, Nr, Nk, idx;
 	WORD temp, Rcon[] = {0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
 						0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
@@ -148,24 +386,107 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, u
 		w[idx] = w[idx-Nk] ^ temp;
 	}
 
+#if defined(NEW_AES_SETKEY_DEC_ALT)
+	ctx->rk_alt_1 = w;
+#else
 	ctx->rk = w;
-
-	// printf("\nRound Key Dec:");
-	// for(idx = 0; idx < Nr + 1; idx++) {
-	// 	printf("\n  %.8x%.8x%.8x%.8x", w[4*idx], w[4*idx + 1], w[4*idx + 2], w[4*idx + 3]);
-	// }
+#endif
 
 	return 0;
 }
+
+#if defined(NEW_AES_SETKEY_DEC_ALT)
+int aes_setkey_dec_og( mbedtls_aes_context *ctx, const unsigned char *key,
+                    unsigned int keybits ) {
+    int i, j, ret;
+    mbedtls_aes_context cty;
+    uint32_t *RK;
+    uint32_t *SK;
+
+    AES_VALIDATE_RET( ctx != NULL );
+    AES_VALIDATE_RET( key != NULL );
+
+    mbedtls_aes_init( &cty );
+
+    ctx->rk = RK = ctx->buf;
+
+    /* Also checks keybits */
+    if( ( ret = aes_setkey_enc_og( &cty, key, keybits ) ) != 0 )
+        goto exit;
+
+    ctx->nr = cty.nr;
+
+    SK = cty.rk + cty.nr * 4;
+
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+
+    for( i = ctx->nr - 1, SK -= 8; i > 0; i--, SK -= 8 )
+    {
+        for( j = 0; j < 4; j++, SK++ )
+        {
+            *RK++ = AES_RT0( FSb[ ( *SK       ) & 0xFF ] ) ^
+                    AES_RT1( FSb[ ( *SK >>  8 ) & 0xFF ] ) ^
+                    AES_RT2( FSb[ ( *SK >> 16 ) & 0xFF ] ) ^
+                    AES_RT3( FSb[ ( *SK >> 24 ) & 0xFF ] );
+        }
+    }
+
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+    *RK++ = *SK++;
+
+exit:
+    mbedtls_aes_free( &cty );
+
+    return( ret );
+}
+
+int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
+    int ret, i, Nr = 10;
+
+	if((ret = aes_setkey_dec_og(ctx, key, keybits)) != 0) {
+		return ret;
+	}
+
+	// printf("\nRound Key Dec (OG):");
+	// for(i = 0; i < Nr + 1; i++) {
+	// 	printf("\n  %.8x%.8x%.8x%.8x", ctx->rk[4*i], ctx->rk[4*i + 1],
+	// 								   ctx->rk[4*i + 2], ctx->rk[4*i + 3]);
+	// }
+
+	if((ret = aes_setkey_dec_alt_1(ctx, key, keybits)) != 0) {
+		return ret;
+	}
+
+	// printf("\nRound Key Dec (ALT_1):");
+	// for(i = 0; i < Nr + 1; i++) {
+	// 	printf("\n  %.8x%.8x%.8x%.8x", ctx->rk_alt_1[4*i], ctx->rk_alt_1[4*i + 1],
+	// 								   ctx->rk_alt_1[4*i + 2], ctx->rk_alt_1[4*i + 3]);
+	// }
+
+    return ret;
+}
+#endif /* NEW_AES_SETKEY_DEC_ALT */
 #endif /* MBEDTLS_AES_SETKEY_DEC_ALT */
+#endif /* MBEDTLS_AES_SETKEY_ENC_ALT || MBEDTLS_AES_SETKEY_DEC_ALT */
 
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) || defined(MBEDTLS_AES_DECRYPT_ALT)
-// This table stores pre-calculated values for all possible GF(2^8) calculations.This
-// table is only used by the (Inv)MixColumns steps.
-// USAGE: The second index (column) is the coefficient of multiplication. Only 7 different
-// coefficients are used: 0x01, 0x02, 0x03, 0x09, 0x0b, 0x0d, 0x0e, but multiplication by
-// 1 is negligible leaving only 6 coefficients. Each column of the table is devoted to one
-// of these coefficients, in the ascending order of value, from values 0x00 to 0xFF.
+#if defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_DECRYPT_ALT)
+#ifndef PUT_UINT32_LE
+#define PUT_UINT32_LE(n,b,i)                                    \
+{                                                               \
+    (b)[(i)    ] = (unsigned char) ( ( (n)       ) & 0xFF );    \
+    (b)[(i) + 1] = (unsigned char) ( ( (n) >>  8 ) & 0xFF );    \
+    (b)[(i) + 2] = (unsigned char) ( ( (n) >> 16 ) & 0xFF );    \
+    (b)[(i) + 3] = (unsigned char) ( ( (n) >> 24 ) & 0xFF );    \
+}
+#endif
+#endif
+
 static const BYTE gf_mul[256][6] = {
 	{0x00,0x00,0x00,0x00,0x00,0x00},{0x02,0x03,0x09,0x0b,0x0d,0x0e},
 	{0x04,0x06,0x12,0x16,0x1a,0x1c},{0x06,0x05,0x1b,0x1d,0x17,0x12},
@@ -297,56 +618,25 @@ static const BYTE gf_mul[256][6] = {
 	{0xe7,0x19,0x4f,0xa8,0x9a,0x83},{0xe5,0x1a,0x46,0xa3,0x97,0x8d}
 };
 
-// Performs the AddRoundKey step. Each round has its own pre-generated 16-byte key in the
-// form of 4 integers (the "w" array). Each integer is XOR'd by one column of the state.
-// Also performs the job of InvAddRoundKey(); since the function is a simple XOR process,
-// it is its own inverse.
 void AddRoundKey(BYTE state[][4], const WORD w[]) {
 	BYTE subkey[4];
 
 	// memcpy(subkey,&w[idx],4); // Not accurate for big endian machines
-	// Subkey 1
-	subkey[0] = w[0] >> 24;
-	subkey[1] = w[0] >> 16;
-	subkey[2] = w[0] >> 8;
-	subkey[3] = w[0];
-	state[0][0] ^= subkey[0];
-	state[1][0] ^= subkey[1];
-	state[2][0] ^= subkey[2];
-	state[3][0] ^= subkey[3];
-	// Subkey 2
-	subkey[0] = w[1] >> 24;
-	subkey[1] = w[1] >> 16;
-	subkey[2] = w[1] >> 8;
-	subkey[3] = w[1];
-	state[0][1] ^= subkey[0];
-	state[1][1] ^= subkey[1];
-	state[2][1] ^= subkey[2];
-	state[3][1] ^= subkey[3];
-	// Subkey 3
-	subkey[0] = w[2] >> 24;
-	subkey[1] = w[2] >> 16;
-	subkey[2] = w[2] >> 8;
-	subkey[3] = w[2];
-	state[0][2] ^= subkey[0];
-	state[1][2] ^= subkey[1];
-	state[2][2] ^= subkey[2];
-	state[3][2] ^= subkey[3];
-	// Subkey 4
-	subkey[0] = w[3] >> 24;
-	subkey[1] = w[3] >> 16;
-	subkey[2] = w[3] >> 8;
-	subkey[3] = w[3];
-	state[0][3] ^= subkey[0];
-	state[1][3] ^= subkey[1];
-	state[2][3] ^= subkey[2];
-	state[3][3] ^= subkey[3];
+
+	subkey[0] = w[0] >> 24; subkey[1] = w[0] >> 16; subkey[2] = w[0] >> 8; subkey[3] = w[0];
+	state[0][0] ^= subkey[0]; state[1][0] ^= subkey[1]; state[2][0] ^= subkey[2]; state[3][0] ^= subkey[3];
+
+	subkey[0] = w[1] >> 24; subkey[1] = w[1] >> 16; subkey[2] = w[1] >> 8; subkey[3] = w[1];
+	state[0][1] ^= subkey[0]; state[1][1] ^= subkey[1]; state[2][1] ^= subkey[2]; state[3][1] ^= subkey[3];
+
+	subkey[0] = w[2] >> 24; subkey[1] = w[2] >> 16; subkey[2] = w[2] >> 8; subkey[3] = w[2];
+	state[0][2] ^= subkey[0]; state[1][2] ^= subkey[1]; state[2][2] ^= subkey[2]; state[3][2] ^= subkey[3];
+
+	subkey[0] = w[3] >> 24; subkey[1] = w[3] >> 16; subkey[2] = w[3] >> 8; subkey[3] = w[3];
+	state[0][3] ^= subkey[0]; state[1][3] ^= subkey[1]; state[2][3] ^= subkey[2]; state[3][3] ^= subkey[3];
 }
-#endif /* MBEDTLS_AES_ENCRYPT_ALT || MBEDTLS_AES_DECRYPT_ALT */
 
 #if defined(MBEDTLS_AES_ENCRYPT_ALT)
-// Performs the SubBytes step. All bytes in the state are substituted with a
-// pre-calculated value from a lookup table.
 void SubBytes(BYTE state[][4]) {
 	state[0][0] = aes_sbox[state[0][0] >> 4][state[0][0] & 0x0F];
 	state[0][1] = aes_sbox[state[0][1] >> 4][state[0][1] & 0x0F];
@@ -366,152 +656,66 @@ void SubBytes(BYTE state[][4]) {
 	state[3][3] = aes_sbox[state[3][3] >> 4][state[3][3] & 0x0F];
 }
 
-// Performs the ShiftRows step. All rows are shifted cylindrically to the left.
 void ShiftRows(BYTE state[][4]) {
 	int t;
 
-	// Shift left by 1
 	t = state[1][0];
-	state[1][0] = state[1][1];
-	state[1][1] = state[1][2];
-	state[1][2] = state[1][3];
-	state[1][3] = t;
-	// Shift left by 2
+	state[1][0] = state[1][1]; state[1][1] = state[1][2]; state[1][2] = state[1][3]; state[1][3] = t;
+
 	t = state[2][0];
-	state[2][0] = state[2][2];
-	state[2][2] = t;
+	state[2][0] = state[2][2]; state[2][2] = t;
 	t = state[2][1];
-	state[2][1] = state[2][3];
-	state[2][3] = t;
-	// Shift left by 3
+	state[2][1] = state[2][3]; state[2][3] = t;
+
 	t = state[3][0];
-	state[3][0] = state[3][3];
-	state[3][3] = state[3][2];
-	state[3][2] = state[3][1];
-	state[3][1] = t;
+	state[3][0] = state[3][3]; state[3][3] = state[3][2]; state[3][2] = state[3][1]; state[3][1] = t;
 }
 
-// Performs the MixColums step. The state is multiplied by itself using matrix
-// multiplication in a Galios Field 2^8. All multiplication is pre-computed in a table.
-// Addition is equivilent to XOR. (Must always make a copy of the column as the original
-// values will be destoyed.)
 void MixColumns(BYTE state[][4]) {
 	BYTE col[4];
 
-	// Column 1
-	col[0] = state[0][0];
-	col[1] = state[1][0];
-	col[2] = state[2][0];
-	col[3] = state[3][0];
-	state[0][0] = gf_mul[col[0]][0];
-	state[0][0] ^= gf_mul[col[1]][1];
-	state[0][0] ^= col[2];
-	state[0][0] ^= col[3];
-	state[1][0] = col[0];
-	state[1][0] ^= gf_mul[col[1]][0];
-	state[1][0] ^= gf_mul[col[2]][1];
-	state[1][0] ^= col[3];
-	state[2][0] = col[0];
-	state[2][0] ^= col[1];
-	state[2][0] ^= gf_mul[col[2]][0];
-	state[2][0] ^= gf_mul[col[3]][1];
-	state[3][0] = gf_mul[col[0]][1];
-	state[3][0] ^= col[1];
-	state[3][0] ^= col[2];
-	state[3][0] ^= gf_mul[col[3]][0];
-	// Column 2
-	col[0] = state[0][1];
-	col[1] = state[1][1];
-	col[2] = state[2][1];
-	col[3] = state[3][1];
-	state[0][1] = gf_mul[col[0]][0];
-	state[0][1] ^= gf_mul[col[1]][1];
-	state[0][1] ^= col[2];
-	state[0][1] ^= col[3];
-	state[1][1] = col[0];
-	state[1][1] ^= gf_mul[col[1]][0];
-	state[1][1] ^= gf_mul[col[2]][1];
-	state[1][1] ^= col[3];
-	state[2][1] = col[0];
-	state[2][1] ^= col[1];
-	state[2][1] ^= gf_mul[col[2]][0];
-	state[2][1] ^= gf_mul[col[3]][1];
-	state[3][1] = gf_mul[col[0]][1];
-	state[3][1] ^= col[1];
-	state[3][1] ^= col[2];
-	state[3][1] ^= gf_mul[col[3]][0];
-	// Column 3
-	col[0] = state[0][2];
-	col[1] = state[1][2];
-	col[2] = state[2][2];
-	col[3] = state[3][2];
-	state[0][2] = gf_mul[col[0]][0];
-	state[0][2] ^= gf_mul[col[1]][1];
-	state[0][2] ^= col[2];
-	state[0][2] ^= col[3];
-	state[1][2] = col[0];
-	state[1][2] ^= gf_mul[col[1]][0];
-	state[1][2] ^= gf_mul[col[2]][1];
-	state[1][2] ^= col[3];
-	state[2][2] = col[0];
-	state[2][2] ^= col[1];
-	state[2][2] ^= gf_mul[col[2]][0];
-	state[2][2] ^= gf_mul[col[3]][1];
-	state[3][2] = gf_mul[col[0]][1];
-	state[3][2] ^= col[1];
-	state[3][2] ^= col[2];
-	state[3][2] ^= gf_mul[col[3]][0];
-	// Column 4
-	col[0] = state[0][3];
-	col[1] = state[1][3];
-	col[2] = state[2][3];
-	col[3] = state[3][3];
-	state[0][3] = gf_mul[col[0]][0];
-	state[0][3] ^= gf_mul[col[1]][1];
-	state[0][3] ^= col[2];
-	state[0][3] ^= col[3];
-	state[1][3] = col[0];
-	state[1][3] ^= gf_mul[col[1]][0];
-	state[1][3] ^= gf_mul[col[2]][1];
-	state[1][3] ^= col[3];
-	state[2][3] = col[0];
-	state[2][3] ^= col[1];
-	state[2][3] ^= gf_mul[col[2]][0];
-	state[2][3] ^= gf_mul[col[3]][1];
-	state[3][3] = gf_mul[col[0]][1];
-	state[3][3] ^= col[1];
-	state[3][3] ^= col[2];
-	state[3][3] ^= gf_mul[col[3]][0];
+	col[0] = state[0][0]; col[1] = state[1][0]; col[2] = state[2][0]; col[3] = state[3][0];
+	state[0][0] = gf_mul[col[0]][0]; state[0][0] ^= gf_mul[col[1]][1]; state[0][0] ^= col[2]; state[0][0] ^= col[3];
+	state[1][0] = col[0]; state[1][0] ^= gf_mul[col[1]][0]; state[1][0] ^= gf_mul[col[2]][1]; state[1][0] ^= col[3];
+	state[2][0] = col[0]; state[2][0] ^= col[1]; state[2][0] ^= gf_mul[col[2]][0]; state[2][0] ^= gf_mul[col[3]][1];
+	state[3][0] = gf_mul[col[0]][1]; state[3][0] ^= col[1]; state[3][0] ^= col[2]; state[3][0] ^= gf_mul[col[3]][0];
+
+	col[0] = state[0][1]; col[1] = state[1][1]; col[2] = state[2][1]; col[3] = state[3][1];
+	state[0][1] = gf_mul[col[0]][0]; state[0][1] ^= gf_mul[col[1]][1]; state[0][1] ^= col[2]; state[0][1] ^= col[3];
+	state[1][1] = col[0]; state[1][1] ^= gf_mul[col[1]][0]; state[1][1] ^= gf_mul[col[2]][1]; state[1][1] ^= col[3];
+	state[2][1] = col[0]; state[2][1] ^= col[1]; state[2][1] ^= gf_mul[col[2]][0]; state[2][1] ^= gf_mul[col[3]][1];
+	state[3][1] = gf_mul[col[0]][1]; state[3][1] ^= col[1]; state[3][1] ^= col[2]; state[3][1] ^= gf_mul[col[3]][0];
+
+	col[0] = state[0][2]; col[1] = state[1][2]; col[2] = state[2][2]; col[3] = state[3][2];
+	state[0][2] = gf_mul[col[0]][0]; state[0][2] ^= gf_mul[col[1]][1]; state[0][2] ^= col[2]; state[0][2] ^= col[3];
+	state[1][2] = col[0]; state[1][2] ^= gf_mul[col[1]][0]; state[1][2] ^= gf_mul[col[2]][1]; state[1][2] ^= col[3];
+	state[2][2] = col[0]; state[2][2] ^= col[1]; state[2][2] ^= gf_mul[col[2]][0]; state[2][2] ^= gf_mul[col[3]][1];
+	state[3][2] = gf_mul[col[0]][1]; state[3][2] ^= col[1]; state[3][2] ^= col[2]; state[3][2] ^= gf_mul[col[3]][0];
+
+	col[0] = state[0][3]; col[1] = state[1][3]; col[2] = state[2][3]; col[3] = state[3][3];
+	state[0][3] = gf_mul[col[0]][0]; state[0][3] ^= gf_mul[col[1]][1]; state[0][3] ^= col[2]; state[0][3] ^= col[3];
+	state[1][3] = col[0]; state[1][3] ^= gf_mul[col[1]][0]; state[1][3] ^= gf_mul[col[2]][1]; state[1][3] ^= col[3];
+	state[2][3] = col[0]; state[2][3] ^= col[1]; state[2][3] ^= gf_mul[col[2]][0]; state[2][3] ^= gf_mul[col[3]][1];
+	state[3][3] = gf_mul[col[0]][1]; state[3][3] ^= col[1]; state[3][3] ^= col[2]; state[3][3] ^= gf_mul[col[3]][0];
 }
 
+#if defined(NEW_AES_ENCRYPT_ALT)
+int internal_aes_encrypt_alt_1(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+#else
 int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+#endif
 	BYTE state[4][4];
+#if defined(NEW_AES_SETKEY_ENC_ALT)
+	WORD *key = ctx->rk_alt_1;
+#else
 	WORD *key = ctx->rk;
+#endif
 
-	// Copy input array (should be 16 bytes long) to a matrix (sequential bytes are ordered
-	// by row, not col) called "state" for processing.
-	// *** Implementation note: The official AES documentation references the state by
-	// column, then row. Accessing an element in C requires row then column. Thus, all state
-	// references in AES must have the column and row indexes reversed for C implementation.
-	state[0][0] = input[0];
-	state[1][0] = input[1];
-	state[2][0] = input[2];
-	state[3][0] = input[3];
-	state[0][1] = input[4];
-	state[1][1] = input[5];
-	state[2][1] = input[6];
-	state[3][1] = input[7];
-	state[0][2] = input[8];
-	state[1][2] = input[9];
-	state[2][2] = input[10];
-	state[3][2] = input[11];
-	state[0][3] = input[12];
-	state[1][3] = input[13];
-	state[2][3] = input[14];
-	state[3][3] = input[15];
+	state[0][0] = input[0]; state[1][0] = input[1]; state[2][0] = input[2]; state[3][0] = input[3];
+	state[0][1] = input[4]; state[1][1] = input[5]; state[2][1] = input[6]; state[3][1] = input[7];
+	state[0][2] = input[8]; state[1][2] = input[9]; state[2][2] = input[10]; state[3][2] = input[11];
+	state[0][3] = input[12]; state[1][3] = input[13]; state[2][3] = input[14]; state[3][3] = input[15];
 
-	// Perform the necessary number of rounds. The round key is added first.
-	// The last round does not perform the MixColumns step.
 	AddRoundKey(state,&key[0]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[4]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[8]);
@@ -522,10 +726,10 @@ int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char i
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[28]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[32]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[36]);
-	if (ctx->nr != 10/*keysize != 128*/) {
+	if (ctx->nr != 10) {
 		SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[40]);
 		SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[44]);
-		if (ctx->nr != 12/*(keysize != 192*/) {
+		if (ctx->nr != 12) {
 			SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[48]);
 			SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[52]);
 			SubBytes(state); ShiftRows(state); AddRoundKey(state,&key[56]);
@@ -538,26 +742,107 @@ int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char i
 		SubBytes(state); ShiftRows(state); AddRoundKey(state,&key[40]);
 	}
 
-	// Copy the state to the output array.
-	output[0] = state[0][0];
-	output[1] = state[1][0];
-	output[2] = state[2][0];
-	output[3] = state[3][0];
-	output[4] = state[0][1];
-	output[5] = state[1][1];
-	output[6] = state[2][1];
-	output[7] = state[3][1];
-	output[8] = state[0][2];
-	output[9] = state[1][2];
-	output[10] = state[2][2];
-	output[11] = state[3][2];
-	output[12] = state[0][3];
-	output[13] = state[1][3];
-	output[14] = state[2][3];
-	output[15] = state[3][3];
+	output[0] = state[0][0]; output[1] = state[1][0]; output[2] = state[2][0]; output[3] = state[3][0];
+	output[4] = state[0][1]; output[5] = state[1][1]; output[6] = state[2][1]; output[7] = state[3][1];
+	output[8] = state[0][2]; output[9] = state[1][2]; output[10] = state[2][2]; output[11] = state[3][2];
+	output[12] = state[0][3]; output[13] = state[1][3]; output[14] = state[2][3]; output[15] = state[3][3];
 
 	return 0;
 }
+
+#if defined(NEW_AES_ENCRYPT_ALT)
+#define AES_FT0(idx) FT0[idx]
+#define AES_FT1(idx) FT1[idx]
+#define AES_FT2(idx) FT2[idx]
+#define AES_FT3(idx) FT3[idx]
+
+#define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)                     \
+    do                                                          \
+    {                                                           \
+        (X0) = *RK++ ^ AES_FT0( ( (Y0)       ) & 0xFF ) ^       \
+                       AES_FT1( ( (Y1) >>  8 ) & 0xFF ) ^       \
+                       AES_FT2( ( (Y2) >> 16 ) & 0xFF ) ^       \
+                       AES_FT3( ( (Y3) >> 24 ) & 0xFF );        \
+                                                                \
+        (X1) = *RK++ ^ AES_FT0( ( (Y1)       ) & 0xFF ) ^       \
+                       AES_FT1( ( (Y2) >>  8 ) & 0xFF ) ^       \
+                       AES_FT2( ( (Y3) >> 16 ) & 0xFF ) ^       \
+                       AES_FT3( ( (Y0) >> 24 ) & 0xFF );        \
+                                                                \
+        (X2) = *RK++ ^ AES_FT0( ( (Y2)       ) & 0xFF ) ^       \
+                       AES_FT1( ( (Y3) >>  8 ) & 0xFF ) ^       \
+                       AES_FT2( ( (Y0) >> 16 ) & 0xFF ) ^       \
+                       AES_FT3( ( (Y1) >> 24 ) & 0xFF );        \
+                                                                \
+        (X3) = *RK++ ^ AES_FT0( ( (Y3)       ) & 0xFF ) ^       \
+                       AES_FT1( ( (Y0) >>  8 ) & 0xFF ) ^       \
+                       AES_FT2( ( (Y1) >> 16 ) & 0xFF ) ^       \
+                       AES_FT3( ( (Y2) >> 24 ) & 0xFF );        \
+    } while( 0 )
+
+int internal_aes_encrypt_og(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+    int i;
+    uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
+
+    RK = ctx->rk;
+
+    GET_UINT32_LE( X0, input,  0 ); X0 ^= *RK++;
+    GET_UINT32_LE( X1, input,  4 ); X1 ^= *RK++;
+    GET_UINT32_LE( X2, input,  8 ); X2 ^= *RK++;
+    GET_UINT32_LE( X3, input, 12 ); X3 ^= *RK++;
+
+    for( i = ( ctx->nr >> 1 ) - 1; i > 0; i-- )
+    {
+        AES_FROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+        AES_FROUND( X0, X1, X2, X3, Y0, Y1, Y2, Y3 );
+    }
+
+    AES_FROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+
+    X0 = *RK++ ^ \
+            ( (uint32_t) FSb[ ( Y0       ) & 0xFF ]       ) ^
+            ( (uint32_t) FSb[ ( Y1 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) FSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) FSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
+
+    X1 = *RK++ ^ \
+            ( (uint32_t) FSb[ ( Y1       ) & 0xFF ]       ) ^
+            ( (uint32_t) FSb[ ( Y2 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) FSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) FSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+
+    X2 = *RK++ ^ \
+            ( (uint32_t) FSb[ ( Y2       ) & 0xFF ]       ) ^
+            ( (uint32_t) FSb[ ( Y3 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) FSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) FSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
+
+    X3 = *RK++ ^ \
+            ( (uint32_t) FSb[ ( Y3       ) & 0xFF ]       ) ^
+            ( (uint32_t) FSb[ ( Y0 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) FSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) FSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
+
+    PUT_UINT32_LE( X0, output,  0 );
+    PUT_UINT32_LE( X1, output,  4 );
+    PUT_UINT32_LE( X2, output,  8 );
+    PUT_UINT32_LE( X3, output, 12 );
+
+    mbedtls_platform_zeroize( &X0, sizeof( X0 ) );
+    mbedtls_platform_zeroize( &X1, sizeof( X1 ) );
+    mbedtls_platform_zeroize( &X2, sizeof( X2 ) );
+    mbedtls_platform_zeroize( &X3, sizeof( X3 ) );
+
+    mbedtls_platform_zeroize( &Y0, sizeof( Y0 ) );
+    mbedtls_platform_zeroize( &Y1, sizeof( Y1 ) );
+    mbedtls_platform_zeroize( &Y2, sizeof( Y2 ) );
+    mbedtls_platform_zeroize( &Y3, sizeof( Y3 ) );
+
+    mbedtls_platform_zeroize( &RK, sizeof( RK ) );
+
+    return( 0 );
+}
+#endif /* NEW_AES_ENCRYPT_ALT */
 #endif /* MBEDTLS_AES_ENCRYPT_ALT */
 
 #if defined(MBEDTLS_AES_DECRYPT_ALT)
@@ -580,10 +865,7 @@ static const BYTE aes_invsbox[16][16] = {
 	{0x17,0x2B,0x04,0x7E,0xBA,0x77,0xD6,0x26,0xE1,0x69,0x14,0x63,0x55,0x21,0x0C,0x7D}
 };
 
-// Performs the InvSubBytes step. All bytes in the state are substituted with a
-// pre-calculated value from a lookup table.
-void InvSubBytes(BYTE state[][4])
-{
+void InvSubBytes(BYTE state[][4]) {
 	state[0][0] = aes_invsbox[state[0][0] >> 4][state[0][0] & 0x0F];
 	state[0][1] = aes_invsbox[state[0][1] >> 4][state[0][1] & 0x0F];
 	state[0][2] = aes_invsbox[state[0][2] >> 4][state[0][2] & 0x0F];
@@ -602,151 +884,84 @@ void InvSubBytes(BYTE state[][4])
 	state[3][3] = aes_invsbox[state[3][3] >> 4][state[3][3] & 0x0F];
 }
 
-// Performs the InvShiftRows step. All rows are shifted cylindrically to the right.
 void InvShiftRows(BYTE state[][4]) {
 	int t;
 
-	// Shift right by 1
 	t = state[1][3];
-	state[1][3] = state[1][2];
-	state[1][2] = state[1][1];
-	state[1][1] = state[1][0];
-	state[1][0] = t;
-	// Shift right by 2
+	state[1][3] = state[1][2]; state[1][2] = state[1][1]; state[1][1] = state[1][0]; state[1][0] = t;
+
 	t = state[2][3];
-	state[2][3] = state[2][1];
-	state[2][1] = t;
+	state[2][3] = state[2][1]; state[2][1] = t;
 	t = state[2][2];
-	state[2][2] = state[2][0];
-	state[2][0] = t;
-	// Shift right by 3
+	state[2][2] = state[2][0]; state[2][0] = t;
+
 	t = state[3][3];
-	state[3][3] = state[3][0];
-	state[3][0] = state[3][1];
-	state[3][1] = state[3][2];
-	state[3][2] = t;
+	state[3][3] = state[3][0]; state[3][0] = state[3][1]; state[3][1] = state[3][2]; state[3][2] = t;
 }
 
-// Performs the InvMixColums step. The state is multiplied by itself using matrix
-// multiplication in a Galios Field 2^8. All multiplication is pre-computed in a table.
-// Addition is equivilent to XOR. (Must always make a copy of the column as the original
-// values will be destoyed.)
 void InvMixColumns(BYTE state[][4]) {
 	BYTE col[4];
 
-	// Column 1
-	col[0] = state[0][0];
-	col[1] = state[1][0];
-	col[2] = state[2][0];
-	col[3] = state[3][0];
-	state[0][0] = gf_mul[col[0]][5];
-	state[0][0] ^= gf_mul[col[1]][3];
-	state[0][0] ^= gf_mul[col[2]][4];
-	state[0][0] ^= gf_mul[col[3]][2];
-	state[1][0] = gf_mul[col[0]][2];
-	state[1][0] ^= gf_mul[col[1]][5];
-	state[1][0] ^= gf_mul[col[2]][3];
-	state[1][0] ^= gf_mul[col[3]][4];
-	state[2][0] = gf_mul[col[0]][4];
-	state[2][0] ^= gf_mul[col[1]][2];
-	state[2][0] ^= gf_mul[col[2]][5];
-	state[2][0] ^= gf_mul[col[3]][3];
-	state[3][0] = gf_mul[col[0]][3];
-	state[3][0] ^= gf_mul[col[1]][4];
-	state[3][0] ^= gf_mul[col[2]][2];
-	state[3][0] ^= gf_mul[col[3]][5];
-	// Column 2
-	col[0] = state[0][1];
-	col[1] = state[1][1];
-	col[2] = state[2][1];
-	col[3] = state[3][1];
-	state[0][1] = gf_mul[col[0]][5];
-	state[0][1] ^= gf_mul[col[1]][3];
-	state[0][1] ^= gf_mul[col[2]][4];
-	state[0][1] ^= gf_mul[col[3]][2];
-	state[1][1] = gf_mul[col[0]][2];
-	state[1][1] ^= gf_mul[col[1]][5];
-	state[1][1] ^= gf_mul[col[2]][3];
-	state[1][1] ^= gf_mul[col[3]][4];
-	state[2][1] = gf_mul[col[0]][4];
-	state[2][1] ^= gf_mul[col[1]][2];
-	state[2][1] ^= gf_mul[col[2]][5];
-	state[2][1] ^= gf_mul[col[3]][3];
-	state[3][1] = gf_mul[col[0]][3];
-	state[3][1] ^= gf_mul[col[1]][4];
-	state[3][1] ^= gf_mul[col[2]][2];
-	state[3][1] ^= gf_mul[col[3]][5];
-	// Column 3
-	col[0] = state[0][2];
-	col[1] = state[1][2];
-	col[2] = state[2][2];
-	col[3] = state[3][2];
-	state[0][2] = gf_mul[col[0]][5];
-	state[0][2] ^= gf_mul[col[1]][3];
-	state[0][2] ^= gf_mul[col[2]][4];
-	state[0][2] ^= gf_mul[col[3]][2];
-	state[1][2] = gf_mul[col[0]][2];
-	state[1][2] ^= gf_mul[col[1]][5];
-	state[1][2] ^= gf_mul[col[2]][3];
-	state[1][2] ^= gf_mul[col[3]][4];
-	state[2][2] = gf_mul[col[0]][4];
-	state[2][2] ^= gf_mul[col[1]][2];
-	state[2][2] ^= gf_mul[col[2]][5];
-	state[2][2] ^= gf_mul[col[3]][3];
-	state[3][2] = gf_mul[col[0]][3];
-	state[3][2] ^= gf_mul[col[1]][4];
-	state[3][2] ^= gf_mul[col[2]][2];
-	state[3][2] ^= gf_mul[col[3]][5];
-	// Column 4
-	col[0] = state[0][3];
-	col[1] = state[1][3];
-	col[2] = state[2][3];
-	col[3] = state[3][3];
-	state[0][3] = gf_mul[col[0]][5];
-	state[0][3] ^= gf_mul[col[1]][3];
-	state[0][3] ^= gf_mul[col[2]][4];
-	state[0][3] ^= gf_mul[col[3]][2];
-	state[1][3] = gf_mul[col[0]][2];
-	state[1][3] ^= gf_mul[col[1]][5];
-	state[1][3] ^= gf_mul[col[2]][3];
-	state[1][3] ^= gf_mul[col[3]][4];
-	state[2][3] = gf_mul[col[0]][4];
-	state[2][3] ^= gf_mul[col[1]][2];
-	state[2][3] ^= gf_mul[col[2]][5];
-	state[2][3] ^= gf_mul[col[3]][3];
-	state[3][3] = gf_mul[col[0]][3];
-	state[3][3] ^= gf_mul[col[1]][4];
-	state[3][3] ^= gf_mul[col[2]][2];
-	state[3][3] ^= gf_mul[col[3]][5];
+	col[0] = state[0][0]; col[1] = state[1][0]; col[2] = state[2][0]; col[3] = state[3][0];
+	state[0][0] = gf_mul[col[0]][5]; state[0][0] ^= gf_mul[col[1]][3];
+	state[0][0] ^= gf_mul[col[2]][4]; state[0][0] ^= gf_mul[col[3]][2];
+	state[1][0] = gf_mul[col[0]][2]; state[1][0] ^= gf_mul[col[1]][5];
+	state[1][0] ^= gf_mul[col[2]][3]; state[1][0] ^= gf_mul[col[3]][4];
+	state[2][0] = gf_mul[col[0]][4]; state[2][0] ^= gf_mul[col[1]][2];
+	state[2][0] ^= gf_mul[col[2]][5]; state[2][0] ^= gf_mul[col[3]][3];
+	state[3][0] = gf_mul[col[0]][3]; state[3][0] ^= gf_mul[col[1]][4];
+	state[3][0] ^= gf_mul[col[2]][2]; state[3][0] ^= gf_mul[col[3]][5];
+
+	col[0] = state[0][1]; col[1] = state[1][1]; col[2] = state[2][1]; col[3] = state[3][1];
+	state[0][1] = gf_mul[col[0]][5]; state[0][1] ^= gf_mul[col[1]][3];
+	state[0][1] ^= gf_mul[col[2]][4]; state[0][1] ^= gf_mul[col[3]][2];
+	state[1][1] = gf_mul[col[0]][2]; state[1][1] ^= gf_mul[col[1]][5];
+	state[1][1] ^= gf_mul[col[2]][3]; state[1][1] ^= gf_mul[col[3]][4];
+	state[2][1] = gf_mul[col[0]][4]; state[2][1] ^= gf_mul[col[1]][2];
+	state[2][1] ^= gf_mul[col[2]][5]; state[2][1] ^= gf_mul[col[3]][3];
+	state[3][1] = gf_mul[col[0]][3]; state[3][1] ^= gf_mul[col[1]][4];
+	state[3][1] ^= gf_mul[col[2]][2]; state[3][1] ^= gf_mul[col[3]][5];
+
+	col[0] = state[0][2]; col[1] = state[1][2]; col[2] = state[2][2]; col[3] = state[3][2];
+	state[0][2] = gf_mul[col[0]][5]; state[0][2] ^= gf_mul[col[1]][3];
+	state[0][2] ^= gf_mul[col[2]][4]; state[0][2] ^= gf_mul[col[3]][2];
+	state[1][2] = gf_mul[col[0]][2]; state[1][2] ^= gf_mul[col[1]][5];
+	state[1][2] ^= gf_mul[col[2]][3]; state[1][2] ^= gf_mul[col[3]][4];
+	state[2][2] = gf_mul[col[0]][4]; state[2][2] ^= gf_mul[col[1]][2];
+	state[2][2] ^= gf_mul[col[2]][5]; state[2][2] ^= gf_mul[col[3]][3];
+	state[3][2] = gf_mul[col[0]][3]; state[3][2] ^= gf_mul[col[1]][4];
+	state[3][2] ^= gf_mul[col[2]][2]; state[3][2] ^= gf_mul[col[3]][5];
+
+	col[0] = state[0][3]; col[1] = state[1][3]; col[2] = state[2][3]; col[3] = state[3][3];
+	state[0][3] = gf_mul[col[0]][5]; state[0][3] ^= gf_mul[col[1]][3];
+	state[0][3] ^= gf_mul[col[2]][4]; state[0][3] ^= gf_mul[col[3]][2];
+	state[1][3] = gf_mul[col[0]][2]; state[1][3] ^= gf_mul[col[1]][5];
+	state[1][3] ^= gf_mul[col[2]][3]; state[1][3] ^= gf_mul[col[3]][4];
+	state[2][3] = gf_mul[col[0]][4]; state[2][3] ^= gf_mul[col[1]][2];
+	state[2][3] ^= gf_mul[col[2]][5]; state[2][3] ^= gf_mul[col[3]][3];
+	state[3][3] = gf_mul[col[0]][3]; state[3][3] ^= gf_mul[col[1]][4];
+	state[3][3] ^= gf_mul[col[2]][2]; state[3][3] ^= gf_mul[col[3]][5];
 }
 
-//void aes_decrypt(const BYTE in[], BYTE out[], const WORD key[], int keysize)
+#if defined(NEW_AES_DECRYPT_ALT)
+int internal_aes_decrypt_alt_1(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+#else
 int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+#endif
 	BYTE state[4][4];
+#if defined(NEW_AES_SETKEY_DEC_ALT)
+	WORD *key = ctx->rk_alt_1;
+#else
 	WORD *key = ctx->rk;
+#endif
 
-	// Copy the input to the state.
-	state[0][0] = input[0];
-	state[1][0] = input[1];
-	state[2][0] = input[2];
-	state[3][0] = input[3];
-	state[0][1] = input[4];
-	state[1][1] = input[5];
-	state[2][1] = input[6];
-	state[3][1] = input[7];
-	state[0][2] = input[8];
-	state[1][2] = input[9];
-	state[2][2] = input[10];
-	state[3][2] = input[11];
-	state[0][3] = input[12];
-	state[1][3] = input[13];
-	state[2][3] = input[14];
-	state[3][3] = input[15];
+	state[0][0] = input[0]; state[1][0] = input[1]; state[2][0] = input[2]; state[3][0] = input[3];
+	state[0][1] = input[4]; state[1][1] = input[5]; state[2][1] = input[6]; state[3][1] = input[7];
+	state[0][2] = input[8]; state[1][2] = input[9]; state[2][2] = input[10]; state[3][2] = input[11];
+	state[0][3] = input[12]; state[1][3] = input[13]; state[2][3] = input[14]; state[3][3] = input[15];
 
-	// Perform the necessary number of rounds. The round key is added first.
-	// The last round does not perform the MixColumns step.
-	if (ctx->nr > 10/*keysize > 128*/) {
-		if (ctx->nr > 12/*keysize > 192*/) {
+	if (ctx->nr > 10) {
+		if (ctx->nr > 12) {
 			AddRoundKey(state,&key[56]);
 			InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[52]);InvMixColumns(state);
 			InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[48]);InvMixColumns(state);
@@ -771,26 +986,134 @@ int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char i
 	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[4]);InvMixColumns(state);
 	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[0]);
 
-	// Copy the state to the output array.
-	output[0] = state[0][0];
-	output[1] = state[1][0];
-	output[2] = state[2][0];
-	output[3] = state[3][0];
-	output[4] = state[0][1];
-	output[5] = state[1][1];
-	output[6] = state[2][1];
-	output[7] = state[3][1];
-	output[8] = state[0][2];
-	output[9] = state[1][2];
-	output[10] = state[2][2];
-	output[11] = state[3][2];
-	output[12] = state[0][3];
-	output[13] = state[1][3];
-	output[14] = state[2][3];
-	output[15] = state[3][3];
+	output[0] = state[0][0]; output[1] = state[1][0]; output[2] = state[2][0]; output[3] = state[3][0];
+	output[4] = state[0][1]; output[5] = state[1][1]; output[6] = state[2][1]; output[7] = state[3][1];
+	output[8] = state[0][2]; output[9] = state[1][2]; output[10] = state[2][2]; output[11] = state[3][2];
+	output[12] = state[0][3]; output[13] = state[1][3]; output[14] = state[2][3]; output[15] = state[3][3];
 
 	return 0;
 }
+
+#if defined(NEW_AES_DECRYPT_ALT)
+#define AES_RROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)                 \
+    do                                                      \
+    {                                                       \
+        (X0) = *RK++ ^ AES_RT0( ( (Y0)       ) & 0xFF ) ^   \
+                       AES_RT1( ( (Y3) >>  8 ) & 0xFF ) ^   \
+                       AES_RT2( ( (Y2) >> 16 ) & 0xFF ) ^   \
+                       AES_RT3( ( (Y1) >> 24 ) & 0xFF );    \
+                                                            \
+        (X1) = *RK++ ^ AES_RT0( ( (Y1)       ) & 0xFF ) ^   \
+                       AES_RT1( ( (Y0) >>  8 ) & 0xFF ) ^   \
+                       AES_RT2( ( (Y3) >> 16 ) & 0xFF ) ^   \
+                       AES_RT3( ( (Y2) >> 24 ) & 0xFF );    \
+                                                            \
+        (X2) = *RK++ ^ AES_RT0( ( (Y2)       ) & 0xFF ) ^   \
+                       AES_RT1( ( (Y1) >>  8 ) & 0xFF ) ^   \
+                       AES_RT2( ( (Y0) >> 16 ) & 0xFF ) ^   \
+                       AES_RT3( ( (Y3) >> 24 ) & 0xFF );    \
+                                                            \
+        (X3) = *RK++ ^ AES_RT0( ( (Y3)       ) & 0xFF ) ^   \
+                       AES_RT1( ( (Y2) >>  8 ) & 0xFF ) ^   \
+                       AES_RT2( ( (Y1) >> 16 ) & 0xFF ) ^   \
+                       AES_RT3( ( (Y0) >> 24 ) & 0xFF );    \
+    } while( 0 )
+
+int internal_aes_decrypt_og(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+    int i;
+    uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
+
+    RK = ctx->rk;
+
+    GET_UINT32_LE( X0, input,  0 ); X0 ^= *RK++;
+    GET_UINT32_LE( X1, input,  4 ); X1 ^= *RK++;
+    GET_UINT32_LE( X2, input,  8 ); X2 ^= *RK++;
+    GET_UINT32_LE( X3, input, 12 ); X3 ^= *RK++;
+
+    for( i = ( ctx->nr >> 1 ) - 1; i > 0; i-- )
+    {
+        AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+        AES_RROUND( X0, X1, X2, X3, Y0, Y1, Y2, Y3 );
+    }
+
+    AES_RROUND( Y0, Y1, Y2, Y3, X0, X1, X2, X3 );
+
+    X0 = *RK++ ^ \
+            ( (uint32_t) RSb[ ( Y0       ) & 0xFF ]       ) ^
+            ( (uint32_t) RSb[ ( Y3 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) RSb[ ( Y2 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) RSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
+
+    X1 = *RK++ ^ \
+            ( (uint32_t) RSb[ ( Y1       ) & 0xFF ]       ) ^
+            ( (uint32_t) RSb[ ( Y0 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) RSb[ ( Y3 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) RSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
+
+    X2 = *RK++ ^ \
+            ( (uint32_t) RSb[ ( Y2       ) & 0xFF ]       ) ^
+            ( (uint32_t) RSb[ ( Y1 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) RSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) RSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
+
+    X3 = *RK++ ^ \
+            ( (uint32_t) RSb[ ( Y3       ) & 0xFF ]       ) ^
+            ( (uint32_t) RSb[ ( Y2 >>  8 ) & 0xFF ] <<  8 ) ^
+            ( (uint32_t) RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
+            ( (uint32_t) RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
+
+    PUT_UINT32_LE( X0, output,  0 );
+    PUT_UINT32_LE( X1, output,  4 );
+    PUT_UINT32_LE( X2, output,  8 );
+    PUT_UINT32_LE( X3, output, 12 );
+
+    mbedtls_platform_zeroize( &X0, sizeof( X0 ) );
+    mbedtls_platform_zeroize( &X1, sizeof( X1 ) );
+    mbedtls_platform_zeroize( &X2, sizeof( X2 ) );
+    mbedtls_platform_zeroize( &X3, sizeof( X3 ) );
+
+    mbedtls_platform_zeroize( &Y0, sizeof( Y0 ) );
+    mbedtls_platform_zeroize( &Y1, sizeof( Y1 ) );
+    mbedtls_platform_zeroize( &Y2, sizeof( Y2 ) );
+    mbedtls_platform_zeroize( &Y3, sizeof( Y3 ) );
+
+    mbedtls_platform_zeroize( &RK, sizeof( RK ) );
+
+    return( 0 );
+}
+#endif /* NEW_AES_DECRYPT_ALT */
 #endif /* MBEDTLS_AES_DECRYPT_ALT */
+
+#if defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_DECRYPT_ALT)
+#if defined(NEW_AES_ENCRYPT_ALT)
+int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+    if(ctx->aes_total <= AES_THRESHOLD) {
+        printf("\nUsing ENC_OG (%d)", ctx->aes_total);
+        return internal_aes_encrypt_og(ctx, input, output);
+    } else {
+        printf("\nUsing ENC_ALT_1 (%d)", ctx->aes_total);
+    	return internal_aes_encrypt_alt_1(ctx, input, output);
+    }
+}
+#endif
+
+#if defined(NEW_AES_DECRYPT_ALT)
+int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
+    if(ctx->aes_total <= AES_THRESHOLD) {
+        printf("\nUsing DEC_OG (%d)", ctx->aes_total);
+        return internal_aes_decrypt_og(ctx, input, output);
+    } else {
+        printf("\nUsing DEC_ALT_1 (%d)", ctx->aes_total);
+    	return internal_aes_decrypt_alt_1(ctx, input, output);
+    }
+}
+#endif
+
+void mbedtls_aes_set_cipher_size(mbedtls_aes_context *ctx, size_t len) {
+	ctx->aes_total = (uint32_t) len;
+}
+#endif /* NEW_AES_ENCRYPT_ALT || NEW_AES_DECRYPT_ALT */
+#endif /* MBEDTLS_AES_ENCRYPT_ALT || MBEDTLS_AES_DECRYPT_ALT */
+
 #endif /* MBEDTLS_AES_ENCRYPT_ALT || MBEDTLS_AES_SETKEY_ENC_ALT 
 		  MBEDTLS_AES_DECRYPT_ALT || MBEDTLS_AES_SETKEY_DEC_ALT */

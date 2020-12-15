@@ -92,6 +92,10 @@ struct mbedtls_cipher_base_t
                         const unsigned char *input, unsigned char *output );
 #endif
 
+#if defined(NEW_CIPHER_ALG_ALT)
+    void (*set_cipher_size_func)(void *ctx, size_t len);
+#endif
+
     /** Set key for encryption purposes */
     int (*setkey_enc_func)( void *ctx, const unsigned char *key,
                             unsigned int key_bitlen );
@@ -105,7 +109,6 @@ struct mbedtls_cipher_base_t
 
     /** Free the given context */
     void (*ctx_free_func)( void *ctx );
-
 };
 
 typedef struct

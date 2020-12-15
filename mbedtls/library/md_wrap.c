@@ -459,7 +459,7 @@ static int sha224_process_wrap( void *ctx, const unsigned char *data )
 }
 
 #if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
-static void sha224_set_hmac_size_wrap( void *ctx, size_t len ) {
+static void sha224_set_hmac_size_wrap(void *ctx, size_t len) {
     mbedtls_sha256_set_hmac_size((mbedtls_sha256_context *) ctx, len);
 }
 #endif

@@ -95,6 +95,12 @@ typedef struct mbedtls_aes_context
                                      <li>Simplifying key expansion in the 256-bit
                                          case by generating an extra round key.
                                          </li></ul> */
+#if defined(NEW_AES_SETKEY_ENC_ALT) || defined(NEW_AES_SETKEY_DEC_ALT)
+    uint32_t *rk_alt_1;
+#endif
+#if defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_DECRYPT_ALT)
+    uint32_t aes_total;
+#endif
 }
 mbedtls_aes_context;
 
@@ -617,6 +623,10 @@ int mbedtls_internal_aes_encrypt( mbedtls_aes_context *ctx,
 int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
                                   const unsigned char input[16],
                                   unsigned char output[16] );
+
+#if defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_DECRYPT_ALT)
+void mbedtls_aes_set_cipher_size(mbedtls_aes_context *ctx, size_t len);
+#endif
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
 #if defined(MBEDTLS_DEPRECATED_WARNING)

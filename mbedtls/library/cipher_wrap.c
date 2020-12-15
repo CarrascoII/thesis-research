@@ -196,6 +196,12 @@ static int aes_crypt_xts_wrap( void *ctx, mbedtls_operation_t operation,
 }
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
+#if defined(NEW_CIPHER_ALG_ALT) && (defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_DECRYPT_ALT))
+static void aes_set_cipher_size_wrap(void *ctx, size_t len) {
+    mbedtls_aes_set_cipher_size((mbedtls_aes_context *) ctx, len);
+}
+#endif
+
 static int aes_setkey_dec_wrap( void *ctx, const unsigned char *key,
                                 unsigned int key_bitlen )
 {
@@ -246,6 +252,13 @@ static const mbedtls_cipher_base_t aes_info = {
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
+#if defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_DECRYPT_ALT)
+    aes_set_cipher_size_wrap,
+#else
+    NULL,
+#endif
 #endif
     aes_setkey_enc_wrap,
     aes_setkey_dec_wrap,
@@ -483,6 +496,9 @@ static const mbedtls_cipher_base_t xts_aes_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     xts_aes_setkey_enc_wrap,
     xts_aes_setkey_dec_wrap,
     xts_aes_ctx_alloc,
@@ -539,6 +555,9 @@ static const mbedtls_cipher_base_t gcm_aes_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     gcm_aes_setkey_wrap,
@@ -608,6 +627,9 @@ static const mbedtls_cipher_base_t ccm_aes_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     ccm_aes_setkey_wrap,
@@ -741,6 +763,9 @@ static const mbedtls_cipher_base_t camellia_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     camellia_setkey_enc_wrap,
@@ -916,6 +941,9 @@ static const mbedtls_cipher_base_t gcm_camellia_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     gcm_camellia_setkey_wrap,
     gcm_camellia_setkey_wrap,
     gcm_ctx_alloc,
@@ -983,6 +1011,9 @@ static const mbedtls_cipher_base_t ccm_camellia_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     ccm_camellia_setkey_wrap,
@@ -1117,6 +1148,9 @@ static const mbedtls_cipher_base_t aria_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     aria_setkey_enc_wrap,
@@ -1292,6 +1326,9 @@ static const mbedtls_cipher_base_t gcm_aria_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     gcm_aria_setkey_wrap,
     gcm_aria_setkey_wrap,
     gcm_ctx_alloc,
@@ -1359,6 +1396,9 @@ static const mbedtls_cipher_base_t ccm_aria_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     ccm_aria_setkey_wrap,
@@ -1543,6 +1583,9 @@ static const mbedtls_cipher_base_t des_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     des_setkey_enc_wrap,
     des_setkey_dec_wrap,
     des_ctx_alloc,
@@ -1594,6 +1637,9 @@ static const mbedtls_cipher_base_t des_ede_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     des3_set2key_enc_wrap,
     des3_set2key_dec_wrap,
     des3_ctx_alloc,
@@ -1643,6 +1689,9 @@ static const mbedtls_cipher_base_t des_ede3_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     des3_set3key_enc_wrap,
@@ -1758,6 +1807,9 @@ static const mbedtls_cipher_base_t blowfish_info = {
     NULL,
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
+    NULL,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
     NULL,
 #endif
     blowfish_setkey_wrap,
@@ -1876,6 +1928,9 @@ static const mbedtls_cipher_base_t arc4_base_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     arc4_crypt_stream_wrap,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     arc4_setkey_wrap,
     arc4_setkey_wrap,
     arc4_ctx_alloc,
@@ -1961,6 +2016,9 @@ static const mbedtls_cipher_base_t chacha20_base_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     chacha20_stream_wrap,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     chacha20_setkey_wrap,
     chacha20_setkey_wrap,
     chacha20_ctx_alloc,
@@ -2033,6 +2091,9 @@ static const mbedtls_cipher_base_t chachapoly_base_info = {
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     NULL,
 #endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
+#endif
     chachapoly_setkey_wrap,
     chachapoly_setkey_wrap,
     chachapoly_ctx_alloc,
@@ -2100,6 +2161,9 @@ static const mbedtls_cipher_base_t null_base_info = {
 #endif
 #if defined(MBEDTLS_CIPHER_MODE_STREAM)
     null_crypt_stream,
+#endif
+#if defined(NEW_CIPHER_ALG_ALT)
+    NULL,
 #endif
     null_setkey,
     null_setkey,
