@@ -418,8 +418,10 @@ int mbedtls_md_hmac_reset( mbedtls_md_context_t *ctx )
         return( MBEDTLS_ERR_MD_BAD_INPUT_DATA );
 
 #if defined(NEW_MD_HMAC_ALT)
-    hmac_total = (size_t *) ctx->hmac_total;
-    ctx->md_info->set_hmac_size_func(ctx->md_ctx, *hmac_total);
+    if(ctx->md_info->set_hmac_size_func != NULL) {
+        hmac_total = (size_t *) ctx->hmac_total;
+        ctx->md_info->set_hmac_size_func(ctx->md_ctx, *hmac_total);
+    }
 #endif
 
     ipad = (unsigned char *) ctx->hmac_ctx;

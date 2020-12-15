@@ -1013,7 +1013,9 @@ int mbedtls_cipher_crypt( mbedtls_cipher_context_t *ctx,
         return( ret );
 
 #if defined(NEW_CIPHER_ALG_ALT)
-    ctx->cipher_info->base->set_cipher_size_func(ctx->cipher_ctx, ilen);
+    if(ctx->cipher_info->base->set_cipher_size_func != NULL) {
+        ctx->cipher_info->base->set_cipher_size_func(ctx->cipher_ctx, ilen);
+    }
 #endif
 
     if( ( ret = mbedtls_cipher_update( ctx, input, ilen, output, olen ) ) != 0 )
