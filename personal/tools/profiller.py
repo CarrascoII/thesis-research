@@ -41,7 +41,7 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     return return_code
     
 def run_cli(min_size, n_tests, ciphersuite):
-    args = ['./tls_psk/client.out', 'input_size=' + min_size,
+    args = ['./../tls_psk/client.out', 'input_size=' + min_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -52,7 +52,7 @@ def run_cli(min_size, n_tests, ciphersuite):
     
 
 def run_srv(min_size, n_tests, ciphersuite):
-    args = ['./tls_psk/server.out', 'input_size=' + min_size,
+    args = ['./../tls_psk/server.out', 'input_size=' + min_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -81,7 +81,7 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     
     print(f'ok\nGot {n_total} ciphersuites')
     print('\nRunning with options:')
-    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Maximum input size: {min_size} bytes')
+    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Starting input size: {min_size} bytes')
 
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     pool = ThreadPool(processes=2)
@@ -126,10 +126,10 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
         current +=1
 
         print('\n    Cipher algorithm:')
-        plotter.make_figs('../docs/' + ciphersuite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
+        plotter.make_figs('../../docs/' + ciphersuite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
         print('\n    MAC algorithm:')
-        plotter.make_figs('../docs/' + ciphersuite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
+        plotter.make_figs('../../docs/' + ciphersuite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
     #Step 6: Report final status
     print('\n--- FINAL STATUS ---')

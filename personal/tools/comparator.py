@@ -24,11 +24,11 @@ def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2):
     ax4 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_in'], stats2['median_in'], ax=ax4,
                                         title='Median (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-    plotter.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
+    plotter.save_fig(fig, '../../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
 
 def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
-    path1 = '../docs/' + ciphersuite1 + '/'
-    path2 = '../docs/' + ciphersuite2 + '/'
+    path1 = '../../docs/' + ciphersuite1 + '/'
+    path2 = '../../docs/' + ciphersuite2 + '/'
 
     for alg in algs:
         print(spacing + f'{alg} algorithm:')

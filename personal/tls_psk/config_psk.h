@@ -112,8 +112,8 @@
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-#define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 // #define MEASURE_KE
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
