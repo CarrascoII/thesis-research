@@ -216,26 +216,26 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 						0xab000000,0x4d000000,0x9a000000};
 	WORD *w;
 
-	switch (keybits) {
+	switch(keybits) {
 		case 128: Nr = 10; Nk = 4; break;
 		case 192: Nr = 12; Nk = 6; break;
 		case 256: Nr = 14; Nk = 8; break;
-		default: return (MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
+		default: return(MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 	}
 
 	w = (WORD*) malloc(sizeof(WORD)*(4*(Nr+1)));
 	ctx->nr = Nr;
 
-	for (idx=0; idx < Nk; ++idx) {
+	for(idx=0; idx < Nk; ++idx) {
 		w[idx] = ((key[4 * idx]) << 24) | ((key[4 * idx + 1]) << 16) |
-				   ((key[4 * idx + 2]) << 8) | ((key[4 * idx + 3]));
+				  ((key[4 * idx + 2]) << 8) | ((key[4 * idx + 3]));
 	}
 
-	for (idx = Nk; idx < Nb * (Nr+1); ++idx) {
+	for(idx = Nk; idx < Nb *(Nr+1); ++idx) {
 		temp = w[idx - 1];
-		if ((idx % Nk) == 0)
+		if((idx % Nk) == 0)
 			temp = SubWord(KE_ROTWORD(temp)) ^ Rcon[(idx-1)/Nk];
-		else if (Nk > 6 && (idx % Nk) == 4)
+		else if(Nk > 6 && (idx % Nk) == 4)
 			temp = SubWord(temp);
 		w[idx] = w[idx-Nk] ^ temp;
 	}
@@ -288,26 +288,26 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, u
 						0xab000000,0x4d000000,0x9a000000};
 	WORD *w;
 
-	switch (keybits) {
+	switch(keybits) {
 		case 128: Nr = 10; Nk = 4; break;
 		case 192: Nr = 12; Nk = 6; break;
 		case 256: Nr = 14; Nk = 8; break;
-		default: return (MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
+		default: return(MBEDTLS_ERR_AES_INVALID_KEY_LENGTH);
 	}
 
 	w = (WORD*) malloc(sizeof(WORD)*(4*(Nr+1)));
 	ctx->nr = Nr;
 
-	for (idx=0; idx < Nk; ++idx) {
+	for(idx=0; idx < Nk; ++idx) {
 		w[idx] = ((key[4 * idx]) << 24) | ((key[4 * idx + 1]) << 16) |
-				   ((key[4 * idx + 2]) << 8) | ((key[4 * idx + 3]));
+				  ((key[4 * idx + 2]) << 8) | ((key[4 * idx + 3]));
 	}
 
-	for (idx = Nk; idx < Nb * (Nr+1); ++idx) {
+	for(idx = Nk; idx < Nb *(Nr+1); ++idx) {
 		temp = w[idx - 1];
-		if ((idx % Nk) == 0)
+		if((idx % Nk) == 0)
 			temp = SubWord(KE_ROTWORD(temp)) ^ Rcon[(idx-1)/Nk];
-		else if (Nk > 6 && (idx % Nk) == 4)
+		else if(Nk > 6 && (idx % Nk) == 4)
 			temp = SubWord(temp);
 		w[idx] = w[idx-Nk] ^ temp;
 	}
@@ -445,10 +445,10 @@ int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char i
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[28]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[32]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[36]);
-	if (ctx->nr != 10) {
+	if(ctx->nr != 10) {
 		SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[40]);
 		SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[44]);
-		if (ctx->nr != 12) {
+		if(ctx->nr != 12) {
 			SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[48]);
 			SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[52]);
 			SubBytes(state); ShiftRows(state); AddRoundKey(state,&key[56]);
@@ -597,8 +597,8 @@ int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char i
 	state[0][2] = input[8]; state[1][2] = input[9]; state[2][2] = input[10]; state[3][2] = input[11];
 	state[0][3] = input[12]; state[1][3] = input[13]; state[2][3] = input[14]; state[3][3] = input[15];
 
-	if (ctx->nr > 10) {
-		if (ctx->nr > 12) {
+	if(ctx->nr > 10) {
+		if(ctx->nr > 12) {
 			AddRoundKey(state,&key[56]);
 			InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[52]);InvMixColumns(state);
 			InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[48]);InvMixColumns(state);

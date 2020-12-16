@@ -14,5 +14,9 @@
 
 typedef unsigned int WORD;     // 32-bit word, change to "long" for 16-bit machines
 
+#if defined(NEW_SHA256_PROCESS_ALT)
+int internal_sha256_process_alt_1(mbedtls_sha256_context *ctx, const unsigned char data[64]);
+#endif
+
 #endif /* mbedtls_sha256.h */
 
