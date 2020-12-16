@@ -18,10 +18,10 @@
 
 // #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
-// #define MBEDTLS_AES_ENCRYPT_ALT
-// #define MBEDTLS_AES_SETKEY_ENC_ALT
-// #define MBEDTLS_AES_DECRYPT_ALT
-// #define MBEDTLS_AES_SETKEY_DEC_ALT
+#define MBEDTLS_AES_ENCRYPT_ALT
+#define MBEDTLS_AES_SETKEY_ENC_ALT
+#define MBEDTLS_AES_DECRYPT_ALT
+#define MBEDTLS_AES_SETKEY_DEC_ALT
 // #define MBEDTLS_ARIA_C
 // #define MBEDTLS_CAMELLIA_C
 // #define MBEDTLS_CHACHA20_C
@@ -147,24 +147,22 @@ char *ke_fname;
 #define SHA256_THRESHOLD    1024
 #endif
 
-#if defined(NEW_CIPHER_ALG_ALT)
-#if defined(MBEDTLS_AES_ENCRYPT_ALT)
+#if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_ENCRYPT_ALT)
 #define NEW_AES_ENCRYPT_ALT
+#define AES_ENC_THRESHOLD   2048
 #endif
 
-#if defined(MBEDTLS_AES_SETKEY_ENC_ALT)
+#if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_SETKEY_ENC_ALT)
 #define NEW_AES_SETKEY_ENC_ALT
 #endif
 
-#if defined(MBEDTLS_AES_DECRYPT_ALT)
+#if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_DECRYPT_ALT)
 #define NEW_AES_DECRYPT_ALT
+#define AES_DEC_THRESHOLD   2048
 #endif
 
-#if defined(MBEDTLS_AES_SETKEY_DEC_ALT)
+#if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
 #define NEW_AES_SETKEY_DEC_ALT
-#endif
-
-#define AES_THRESHOLD       1024 + 32 /* msg size + sum of size of blocks with extra record info  */
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

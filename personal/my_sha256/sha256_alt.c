@@ -6,8 +6,14 @@
 
 #if defined(MBEDTLS_SHA256_PROCESS_ALT)
 #include "sha256_alt.h"
+
 #if defined(NEW_SHA256_PROCESS_ALT)
+#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
+#else
+#include <stdio.h>
+#define mbedtls_printf printf
+#endif
 #endif
 
 #define ROTRIGHT(a,b) (((a) >> (b)) | ((a) << (32-(b))))
