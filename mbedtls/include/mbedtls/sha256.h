@@ -143,6 +143,8 @@ int mbedtls_sha256_finish_ret( mbedtls_sha256_context *ctx,
                                unsigned char output[32] );
 
 #if defined(NEW_SHA256_PROCESS_ALT)
+int internal_sha256_process_og(mbedtls_sha256_context *ctx, const unsigned char data[64]);
+
 void mbedtls_sha256_set_hmac_size(mbedtls_sha256_context *ctx, size_t len);
 #endif
 

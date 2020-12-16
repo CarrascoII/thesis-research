@@ -35,7 +35,7 @@
 
 // #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-// #define MBEDTLS_SHA256_PROCESS_ALT
+#define MBEDTLS_SHA256_PROCESS_ALT
 // #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -116,20 +116,17 @@
 // #define MEASURE_MD
 // #define MEASURE_KE
 
-
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define MEASURE_TIME
 #define FILE_PATH           "../docs/"
 
 #if defined(MEASURE_CIPHER)
-#define NEW_CIPHER_ALG_ALT
 #define CIPHER_EXTENSION    "/cipher_data.csv"
 #define CIPHER_FNAME_SIZE   25 /* = len(FILE_PATH) + len(CIPHER_EXTENSION) + len("\0") */
 char *cipher_fname;
 #endif
 
 #if defined(MEASURE_MD)
-#define NEW_MD_HMAC_ALT
 #define MD_EXTENSION        "/md_data.csv"
 #define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(MD_EXTENSION) + len("\0") */
 char *md_fname;
@@ -141,6 +138,9 @@ char *md_fname;
 char *ke_fname;
 #endif
 #endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
+
+#define NEW_CIPHER_ALG_ALT
+#define NEW_MD_HMAC_ALT
 
 #if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
 #define NEW_SHA256_PROCESS_ALT

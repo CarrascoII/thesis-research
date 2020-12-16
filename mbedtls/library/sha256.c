@@ -151,7 +151,7 @@ void mbedtls_sha256_starts( mbedtls_sha256_context *ctx,
 }
 #endif
 
-#if !defined(MBEDTLS_SHA256_PROCESS_ALT)
+#if !defined(MBEDTLS_SHA256_PROCESS_ALT) || defined(NEW_SHA256_PROCESS_ALT)
 static const uint32_t K[] =
 {
     0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -198,8 +198,12 @@ static const uint32_t K[] =
         (d) += temp1; (h) = temp1 + temp2;              \
     } while( 0 )
 
+#if defined(NEW_SHA256_PROCESS_ALT)
+int internal_sha256_process_og(mbedtls_sha256_context *ctx, const unsigned char data[64])
+#else
 int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
                                 const unsigned char data[64] )
+#endif
 {
     uint32_t temp1, temp2, W[64];
     uint32_t A[8];
