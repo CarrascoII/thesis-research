@@ -172,7 +172,7 @@ def main(argv):
         sys.exit(2)
 
     timeout = 2
-    min_size = '16'
+    min_size = '32'
     n_tests = '500'
     weight = 1.5
 
