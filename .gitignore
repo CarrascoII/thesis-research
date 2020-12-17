@@ -198,4 +198,4 @@ cython_debug/
 
 ######### OTHERS #########
 papi/*
-*.png
+aux_files/*
