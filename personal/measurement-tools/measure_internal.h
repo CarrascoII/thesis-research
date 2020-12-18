@@ -9,10 +9,10 @@
 
 #include "measure.h"
 
-typedef measure_base_t {
+typedef struct measure_base_t {
     /** Base Measurement tool */
-    measure_tool_t measure;
-
+    measure_tool_t tool;
+    
     /** Allocate a new context */
     void* (*ctx_alloc_func)(void);
 
@@ -24,6 +24,9 @@ typedef measure_base_t {
     
     /** Get virtual time measurement */
     int (*get_time_func)(void *ctx);
+
+    /** Calculates and saves measured values */
+    int (*finish_func)(void *ctx, const char *file_name, const char *file_output);
 };
 
 #endif /* MEASURE_INTERNAL_H */

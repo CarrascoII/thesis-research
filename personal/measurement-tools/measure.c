@@ -21,11 +21,11 @@ static const int supported_tools[] = {
     MBEDTLS_MD_NONE
 };
 
-const int *measure_tools_list(void) {
+const int* measure_tools_list(void) {
     return(supported_tools);
 }
 
-const measure_info_t *measure_info_from_string(const char *tool_name) {
+const measure_info_t* measure_info_from_string(const char *tool_name) {
     if(NULL == tool_name)
         return(NULL);
 
@@ -41,7 +41,7 @@ const measure_info_t *measure_info_from_string(const char *tool_name) {
     return(NULL);
 }
 
-const measure_info_t *measure_info_from_type(measure_tool_t measure_tool) {
+const measure_info_t* measure_info_from_type(measure_tool_t measure_tool) {
     switch(measure_tool) {
 #if defined(MEASURE_PAPI_C)
         case MEASURE_TOOL_PAPI:
@@ -61,21 +61,58 @@ void measure_init(measure_context_t *ctx) {
 }
 
 void measure_free(measure_context_t *ctx) {
+    if(ctx == NULL || ctx->measure_info == NULL)
+        return(NULL);
+
+    if(ctx->measure_ctx != NULL) {
+        ctx->measure_info->ctx_free_func(ctx->measure_ctx);
+    }
+
+    memset(ctx, 0, sizeof(measure_context_t));
 }
 
 int measure_setup(measure_context_t *ctx, const measure_info_t *measure_info) {
+    if(ctx == NULL || measure_info == NULL) {
+        return(MEASURE_ERR_BAD_INPUT_DATA);
+    }
+
+    if((ctx->measure_ctx = measure_info->ctx_alloc_func()) == NULL) {
+        return(MEASURE_ERR_ALLOC_FAILED);
+    }
+
+    ctx->measure_info = measure_info;
+
+    return(0);
 }
 
-int measure_clone(measure_context_t *dst, const measure_context_t *src) {
+int measure_get_vals(measure_context_t *ctx, measure_val_t mode) {
+    int ret;
+
+    if(ctx == NULL || (mode != MEASURE_START && mode != MEASURE_END)) {
+        return(MEASURE_ERR_BAD_INPUT_DATA);
+    }
+
+    if(can_measure_cycles(ctx)) {
+        if((ret = ctx->measure_info->base->get_cycles_func(ctx->measure_ctx, mode)) != 0) {
+            return(ret);
+        }
+    }
+
+    if(can_measure_time(ctx)) {
+        if((ret = ctx->measure_info->base->get_time_func(ctx->measure_ctx, mode)) != 0) {
+            return(ret);
+        }
+    }
+
+    return(0);
 }
 
-unsigned char measure_get_time_unit(const measure_info_t *measure_info) {
-}
+int measure_finish(measure_context_t *ctx, const char *file_name, const char *file_output) {
+    if(ctx == NULL || file_name == NULL || file_output == NULL) {
+        return(MEASURE_ERR_BAD_INPUT_DATA);
+    }
 
-measure_tool_t measure_get_type(const measure_info_t *measure_info) {
-}
-
-const char *measure_get_name(const measure_info_t *measure_info) {
+    return ctx->measure_info->base->finish_func(ctx->measure_ctx, file_name, file_output);
 }
 
 #endif /* MEASURE_C */

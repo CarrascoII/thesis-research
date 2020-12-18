@@ -22,8 +22,15 @@
 typedef enum {
     MEASURE_TOOL_NONE = 0,  /**< None. */
     MEASURE_TOOL_PAPI,      /**< The PAPI performance analysis library. */
-    MEASURE_TOOL_TIMELIB   /**< The time library from C. */
+    MEASURE_TOOL_TIMELIB    /**< The time library from C. */
 } measure_tool_t;
+
+/** Type of operation. */
+typedef enum {
+    MEASURE_VAL_NONE = -1,
+    MEASURE_START = 0,
+    MEASURE_END,
+} measure_val_t;
 
 /**
  * Base measurement tool information (opaque struct).
@@ -56,16 +63,6 @@ typedef struct measure_context_t {
 
     /** The measure-specific context. */
     void *measure_ctx;
-
-    /** The starting and ending values
-     *  for the clock cycle measurements.
-     */
-    // void *cycle_measurements;
-
-    /** The starting and ending values
-     *  for the time measurements.
-     */
-    // void *time_measurements;
 } measure_context_t;
 
 /**
@@ -88,7 +85,7 @@ const int *measure_tools_list(void);
  * \return          The measurement tool information associated with \p tool_name.
  * \return          NULL if the associated measurement tool information is not found.
  */
-const measure_info_t *measure_info_from_string(const char *tool_name);
+const measure_info_t* measure_info_from_string(const char *tool_name);
 
 /**
  * \brief               This function returns the measurement tool information
@@ -99,7 +96,7 @@ const measure_info_t *measure_info_from_string(const char *tool_name);
  * \return              The measurement tool information associated with \p measure_tool.
  * \return              NULL if the associated measurement tool information is not found.
  */
-const measure_info_t *measure_info_from_type(measure_tool_t measure_tool);
+const measure_info_t* measure_info_from_type(measure_tool_t measure_tool);
 
 /**
  * \brief   This function initializes a measure context without
@@ -145,50 +142,85 @@ void measure_free(measure_context_t *ctx);
 int measure_setup(measure_context_t *ctx, const measure_info_t *measure_info);
 
 /**
- * \brief       This function clones the state of an measure context.
+ * \brief       This function extracts the measurement tool name from the
+ *              measurement tool information structure.
  *
- * \note        You must call measure_setup() on \c dst before calling
- *              this function.
+ * \param ctx   The context of the measurement tool. This must be initialized.
  *
- * \note        The two contexts must use the same tool,
- *              for example, both use PAPI.
- *
- * \param dst   The destination context.
- * \param src   The context to be cloned.
- *
- * \return      \c 0 on success.
- * \return      #MEASURE_ERR_BAD_INPUT_DATA on parameter-verification failure.
+ * \return      The name of the measurent tool.
  */
-int measure_clone(measure_context_t *dst, const measure_context_t *src);
+static inline const char* measure_get_name(const measure_context_t *ctx) {
+    if(ctx == NULL || ctx->measure_info == NULL) {
+        return 0;
+    }
+
+    return ctx->measure_info->name;
+}
 
 /**
- * \brief               This function extracts the time unit from the
- *                      measure information structure.
+ * \brief       This function extracts the time unit from the
+ *              measure information structure.
  *
- * \param measure_info  The information structure of the measurement tool to use.
- *
- * \return              The time unit of the measurement tool.
+ * \param ctx   The context of the measurement tool. This must be initialized.
+ * 
+ * \return      The time unit of the measurement tool.
  */
-unsigned char measure_get_time_unit(const measure_info_t *measure_info);
+static inline const char* measure_get_time_unit(const measure_context_t *ctx) {
+    if(ctx == NULL || ctx->measure_info == NULL) {
+        return 0;
+    }
+
+    return ctx->measure_info->time_units;
+}
 
 /**
- * \brief               This function extracts the measurement tool from the
- *                      measurement tool information structure.
+ * \brief       This function extracts the measurement tool from the
+ *              measurement tool information structure.
  *
- * \param measure_info  The information structure of the measurement tool to use.
+ * \param ctx   The context of the measurement tool. This must be initialized.
  *
- * \return              The measurement tool.
+ * \return      The measurement tool.
  */
-measure_tool_t measure_get_type(const measure_info_t *measure_info);
+static inline measure_tool_t measure_get_type(const measure_context_t *ctx) {
+    if(ctx == NULL || ctx->measure_info == NULL) {
+        return(MEASURE_TOOL_NONE);
+    }
+
+    return ctx->measure_info->base->tool;
+}
 
 /**
- * \brief               This function extracts the measurement tool name from the
- *                      measurement tool information structure.
+ * \brief       This function verifies if context can measure cycles.
  *
- * \param measure_info  The information structure of the measurement tool to use.
- *
- * \return              The name of the measurent tool.
+ * \param ctx   The context of the measurement tool. This must be initialized.
+ * 
+ * \return      1 if the context can measure cycles. 0 otherwise.
  */
-const char *measure_get_name(const measure_info_t *measure_info);
+static inline int can_measure_cycles(const measure_context_t *ctx) {
+    if(ctx == NULL || ctx->measure_info == NULL) {
+        return 0;
+    }
+
+    return((ctx->measure_info->flags & MEASURE_TYPE_CYCLES) == MEASURE_TYPE_CYCLES);
+}
+
+/**
+ * \brief       This function verifies if context can measure time.
+ *
+ * \param ctx   The context of the measurement tool. This must be initialized.
+ * 
+ * \return      1 if the context can measure time. 0 otherwise.
+ */
+static inline int can_measure_time(const measure_context_t *ctx) {
+    if(ctx == NULL || ctx->measure_info == NULL) {
+        return 0;
+    }
+
+    return((ctx->measure_info->flags & MEASURE_TYPE_TIME) == MEASURE_TYPE_TIME);
+}
+
+int measure_get_vals(measure_context_t *ctx, measure_val_t mode);
+
+int measure_finish(measure_context_t *ctx, const char *file_name, const char *file_output);
 
 #endif /* MEASURE_H */

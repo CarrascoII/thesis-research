@@ -18,10 +18,10 @@
 
 #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
-#define MBEDTLS_AES_ENCRYPT_ALT
-#define MBEDTLS_AES_SETKEY_ENC_ALT
-#define MBEDTLS_AES_DECRYPT_ALT
-#define MBEDTLS_AES_SETKEY_DEC_ALT
+// #define MBEDTLS_AES_ENCRYPT_ALT
+// #define MBEDTLS_AES_SETKEY_ENC_ALT
+// #define MBEDTLS_AES_DECRYPT_ALT
+// #define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_ARIA_C
 // #define MBEDTLS_CAMELLIA_C
 // #define MBEDTLS_CHACHA20_C
@@ -35,7 +35,7 @@
 
 #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
-#define MBEDTLS_SHA256_PROCESS_ALT
+// #define MBEDTLS_SHA256_PROCESS_ALT
 #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
@@ -69,14 +69,14 @@
  */
 #define MBEDTLS_SSL_CIPHERSUITES \
                  MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
-//                 MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
-//                 MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
-//                 MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
-//                 MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
-//                 MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
-//                 MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
-//                 MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,   
-//                 MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
+                // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
+                // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
+                // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
+                // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
+                // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
+                // MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
+                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,   
+                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
 
                 // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256,        
                 // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
@@ -93,9 +93,8 @@
 #include "mbedtls/check_config.h"
 
 /**
- * Program flags
+ * Server and client program flags
  */
-
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
@@ -112,14 +111,22 @@
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+/**
+ * Profiling program flags
+ */
+#define MEASURE_C
+// #define MEASURE_PAPI_C
+#define MEASURE_TIMELIB_C
+
+#if defined(MEASURE_C)
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_KE
+#endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
-#define MEASURE_TIME
 #define FILE_PATH           "../docs/"
-
+#endif
 #if defined(MEASURE_CIPHER)
 #define CIPHER_EXTENSION    "/cipher_data.csv"
 #define CIPHER_FNAME_SIZE   25 /* = len(FILE_PATH) + len(CIPHER_EXTENSION) + len("\0") */
@@ -137,8 +144,10 @@ char *md_fname;
 #define KE_FNAME_SIZE       21 /* = len(FILE_PATH) + len(KE_EXTENSION) + len("\0") */
 char *ke_fname;
 #endif
-#endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
 
+/**
+ * New alternative implementation flags
+ */
 #define NEW_CIPHER_ALG_ALT
 #define NEW_MD_HMAC_ALT
 
