@@ -1,11 +1,15 @@
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#if !defined(MEASURE_CONFIG_FILE)
+#include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_PAPI_C)
 #include "papilib.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 int measure_papi_init(measure_papi_context *ctx) {
     int ret;

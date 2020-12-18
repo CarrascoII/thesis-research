@@ -1,24 +1,23 @@
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#if !defined(MEASURE_CONFIG_FILE)
+#include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_C)
 #include "measure.h"
 #include "measure_internal.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 static const int supported_tools[] = {
 #if defined(MEASURE_PAPI_C)
-    MEASURE_PAPI,
+    MEASURE_TOOL_PAPI,
 #endif
 #if defined(MEASURE_TIMELIB_C)
-    MEASURE_TIME_LIB,
+    MEASURE_TOOL_TIMELIB,
 #endif
-    MBEDTLS_MD_NONE
+    MEASURE_TOOL_NONE
 };
 
 const int* measure_tools_list(void) {
@@ -32,11 +31,11 @@ const measure_info_t* measure_info_from_string(const char *tool_name) {
     /* Get the appropriate measurement tool information */
 #if defined(MEASURE_PAPI_C)
     if(!strcmp("PAPI", tool_name))
-        return measure_info_from_type(MEASURE_PAPI);
+        return measure_info_from_type(MEASURE_TOOL_PAPI);
 #endif
 #if defined(MEASURE_TIMELIB_C)
     if(!strcmp("TIME_LIB", tool_name))
-        return measure_info_from_type(MEASURE_TIME_LIB);
+        return measure_info_from_type(MEASURE_TOOL_TIMELIB);
 #endif
     return(NULL);
 }
@@ -62,10 +61,10 @@ void measure_init(measure_context_t *ctx) {
 
 void measure_free(measure_context_t *ctx) {
     if(ctx == NULL || ctx->measure_info == NULL)
-        return(NULL);
+        return;
 
     if(ctx->measure_ctx != NULL) {
-        ctx->measure_info->ctx_free_func(ctx->measure_ctx);
+        ctx->measure_info->base->ctx_free_func(ctx->measure_ctx);
     }
 
     memset(ctx, 0, sizeof(measure_context_t));
@@ -76,7 +75,7 @@ int measure_setup(measure_context_t *ctx, const measure_info_t *measure_info) {
         return(MEASURE_ERR_BAD_INPUT_DATA);
     }
 
-    if((ctx->measure_ctx = measure_info->ctx_alloc_func()) == NULL) {
+    if((ctx->measure_ctx = measure_info->base->ctx_alloc_func()) == NULL) {
         return(MEASURE_ERR_ALLOC_FAILED);
     }
 

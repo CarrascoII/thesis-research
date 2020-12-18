@@ -1,0 +1,8 @@
+#ifndef MEASURE_CONFIG_H
+#define MEASURE_CONFIG_H
+
+#define MEASURE_C
+// #define MEASURE_PAPI_C
+#define MEASURE_TIMELIB_C
+
+#endif /* MEASURE_CONFIG_H */

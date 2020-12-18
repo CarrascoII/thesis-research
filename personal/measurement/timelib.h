@@ -1,17 +1,13 @@
 #ifndef MEASURE_TIMELIB_H
 #define MEASURE_TIMELIB_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#if !defined(MEASURE_CONFIG_FILE)
+#include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#include MEASURE_CONFIG_FILE
 #endif
 
-#include "time.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <time.h>
 
 #define MEASURE_TIMELIB_START       0 /**< TIMELIB start measurement. */
 #define MEASURE_TIMELIB_END         1 /**< TIMELIB end measurement. */

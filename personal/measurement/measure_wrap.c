@@ -1,7 +1,7 @@
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#if !defined(MEASURE_CONFIG_FILE)
+#include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_C)
@@ -13,13 +13,11 @@
 #include "timelib.h"
 #endif
 
-#include <stdlib.h>
-
 #if defined(MEASURE_PAPI_C)
 static void* papi_ctx_alloc(void) {
     int ret;
 
-    measure_context *papi = calloc(1, sizeof(measure_context));
+    measure_papi_context *papi = calloc(1, sizeof(measure_papi_context));
 
     if(papi == NULL)
         return(NULL);
@@ -37,12 +35,12 @@ static void papi_ctx_free(void *ctx) {
     free(ctx);
 }
 
-static int papi_get_cycles_wrap(void *ctx) {
-    return measure_papi_get_cycles((measure_papi_ctx *) ctx);
+static int papi_get_cycles_wrap(void *ctx, int mode) {
+    return measure_papi_get_cycles((measure_papi_ctx *) ctx, mode);
 }
 
-static int papi_get_time_wrap(void *ctx) {
-    return measure_papi_get_time((measure_papi_ctx *) ctx);
+static int papi_get_time_wrap(void *ctx, int mode) {
+    return measure_papi_get_time((measure_papi_ctx *) ctx, mode);
 }
 
 static int papi_finish_wrap(void *ctx, const char *file_name, const char *file_output) {
@@ -50,7 +48,6 @@ static int papi_finish_wrap(void *ctx, const char *file_name, const char *file_o
 }
 
 static const measure_base_t measure_papi_base = {
-    MEASURE_TOOL_PAPI,
     papi_ctx_alloc,
     papi_ctx_free,
     papi_get_cycles_wrap,
@@ -58,7 +55,8 @@ static const measure_base_t measure_papi_base = {
     papi_finish_wrap
 };
 
-static const measure_info_t measure_papi_info = {
+const measure_info_t measure_papi_info = {
+    MEASURE_TOOL_PAPI,
     "PAPI",
     "MICROSECONDS",
     MEASURE_TYPE_CYCLES | MEASURE_TYPE_TIME,
@@ -68,7 +66,7 @@ static const measure_info_t measure_papi_info = {
 
 #if defined(MEASURE_TIMELIB_C)
 static void* timelib_ctx_alloc(void) {
-    measure_context *timelib = calloc(1, sizeof(measure_context));
+    measure_timelib_context *timelib = calloc(1, sizeof(measure_timelib_context));
 
     if(timelib == NULL)
         return(NULL);
@@ -79,20 +77,19 @@ static void* timelib_ctx_alloc(void) {
 }
 
 static void timelib_ctx_free(void *ctx) {
-    measure_timelib_free((measure_timelib_ctx *) ctx);
+    measure_timelib_free((measure_timelib_context *) ctx);
     free(ctx);
 }
 
-static int timelib_get_time_wrap(void *ctx) {
-    return measure_timelib_get_time((measure_timelib_ctx *) ctx);
+static int timelib_get_time_wrap(void *ctx, int mode) {
+    return measure_timelib_get_time((measure_timelib_context *) ctx, mode);
 }
 
 static int timelib_finish_wrap(void *ctx, const char *file_name, const char *file_output) {
-    return measure_timelib_finish((measure_papi_ctx *) ctx, file_name, file_output);
+    return measure_timelib_finish((measure_timelib_context *) ctx, file_name, file_output);
 }
 
 static const measure_base_t measure_timelib_base = {
-    MEASURE_TOOL_TIMELIB,
     timelib_ctx_alloc,
     timelib_ctx_free,
     NULL,
@@ -100,7 +97,8 @@ static const measure_base_t measure_timelib_base = {
     timelib_finish_wrap
 };
 
-static const measure_info_t measure_timelib_info = {
+const measure_info_t measure_timelib_info = {
+    MEASURE_TOOL_TIMELIB,
     "TIMELIB",
     "SECONDS",
     MEASURE_TYPE_TIME,

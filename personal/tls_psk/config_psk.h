@@ -114,9 +114,7 @@
 /**
  * Profiling program flags
  */
-#define MEASURE_C
-// #define MEASURE_PAPI_C
-#define MEASURE_TIMELIB_C
+#include "measurement/config.h"
 
 #if defined(MEASURE_C)
 #define MEASURE_CIPHER

@@ -1,11 +1,14 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
+#if !defined(MEASURE_CONFIG_FILE)
 #include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#include MEASURE_CONFIG_FILE
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #define MEASURE_ERR_FEATURE_UNAVAILABLE     -0xA000  /**< The selected feature is not available. */
 #define MEASURE_ERR_ALLOC_FAILED            -0xA001  /**< Failed to allocate memory. */
@@ -37,7 +40,10 @@ typedef enum {
  */
 typedef struct measure_base_t measure_base_t;
 
-typedef measure_info_t {
+typedef struct measure_info_t {
+    /** Base Measurement tool */
+    measure_tool_t tool;
+
     /** Name of the measurement tool */
     const char *name;
 
@@ -52,7 +58,7 @@ typedef measure_info_t {
 
     /** Struct for base measurement functions. */
     const measure_base_t *base;
-};
+} measure_info_t;
 
 /**
  * The generic measure context.
@@ -186,7 +192,7 @@ static inline measure_tool_t measure_get_type(const measure_context_t *ctx) {
         return(MEASURE_TOOL_NONE);
     }
 
-    return ctx->measure_info->base->tool;
+    return(ctx->measure_info->tool);
 }
 
 /**

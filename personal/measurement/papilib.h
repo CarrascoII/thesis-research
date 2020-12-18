@@ -1,17 +1,13 @@
 #ifndef MEASURE_PAPILIB_H
 #define MEASURE_PAPILIB_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
+#if !defined(MEASURE_CONFIG_FILE)
+#include "config.h"
 #else
-#include MBEDTLS_CONFIG_FILE
+#include MEASURE_CONFIG_FILE
 #endif
 
 #include "papi.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #define MEASURE_PAPI_START      0 /**< PAPI start. */
 #define MEASURE_PAPI_END        1 /**< PAPI end. */
