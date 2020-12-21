@@ -1,11 +1,11 @@
 #if !defined(MEASURE_CONFIG_FILE)
-#include "config.h"
+#include "measurement/config.h"
 #else
 #include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_PAPI_C)
-#include "papilib.h"
+#include "measurement/papilib.h"
 
 #include <stdio.h>
 #include <stdlib.h>

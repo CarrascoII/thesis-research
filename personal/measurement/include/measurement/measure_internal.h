@@ -2,12 +2,12 @@
 #define MEASURE_INTERNAL_H
 
 #if !defined(MEASURE_CONFIG_FILE)
-#include "config.h"
+#include "measurement/config.h"
 #else
 #include MEASURE_CONFIG_FILE
 #endif
 
-#include "measure.h"
+#include "measurement/measure.h"
 
 struct measure_base_t {    
     /** Allocate a new context */

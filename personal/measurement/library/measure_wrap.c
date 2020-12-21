@@ -1,16 +1,16 @@
 #if !defined(MEASURE_CONFIG_FILE)
-#include "config.h"
+#include "measurement/config.h"
 #else
 #include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_C)
-#include "measure_internal.h"
+#include "measurement/measure_internal.h"
 #if defined(MEASURE_PAPI_C)
-#include "papilib.h"
+#include "measurement/papilib.h"
 #endif
 #if defined(MEASURE_TIMELIB_C)
-#include "timelib.h"
+#include "measurement/timelib.h"
 #endif
 
 #if defined(MEASURE_PAPI_C)

@@ -1,22 +1,29 @@
-MBEDTLS_DIR = ../mbedtls
-PERSONAL_DIR = ../personal
+MBEDTLS_INC_DIR = ../mbedtls/include
+MBEDTLS_LIB_DIR = ../mbedtls/library
+MBEDTLS_PROG_DIR = ../mbedtls/programs
+PERSONAL_DIR = ../../personal
 MY_AES = my_aes/aes_alt
 MY_SHA256 = my_sha256/sha256_alt
-PAPI_DIR = ../papi/src/install
-MEASUREMENT_DIR = measurement
+PAPI_INC_DIR = ../papi/src/install/include
+PAPI_LIB_DIR = ../papi/src/install/lib
+MEASUREMENT_INC_DIR = measurement/include
+MEASUREMENT_LIB_DIR = measurement/library
 
-MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_DIR)/library
-MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_DIR)/programs
+MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
+MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
+
+INCLUDES = -I$(MBEDTLS_INC_DIR) -I$(MEASUREMENT_INC_DIR)
 
 ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
-LOCAL_CFLAGS = $(MY_AES).o -I$(MBEDTLS_DIR)/include -L$(MBEDTLS_DIR)/library -lmbedx509 -lmbedtls -lmbedcrypto
-PAPI_CFLAGS = -I${PAPI_DIR}/include -L${PAPI_DIR}/lib -lpapi
+LOCAL_CFLAGS = $(MY_AES).o $(INCLUDES) -L$(MBEDTLS_LIB_DIR) -lmbedx509 -lmbedtls -lmbedcrypto
+PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
 TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
 CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
 
-.PHONY: lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
+.PHONY: lib_measurement lib_measurement_papi alt_psk alt_rsa \
+		lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
 		psk_server run_psk_server psk_client run_psk_client tls_psk \
 		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi tls_psk_papi \
 		rsa_server run_rsa_server rsa_client run_rsa_client tls_rsa \
@@ -24,55 +31,53 @@ CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
 		cipher run_cipher cipher_papi run_cipher_papi \
 		clean_local clean
 
+### MAKE MEASUREMENT LIBRARY ###
+lib_measurement:
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure.c -o $(MEASUREMENT_LIB_DIR)/measure.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure_wrap.c -o $(MEASUREMENT_LIB_DIR)/measure_wrap.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/papilib.c -o $(MEASUREMENT_LIB_DIR)/papilib.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/timelib.c -o $(MEASUREMENT_LIB_DIR)/timelib.o
+
+lib_measurement_papi:
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure.c -o $(MEASUREMENT_LIB_DIR)/measure.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure_wrap.c -o $(MEASUREMENT_LIB_DIR)/measure_wrap.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) $(PAPI_CFLAGS) -c $(MEASUREMENT_LIB_DIR)/papilib.c -o $(MEASUREMENT_LIB_DIR)/papilib.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/timelib.c -o $(MEASUREMENT_LIB_DIR)/timelib.o
+
+### MAKE MBEDTLS ALT ###
+alt_psk:
+	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) $(INCLUDES) -c $(MY_AES).c -o $(MY_AES).o
+	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) $(INCLUDES) -c $(MY_SHA256).c -o $(MY_SHA256).o
+
+alt_rsa:
+	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) $(INCLUDES) -c $(MY_AES).c -o $(MY_AES).o
+	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) $(INCLUDES) -c $(MY_SHA256).c -o $(MY_SHA256).o 
+
 ### MAKE MBEDTLS LIBRARY ###
 lib_mbedtls:
-	gcc $(ALL_CFLAGS) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	gcc $(ALL_CFLAGS) -I$(MBEDTLS_INC_DIR) -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	gcc $(ALL_CFLAGS) -I$(MBEDTLS_INC_DIR) -c $(MY_AES).c -o $(MY_AES).o
 	$(MBEDTLS_LIB_MAKE)
 
-lib_psk:
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure.c -o $(MEASUREMENT_DIR)/measure.o
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure_wrap.c -o $(MEASUREMENT_DIR)/measure_wrap.o
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/timelib.c -o $(MEASUREMENT_DIR)/timelib.o
+lib_psk: lib_measurement alt_psk
+	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_PSK_CONFIG)"
 
-	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG)"
+lib_psk_papi: lib_measurement_papi alt_psk
+	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_PSK_CONFIG) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
 
-lib_psk_papi:
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure.c -o $(MEASUREMENT_DIR)/measure.o
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure_wrap.c -o $(MEASUREMENT_DIR)/measure_wrap.o
-	gcc $(ALL_CFLAGS) $(PAPI_CFLAGS) -c $(MEASUREMENT_DIR)/papilib.c -o $(MEASUREMENT_DIR)/papilib.o
+lib_rsa: lib_measurement alt_rsa
+	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_RSA_CONFIG)"
 
-	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../$(PAPI_DIR)/include -L../$(PAPI_DIR)/lib -lpapi"
-
-lib_rsa:
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure.c -o $(MEASUREMENT_DIR)/measure.o
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure_wrap.c -o $(MEASUREMENT_DIR)/measure_wrap.o
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/timelib.c -o $(MEASUREMENT_DIR)/timelib.o
-
-	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG)"
-
-lib_rsa_papi:
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure.c -o $(MEASUREMENT_DIR)/measure.o
-	gcc $(ALL_CFLAGS) -c $(MEASUREMENT_DIR)/measure_wrap.c -o $(MEASUREMENT_DIR)/measure_wrap.o
-	gcc $(ALL_CFLAGS) $(PAPI_CFLAGS) -c $(MEASUREMENT_DIR)/papilib.c -o $(MEASUREMENT_DIR)/papilib.o
-
-	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_SHA256).c -o $(MY_SHA256).o 
-	gcc $(ALL_CFLAGS) $(TLS_RSA_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../$(PAPI_DIR)/include -L../$(PAPI_DIR)/lib -lpapi"
+lib_rsa_papi: lib_measurement_papi alt_rsa
+	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_RSA_CONFIG) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
 
 lib_cipher:
-	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) -I$(MBEDTLS_DIR)/include -c $(MY_AES).c -o $(MY_AES).o
+	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) -I$(MBEDTLS_INC_DIR) -c $(MY_AES).c -o $(MY_AES).o
 	$(MBEDTLS_LIB_MAKE) CFLAGS="$(CIPHER_CONFIG)"
 
 ### MAKE MBEDTLS PROGRAMS ###
 progs: lib_mbedtls
-	$(MBEDTLS_PROGS_MAKE) CFLAGS="../$(PERSONAL_DIR)/$(MY_SHA256).o ../$(PERSONAL_DIR)/$(MY_AES).o"
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(PERSONAL_DIR)/$(MY_SHA256).o $(PERSONAL_DIR)/$(MY_AES).o"
 
 ### MAKE TLS PSK ###
 psk_server: lib_psk
@@ -171,7 +176,7 @@ clean: clean_local
 	$(MBEDTLS_LIB_MAKE) clean
 	rm -f $(MY_SHA256).o
 	rm -f $(MY_AES).o
-	rm -f measurement/measure_wrap.o
-	rm -f measurement/measure.o
-	rm -f measurement/papilib.o
-	rm -f measurement/timelib.o
+	rm -f $(MEASUREMENT_LIB_DIR)/measure_wrap.o
+	rm -f $(MEASUREMENT_LIB_DIR)/measure.o
+	rm -f $(MEASUREMENT_LIB_DIR)/papilib.o
+	rm -f $(MEASUREMENT_LIB_DIR)/timelib.o

@@ -1,12 +1,12 @@
 #if !defined(MEASURE_CONFIG_FILE)
-#include "config.h"
+#include "measurement/config.h"
 #else
 #include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_C)
-#include "measure.h"
-#include "measure_internal.h"
+#include "measurement/measure.h"
+#include "measurement/measure_internal.h"
 
 #include <string.h>
 

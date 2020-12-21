@@ -2,7 +2,7 @@
 #define MEASURE_H
 
 #if !defined(MEASURE_CONFIG_FILE)
-#include "config.h"
+#include "measurement/config.h"
 #else
 #include MEASURE_CONFIG_FILE
 #endif

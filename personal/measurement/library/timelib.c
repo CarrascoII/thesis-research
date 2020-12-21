@@ -1,11 +1,11 @@
 #if !defined(MEASURE_CONFIG_FILE)
-#include "config.h"
+#include "measurement/config.h"
 #else
 #include MEASURE_CONFIG_FILE
 #endif
 
 #if defined(MEASURE_TIMELIB_C)
-#include "timelib.h"
+#include "measurement/timelib.h"
 
 #include <stdio.h>
 #include <string.h>
