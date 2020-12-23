@@ -4,7 +4,7 @@
 #include MEASURE_CONFIG_FILE
 #endif
 
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
 #include "measurement/timelib.h"
 
 #include <stdio.h>
@@ -79,4 +79,4 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
     return(0);
 }
 
-#endif /* MEASURE_TIMELIB_C */
+#endif /* MEASUREMENT_TIMELIB_C */

@@ -116,7 +116,7 @@
  */
 #include "measurement/config.h"
 
-#if defined(MEASURE_C)
+#if defined(MEASUREMENT_MEASURE_C)
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
 // #define MEASURE_KE

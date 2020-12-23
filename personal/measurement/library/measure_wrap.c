@@ -4,16 +4,16 @@
 #include MEASURE_CONFIG_FILE
 #endif
 
-#if defined(MEASURE_C)
+#if defined(MEASUREMENT_MEASURE_C)
 #include "measurement/measure_internal.h"
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
 #include "measurement/papilib.h"
 #endif
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
 #include "measurement/timelib.h"
 #endif
 
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
 static void* papi_ctx_alloc(void) {
     int ret;
 
@@ -62,9 +62,9 @@ const measure_info_t measure_papi_info = {
     MEASURE_TYPE_CYCLES | MEASURE_TYPE_TIME,
     &measure_papi_base
 };
-#endif /* MEASURE_PAPI_C */
+#endif /* MEASUREMENT_PAPI_C */
 
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
 static void* timelib_ctx_alloc(void) {
     measure_timelib_context *timelib = calloc(1, sizeof(measure_timelib_context));
 
@@ -104,6 +104,6 @@ const measure_info_t measure_timelib_info = {
     MEASURE_TYPE_TIME,
     &measure_timelib_base
 };
-#endif /* MEASURE_TIMELIB_C */
+#endif /* MEASUREMENT_TIMELIB_C */
 
-#endif /* MEASURE_C */
+#endif /* MEASUREMENT_MEASURE_C */

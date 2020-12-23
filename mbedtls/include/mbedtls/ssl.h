@@ -65,6 +65,10 @@
 #include "platform_time.h"
 #endif
 
+#if defined(MEASUREMENT_MEASURE_C)
+#include "measurement/measure.h"
+#endif
+
 /*
  * SSL Error codes
  */
@@ -1176,6 +1180,10 @@ struct mbedtls_ssl_context
     char own_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
     char peer_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
+
+#if defined(MEASUREMENT_MEASURE_C)
+    measure_context_t *msr_ctx;
+#endif
 };
 
 #if defined(MBEDTLS_SSL_HW_RECORD_ACCEL)
@@ -1248,6 +1256,10 @@ void mbedtls_ssl_init( mbedtls_ssl_context *ssl );
  */
 int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
                        const mbedtls_ssl_config *conf );
+
+#if defined(MEASUREMENT_MEASURE_C)
+int mbedtls_measure_config(mbedtls_ssl_context *ctx);
+#endif
 
 /**
  * \brief          Reset an already initialized SSL context for re-use

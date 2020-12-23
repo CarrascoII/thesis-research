@@ -17,10 +17,12 @@ INCLUDES = -I$(MBEDTLS_INC_DIR) -I$(MEASUREMENT_INC_DIR)
 ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
 LOCAL_CFLAGS = $(MY_AES).o $(INCLUDES) -L$(MBEDTLS_LIB_DIR) -lmbedx509 -lmbedtls -lmbedcrypto
 PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
+MEASUREMENT_CFLAGS = -I$(MEASUREMENT_INC_DIR) -L$(MEASUREMENT_LIB_DIR) -lmeasurement
 
 TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
 TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
 CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
+
 
 .PHONY: lib_measurement lib_measurement_papi alt_psk alt_rsa \
 		lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
@@ -37,13 +39,15 @@ lib_measurement:
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure_wrap.c -o $(MEASUREMENT_LIB_DIR)/measure_wrap.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/papilib.c -o $(MEASUREMENT_LIB_DIR)/papilib.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/timelib.c -o $(MEASUREMENT_LIB_DIR)/timelib.o
+	ar rcs $(MEASUREMENT_LIB_DIR)/libmeasurement.a $(MEASUREMENT_LIB_DIR)/measure.o $(MEASUREMENT_LIB_DIR)/measure_wrap.o $(MEASUREMENT_LIB_DIR)/papilib.o $(MEASUREMENT_LIB_DIR)/timelib.o
 
 lib_measurement_papi:
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure.c -o $(MEASUREMENT_LIB_DIR)/measure.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure_wrap.c -o $(MEASUREMENT_LIB_DIR)/measure_wrap.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) $(PAPI_CFLAGS) -c $(MEASUREMENT_LIB_DIR)/papilib.c -o $(MEASUREMENT_LIB_DIR)/papilib.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/timelib.c -o $(MEASUREMENT_LIB_DIR)/timelib.o
-
+	ar rcs $(MEASUREMENT_LIB_DIR)/libmeasurement.a $(MEASUREMENT_LIB_DIR)/measure.o $(MEASUREMENT_LIB_DIR)/measure_wrap.o $(MEASUREMENT_LIB_DIR)/papilib.o $(MEASUREMENT_LIB_DIR)/timelib.o
+	
 ### MAKE MBEDTLS ALT ###
 alt_psk:
 	gcc $(ALL_CFLAGS) $(TLS_PSK_CONFIG) $(INCLUDES) -c $(MY_AES).c -o $(MY_AES).o
@@ -60,16 +64,16 @@ lib_mbedtls:
 	$(MBEDTLS_LIB_MAKE)
 
 lib_psk: lib_measurement alt_psk
-	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_PSK_CONFIG)"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR) -L../../personal/$(MEASUREMENT_LIB_DIR) -lmeasurement"
 
 lib_psk_papi: lib_measurement_papi alt_psk
-	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_PSK_CONFIG) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
 
 lib_rsa: lib_measurement alt_rsa
-	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_RSA_CONFIG)"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR)"
 
 lib_rsa_papi: lib_measurement_papi alt_rsa
-	$(MBEDTLS_LIB_MAKE) CFLAGS="-I'$(CURDIR)/$(MEASUREMENT_INC_DIR)' $(TLS_RSA_CONFIG) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
 
 lib_cipher:
 	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) -I$(MBEDTLS_INC_DIR) -c $(MY_AES).c -o $(MY_AES).o
@@ -82,14 +86,14 @@ progs: lib_mbedtls
 ### MAKE TLS PSK ###
 psk_server: lib_psk
 	rm -f tls_psk/server.out
-	gcc $(ALL_CFLAGS) tls_psk/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/server.out
+	gcc $(ALL_CFLAGS) tls_psk/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) -o tls_psk/server.out
 
 run_psk_server: psk_server
 	./tls_psk/server.out
 
 psk_client: lib_psk
 	rm -f tls_psk/client.out
-	gcc $(ALL_CFLAGS) tls_psk/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_psk/client.out
+	gcc $(ALL_CFLAGS) tls_psk/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) -o tls_psk/client.out
 
 run_psk_client: psk_client
 	./tls_psk/client.out
@@ -99,14 +103,14 @@ tls_psk: clean psk_server psk_client
 ### MAKE TLS PSK PAPI ###
 psk_server_papi: lib_psk_papi
 	rm -f tls_psk/server.out
-	gcc $(ALL_CFLAGS) tls_psk/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/server.out
+	gcc $(ALL_CFLAGS) tls_psk/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/server.out
 
 run_psk_server_papi: psk_server_papi
 	./tls_psk/server.out
 
 psk_client_papi: lib_psk_papi
 	rm -f tls_psk/client.out
-	gcc $(ALL_CFLAGS) tls_psk/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/client.out
+	gcc $(ALL_CFLAGS) tls_psk/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) $(PAPI_CFLAGS) -o tls_psk/client.out
 
 run_psk_client_papi: psk_client_papi
 	./tls_psk/client.out
@@ -116,14 +120,14 @@ tls_psk_papi: clean psk_server_papi psk_client_papi
 ### MAKE TLS RSA ###
 rsa_server: lib_rsa
 	rm -f tls_rsa/server.out
-	gcc $(ALL_CFLAGS) tls_rsa/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/server.out
+	gcc $(ALL_CFLAGS) tls_rsa/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) -o tls_rsa/server.out
 
 run_rsa_server: rsa_server
 	./tls_rsa/server.out
 
 rsa_client: lib_rsa
 	rm -f tls_rsa/client.out
-	gcc $(ALL_CFLAGS) tls_rsa/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) -o tls_rsa/client.out
+	gcc $(ALL_CFLAGS) tls_rsa/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) -o tls_rsa/client.out
 
 run_rsa_client: rsa_client
 	./tls_rsa/client.out
@@ -133,14 +137,14 @@ tls_rsa: clean rsa_server rsa_client
 ### MAKE TLS RSA PAPI ###
 rsa_server_papi: lib_rsa_papi
 	rm -f tls_rsa/server.out
-	gcc $(ALL_CFLAGS) tls_rsa/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/server.out
+	gcc $(ALL_CFLAGS) tls_rsa/server.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/server.out
 
 run_rsa_server_papi: rsa_server_papi
 	./tls_rsa/server.out
 
 rsa_client_papi: lib_rsa_papi
 	rm -f tls_rsa/client.out
-	gcc $(ALL_CFLAGS) tls_rsa/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/client.out
+	gcc $(ALL_CFLAGS) tls_rsa/client.c $(MY_SHA256).o $(LOCAL_CFLAGS) $(MEASUREMENT_CFLAGS) $(PAPI_CFLAGS) -o tls_rsa/client.out
 
 run_rsa_client_papi: rsa_client_papi
 	./tls_rsa/client.out
@@ -176,6 +180,7 @@ clean: clean_local
 	$(MBEDTLS_LIB_MAKE) clean
 	rm -f $(MY_SHA256).o
 	rm -f $(MY_AES).o
+	rm -f $(MEASUREMENT_LIB_DIR)/libmeasurement.a
 	rm -f $(MEASUREMENT_LIB_DIR)/measure_wrap.o
 	rm -f $(MEASUREMENT_LIB_DIR)/measure.o
 	rm -f $(MEASUREMENT_LIB_DIR)/papilib.o

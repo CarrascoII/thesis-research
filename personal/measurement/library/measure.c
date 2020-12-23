@@ -4,17 +4,18 @@
 #include MEASURE_CONFIG_FILE
 #endif
 
-#if defined(MEASURE_C)
+#if defined(MEASUREMENT_MEASURE_C)
 #include "measurement/measure.h"
 #include "measurement/measure_internal.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 static const int supported_tools[] = {
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
     MEASURE_TOOL_PAPI,
 #endif
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
     MEASURE_TOOL_TIMELIB,
 #endif
     MEASURE_TOOL_NONE
@@ -29,11 +30,11 @@ const measure_info_t* measure_info_from_string(const char *tool_name) {
         return(NULL);
 
     /* Get the appropriate measurement tool information */
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
     if(!strcmp("PAPI", tool_name))
         return measure_info_from_type(MEASURE_TOOL_PAPI);
 #endif
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
     if(!strcmp("TIME_LIB", tool_name))
         return measure_info_from_type(MEASURE_TOOL_TIMELIB);
 #endif
@@ -42,11 +43,11 @@ const measure_info_t* measure_info_from_string(const char *tool_name) {
 
 const measure_info_t* measure_info_from_type(measure_tool_t measure_tool) {
     switch(measure_tool) {
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
         case MEASURE_TOOL_PAPI:
             return(&measure_papi_info);
 #endif
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
         case MEASURE_TOOL_TIMELIB:
             return(&measure_timelib_info);
 #endif
@@ -114,4 +115,4 @@ int measure_finish(measure_context_t *ctx, const char *file_name, const char *fi
     return ctx->measure_info->base->finish_func(ctx->measure_ctx, file_name, file_output);
 }
 
-#endif /* MEASURE_C */
+#endif /* MEASUREMENT_MEASURE_C */

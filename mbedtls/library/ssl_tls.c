@@ -7271,6 +7271,35 @@ static void ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl )
     ssl_update_in_pointers ( ssl, NULL /* no transform enabled */ );
 }
 
+#if defined(MEASUREMENT_MEASURE_C)
+int mbedtls_measure_config(mbedtls_ssl_context *ctx) {
+    const measure_info_t *tmp;
+    const int *tool_list;
+
+    if((tool_list = measure_tools_list()) == MEASURE_TOOL_NONE) {
+        return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+    }
+
+    ctx->msr_ctx = calloc(1, sizeof(measure_context_t));
+
+    if(ctx->msr_ctx == NULL) {
+        return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+    }
+
+    measure_init(ctx->msr_ctx);
+
+    for(; *tool_list != MEASURE_TOOL_NONE; tool_list++) {
+        tmp = measure_info_from_type(*tool_list);
+
+        if(tmp != NULL) {
+            return measure_setup(ctx->msr_ctx, tmp);
+        }
+    }
+
+    return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
+}
+#endif
+
 int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
                        const mbedtls_ssl_config *conf )
 {
@@ -7306,9 +7335,20 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
     if( ( ret = ssl_handshake_init( ssl ) ) != 0 )
         goto error;
 
+#if defined(MEASUREMENT_MEASURE_C)
+    if((ret = mbedtls_measure_config(ssl)) != 0) {
+        goto error;
+    }
+#endif
+
     return( 0 );
 
 error:
+#if defined(MEASUREMENT_MEASURE_C)
+    measure_free(ssl->msr_ctx);
+    ssl->msr_ctx = NULL;
+#endif
+
     mbedtls_free( ssl->in_buf );
     mbedtls_free( ssl->out_buf );
 

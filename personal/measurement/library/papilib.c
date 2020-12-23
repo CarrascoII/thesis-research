@@ -4,7 +4,7 @@
 #include MEASURE_CONFIG_FILE
 #endif
 
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
 #include "measurement/papilib.h"
 
 #include <stdio.h>
@@ -110,4 +110,4 @@ int measure_papi_finish(measure_papi_context *ctx, const char *file_name, const 
     return(0);
 }
 
-#endif /* MEASURE_PAPI_C */
+#endif /* MEASUREMENT_PAPI_C */

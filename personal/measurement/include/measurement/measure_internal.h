@@ -26,10 +26,10 @@ struct measure_base_t {
     int (*finish_func)(void *ctx, const char *file_name, const char *file_output);
 };
 
-#if defined(MEASURE_PAPI_C)
+#if defined(MEASUREMENT_PAPI_C)
 extern const measure_info_t measure_papi_info;
 #endif
-#if defined(MEASURE_TIMELIB_C)
+#if defined(MEASUREMENT_TIMELIB_C)
 extern const measure_info_t measure_timelib_info;
 #endif
 
