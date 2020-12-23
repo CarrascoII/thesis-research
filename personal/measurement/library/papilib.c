@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 int measure_papi_init(measure_papi_context *ctx) {
     int ret;
@@ -35,7 +36,7 @@ int measure_papi_init(measure_papi_context *ctx) {
 
 void measure_papi_free(measure_papi_context *ctx) {
     if(ctx == NULL) {
-        return(NULL);
+        return;
     }
 
     PAPI_shutdown();
@@ -45,7 +46,7 @@ void measure_papi_free(measure_papi_context *ctx) {
 
 void measure_papi_reset(measure_papi_context *ctx) {
     if(ctx == NULL) {
-        return(NULL);
+        return;
     }
 
     memset(ctx, 0, sizeof(measure_papi_context));
@@ -83,10 +84,13 @@ int measure_papi_starts(measure_papi_context *ctx, const char *file_name, const 
     FILE *csv;
 
     if(ctx == NULL || file_name == NULL || file_output == NULL) {
-        return(MEASURE_ERR_TIMELIB_BAD_INPUT_DATA);
+        return(MEASURE_ERR_PAPI_BAD_INPUT_DATA);
     }
 
-    csv = fopen(file_name, "w");
+    if((csv = fopen(file_name, "w")) == NULL) {
+        return(MEASURE_ERR_PAPI_FILE_NOT_FOUND);
+    }
+
     fprintf(csv, "%s", file_output);
     fprintf(csv, ",cycles,time");
     fclose(csv);
@@ -115,8 +119,11 @@ int measure_papi_finish(measure_papi_context *ctx, const char *file_name, const 
     printf(", %lld, %lld", final_cycles, final_time);
 #endif
 
-    csv = fopen(file_name, "a+");
-    fprintf(csv, file_output);
+    if((csv = fopen(file_name, "a+")) == NULL) {
+        return(MEASURE_ERR_PAPI_FILE_NOT_FOUND);
+    }
+
+    fprintf(csv, "%s", file_output);
     fprintf(csv, ",%lld,%lld", final_cycles, final_time);
     fclose(csv);
 

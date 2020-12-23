@@ -43,7 +43,7 @@ lib_measurement:
 
 lib_measurement_papi:
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure.c -o $(MEASUREMENT_LIB_DIR)/measure.o
-	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/measure_wrap.c -o $(MEASUREMENT_LIB_DIR)/measure_wrap.o
+	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) $(PAPI_CFLAGS) -c $(MEASUREMENT_LIB_DIR)/measure_wrap.c -o $(MEASUREMENT_LIB_DIR)/measure_wrap.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) $(PAPI_CFLAGS) -c $(MEASUREMENT_LIB_DIR)/papilib.c -o $(MEASUREMENT_LIB_DIR)/papilib.o
 	gcc $(ALL_CFLAGS) -I$(MEASUREMENT_INC_DIR) -c $(MEASUREMENT_LIB_DIR)/timelib.c -o $(MEASUREMENT_LIB_DIR)/timelib.o
 	ar rcs $(MEASUREMENT_LIB_DIR)/libmeasurement.a $(MEASUREMENT_LIB_DIR)/measure.o $(MEASUREMENT_LIB_DIR)/measure_wrap.o $(MEASUREMENT_LIB_DIR)/papilib.o $(MEASUREMENT_LIB_DIR)/timelib.o

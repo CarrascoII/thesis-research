@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
+// #define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C

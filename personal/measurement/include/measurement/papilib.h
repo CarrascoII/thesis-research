@@ -16,6 +16,7 @@
 #define MEARURE_ERR_PAPI_INIT_FAILED        -0xA101  /**< Papi init failed. */
 #define MEASURE_ERR_PAPI_BAD_INPUT_DATA     -0xA102  /**< Invalid input data. */
 #define MEASURE_ERR_PAPI_MISSING_VAL        -0xA103  /**< Missing start, end or both vals */ 
+#define MEASURE_ERR_PAPI_FILE_NOT_FOUND		-0xA104  /**< Could not open file */
 
 typedef struct measure_papi_context {
     long long start_cycles;
