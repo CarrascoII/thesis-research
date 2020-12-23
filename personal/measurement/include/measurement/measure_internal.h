@@ -22,6 +22,9 @@ struct measure_base_t {
     /** Get virtual time measurement */
     int (*get_time_func)(void *ctx, int mode);
 
+    /** Creates file where measured values are saved */
+    int (*starts_func)(void *ctx, const char *file_name, const char *file_output);
+
     /** Calculates and saves measured values */
     int (*finish_func)(void *ctx, const char *file_name, const char *file_output);
 };

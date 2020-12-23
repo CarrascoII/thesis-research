@@ -79,6 +79,21 @@ int measure_papi_get_time(measure_papi_context *ctx, int mode) {
     return(0);
 }
 
+int measure_papi_starts(measure_papi_context *ctx, const char *file_name, const char *file_output) {
+    FILE *csv;
+
+    if(ctx == NULL || file_name == NULL || file_output == NULL) {
+        return(MEASURE_ERR_TIMELIB_BAD_INPUT_DATA);
+    }
+
+    csv = fopen(file_name, "w");
+    fprintf(csv, "%s", file_output);
+    fprintf(csv, ",cycles,time");
+    fclose(csv);
+
+    return(0);
+}
+
 int measure_papi_finish(measure_papi_context *ctx, const char *file_name, const char *file_output) {
     long long final_cycles, final_time;
     FILE *csv;

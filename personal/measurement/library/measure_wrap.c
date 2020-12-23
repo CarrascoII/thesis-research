@@ -43,6 +43,10 @@ static int papi_get_time_wrap(void *ctx, int mode) {
     return measure_papi_get_time((measure_papi_ctx *) ctx, mode);
 }
 
+static int papi_starts_wrap(void *ctx, const char *file_name, const char *file_output) {
+    return measure_papi_starts((measure_papi_ctx *) ctx, file_name, file_output);
+}
+
 static int papi_finish_wrap(void *ctx, const char *file_name, const char *file_output) {
     return measure_papi_finish((measure_papi_ctx *) ctx, file_name, file_output);
 }
@@ -52,6 +56,7 @@ static const measure_base_t measure_papi_base = {
     papi_ctx_free,
     papi_get_cycles_wrap,
     papi_get_time_wrap,
+    papi_starts_wrap,
     papi_finish_wrap
 };
 
@@ -85,6 +90,10 @@ static int timelib_get_time_wrap(void *ctx, int mode) {
     return measure_timelib_get_time((measure_timelib_context *) ctx, mode);
 }
 
+static int timelib_starts_wrap(void *ctx, const char *file_name, const char *file_output) {
+    return measure_timelib_starts((measure_timelib_context *) ctx, file_name, file_output);
+}
+
 static int timelib_finish_wrap(void *ctx, const char *file_name, const char *file_output) {
     return measure_timelib_finish((measure_timelib_context *) ctx, file_name, file_output);
 }
@@ -94,6 +103,7 @@ static const measure_base_t measure_timelib_base = {
     timelib_ctx_free,
     NULL,
     timelib_get_time_wrap,
+    timelib_starts_wrap,
     timelib_finish_wrap
 };
 

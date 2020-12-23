@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -117,14 +117,15 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 // #define MEASURE_KE
 #endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define FILE_PATH           "../docs/"
 #endif
+
 #if defined(MEASURE_CIPHER)
 #define CIPHER_EXTENSION    "/cipher_data.csv"
 #define CIPHER_FNAME_SIZE   25 /* = len(FILE_PATH) + len(CIPHER_EXTENSION) + len("\0") */

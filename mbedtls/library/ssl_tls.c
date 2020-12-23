@@ -54,11 +54,12 @@
 #include "mbedtls/oid.h"
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "measurement/measure.h"
 
-#include "papi.h"
+#include <sys/stat.h>
+
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 static void ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl );
@@ -1452,24 +1453,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
     size_t *hmac_total_size;
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    FILE *csv;
-    int ret;
-    long long start_cycles_cpu, end_cycles_cpu, cycles_cpu;
-#if defined(MEASURE_TIME)
-    long long start_time_cpu, end_time_cpu, time_cpu;
-#endif
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
+    char buffer[40];
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> encrypt buf" ) );
@@ -1516,12 +1500,12 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
         if( ssl->minor_ver >= MBEDTLS_SSL_MINOR_VERSION_1 )
         {
             unsigned char mac[MBEDTLS_SSL_MAC_ADD];
+#if defined(MEASURE_MD)
+            int ret;
 
-#if defined(MEASURE_MD)    
-            start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            start_time_cpu = PAPI_get_virt_usec();
-#endif
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
 #endif
 
 #if defined(NEW_MD_HMAC_ALT)
@@ -1541,31 +1525,20 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            end_time_cpu = PAPI_get_virt_usec();
-            time_cpu = end_time_cpu - start_time_cpu;
-#endif
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-
-#if defined(PRINT_MEASUREMENTS)
-            printf("\nMD: digest, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-            printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
 
             if(ssl->out_msgtype == 23) {
-                csv = fopen(md_fname, "a+");
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                    sprintf(buffer, "\nclient,digest,%lu", ssl->out_msglen);
                 } else {
-                    fprintf(csv, "\nserver,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                    sprintf(buffer, "\nserver,digest,%lu", ssl->out_msglen);
                 }
-#if defined(MEASURE_TIME)
-                fprintf(csv, ",%lld", time_cpu);
-#endif
-                fclose(csv);
+
+                if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                    return(ret);
+                }
             }
 #endif
 
@@ -1600,56 +1573,39 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             "including %d bytes of padding",
                        ssl->out_msglen, 0 ) );
 
-#if !defined(MEASURE_CIPHER)
+#if defined(MEASURE_CIPHER)
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
+
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
                                    ssl->out_msg, ssl->out_msglen,
                                    ssl->out_msg, &olen ) ) != 0 )
-#else
-        start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        start_time_cpu = PAPI_get_virt_usec();
-#endif
-        ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
-                                   ssl->transform_out->iv_enc,
-                                   ssl->transform_out->ivlen,
-                                   ssl->out_msg, ssl->out_msglen,
-                                   ssl->out_msg, &olen );
-
-        end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        end_time_cpu = PAPI_get_virt_usec();
-        time_cpu = end_time_cpu - start_time_cpu;
-#endif
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-
-#if defined(PRINT_MEASUREMENTS)
-        printf("\nCIPHER: encrypt, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-        printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-        if(ssl->out_msgtype == 23) {
-            csv = fopen(cipher_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,encrypt,%d,%lld", ssl->out_msglen, cycles_cpu);
-            }
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",%lld", time_cpu);
-#endif
-            fclose(csv);
-        }
-
-        if(ret != 0)
-#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
         }
+
+#if defined(MEASURE_CIPHER)
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if(ssl->out_msgtype == 23) {
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                sprintf(buffer, "\nclient,encrypt,%d", ssl->out_msglen);
+            } else {
+                sprintf(buffer, "\nserver,encrypt,%d", ssl->out_msglen);
+            }
+
+            if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                return(ret);
+            }
+        }
+#endif
 
         if( ssl->out_msglen != olen )
         {
@@ -1812,58 +1768,40 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                             ssl->out_msglen, ssl->transform_out->ivlen,
                             padlen + 1 ) );
 
-#if !defined(MEASURE_CIPHER)
+#if defined(MEASURE_CIPHER)
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
+
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
                                    ssl->transform_out->iv_enc,
                                    ssl->transform_out->ivlen,
                                    enc_msg, enc_msglen,
                                    enc_msg, &olen ) ) != 0 )
-#else
-        start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        start_time_cpu = PAPI_get_virt_usec();
-#endif
-
-        ret = mbedtls_cipher_crypt( &ssl->transform_out->cipher_ctx_enc,
-                                   ssl->transform_out->iv_enc,
-                                   ssl->transform_out->ivlen,
-                                   enc_msg, enc_msglen,
-                                   enc_msg, &olen );
-
-        end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        end_time_cpu = PAPI_get_virt_usec();
-        time_cpu = end_time_cpu - start_time_cpu;
-#endif
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-
-#if defined(PRINT_MEASUREMENTS)
-        printf("\nCIPHER: encrypt, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-        printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-        if(ssl->out_msgtype == 23) {
-            csv = fopen(cipher_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,encrypt,%d,%lld", enc_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,encrypt,%d,%lld", enc_msglen, cycles_cpu);
-            }
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",%lld", time_cpu);
-#endif
-            fclose(csv);
-        }
-
-        if(ret != 0)
-#endif
 
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
         }
+
+#if defined(MEASURE_CIPHER)
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if(ssl->out_msgtype == 23) {
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                sprintf(buffer, "\nclient,encrypt,%lu", enc_msglen);
+            } else {
+                sprintf(buffer, "\nserver,encrypt,%lu", enc_msglen);
+            }
+
+            if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                return(ret);
+            }
+        }
+#endif
 
         if( enc_msglen != olen )
         {
@@ -1908,10 +1846,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             MBEDTLS_SSL_DEBUG_BUF( 4, "MAC'd meta-data", pseudo_hdr, 13 );
 
 #if defined(MEASURE_MD)    
-            start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            start_time_cpu = PAPI_get_virt_usec();
-#endif
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
 #endif
 
 #if defined(NEW_MD_HMAC_ALT)
@@ -1929,31 +1866,20 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            end_time_cpu = PAPI_get_virt_usec();
-            time_cpu = end_time_cpu - start_time_cpu;
-#endif
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
 
-#if defined(PRINT_MEASUREMENTS)
-            printf("\nMD: digest, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-            printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-            if(ssl->out_msgtype == 23) {   
-                csv = fopen(md_fname, "a+");
+            if(ssl->out_msgtype == 23) {
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    fprintf(csv, "\nclient,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                    sprintf(buffer, "\nclient,digest,%d", ssl->out_msglen);
                 } else {
-                    fprintf(csv, "\nserver,digest,%d,%lld", ssl->out_msglen, cycles_cpu);
+                    sprintf(buffer, "\nserver,digest,%d", ssl->out_msglen);
                 }
-#if defined(MEASURE_TIME)
-                fprintf(csv, ",%lld", time_cpu);
-#endif
-                fclose(csv);
+
+                if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                    return(ret);
+                }
             }
 #endif
 
@@ -1982,10 +1908,6 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= encrypt buf" ) );
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    PAPI_shutdown();
-#endif
-
     return( 0 );
 }
 
@@ -2000,24 +1922,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     size_t *hmac_total_size;
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    int ret;
-    FILE *csv;
-    long long start_cycles_cpu, end_cycles_cpu, cycles_cpu;
-#if defined(MEASURE_TIME)
-    long long start_time_cpu, end_time_cpu, time_cpu;
-#endif
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
+    char buffer[40];
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> decrypt buf" ) );
@@ -2045,58 +1950,39 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
         padlen = 0;
 
-#if !defined(MEASURE_CIPHER)
+#if defined(MEASURE_CIPHER)
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
+
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
                                    ssl->in_msg, ssl->in_msglen,
                                    ssl->in_msg, &olen ) ) != 0 )
-#else
-        start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        start_time_cpu = PAPI_get_virt_usec();
-#endif
-
-        ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
-                                   ssl->transform_in->iv_dec,
-                                   ssl->transform_in->ivlen,
-                                   ssl->in_msg, ssl->in_msglen,
-                                   ssl->in_msg, &olen );
-
-        end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        end_time_cpu = PAPI_get_virt_usec();
-        time_cpu = end_time_cpu - start_time_cpu;
-#endif
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-
-#if defined(PRINT_MEASUREMENTS)
-        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-        printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-        if(ssl->in_msgtype == 23) {
-            csv = fopen(cipher_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,decrypt,%d,%lld", ssl->in_msglen, cycles_cpu);
-            }
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",%lld", time_cpu);
-#endif
-            fclose(csv);
-        }
-
-        if(ret != 0)
-#endif
-
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
         }
+
+#if defined(MEASURE_CIPHER)
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if(ssl->out_msgtype == 23) {
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                sprintf(buffer, "\nclient,decrypt,%d", ssl->in_msglen);
+            } else {
+                sprintf(buffer, "\nserver,decrypt,%d", ssl->in_msglen);
+            }
+
+            if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                return(ret);
+            }
+        }
+#endif
 
         if( ssl->in_msglen != olen )
         {
@@ -2267,10 +2153,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             MBEDTLS_SSL_DEBUG_BUF( 4, "MAC'd meta-data", pseudo_hdr, 13 );
 
 #if defined(MEASURE_MD)    
-            start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            start_time_cpu = PAPI_get_virt_usec();
-#endif
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
 #endif
 
 #if defined(NEW_MD_HMAC_ALT)
@@ -2288,31 +2173,20 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            end_time_cpu = PAPI_get_virt_usec();
-            time_cpu = end_time_cpu - start_time_cpu;
-#endif
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
 
-#if defined(PRINT_MEASUREMENTS)
-            printf("\nMD: verify, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-            printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-            if(ssl->in_msgtype == 23) {   
-                csv = fopen(md_fname, "a+");
+            if(ssl->out_msgtype == 23) {
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                    sprintf(buffer, "\nclient,verify,%d", ssl->in_msglen);
                 } else {
-                    fprintf(csv, "\nserver,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                    sprintf(buffer, "\nserver,verify,%d", ssl->in_msglen);
                 }
-#if defined(MEASURE_TIME)
-                fprintf(csv, ",%lld", time_cpu);
-#endif
-                fclose(csv);
+
+                if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                    return(ret);
+                }
             }
 #endif
 
@@ -2357,57 +2231,39 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         }
 #endif /* MBEDTLS_SSL_PROTO_TLS1_1 || MBEDTLS_SSL_PROTO_TLS1_2 */
 
-#if !defined(MEASURE_CIPHER)
+#if defined(MEASURE_CIPHER)
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
+
         if( ( ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
                                    ssl->transform_in->iv_dec,
                                    ssl->transform_in->ivlen,
                                    dec_msg, dec_msglen,
                                    dec_msg_result, &olen ) ) != 0 )
-#else
-        start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        start_time_cpu = PAPI_get_virt_usec();
-#endif
-
-        ret = mbedtls_cipher_crypt( &ssl->transform_in->cipher_ctx_dec,
-                                   ssl->transform_in->iv_dec,
-                                   ssl->transform_in->ivlen,
-                                   dec_msg, dec_msglen,
-                                   dec_msg_result, &olen );
-
-        end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-        end_time_cpu = PAPI_get_virt_usec();
-        time_cpu = end_time_cpu - start_time_cpu;
-#endif
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-
-#if defined(PRINT_MEASUREMENTS)
-        printf("\nCIPHER: decrypt, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-        printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-        if(ssl->in_msgtype == 23) {
-            csv = fopen(cipher_fname, "a+");
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                fprintf(csv, "\nclient,decrypt,%d,%lld", dec_msglen, cycles_cpu);
-            } else {
-                fprintf(csv, "\nserver,decrypt,%d,%lld", dec_msglen, cycles_cpu);
-            }
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",%lld", time_cpu);
-#endif
-            fclose(csv);
-        }
-
-        if(ret != 0)
-#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_cipher_crypt", ret );
             return( ret );
         }
+
+#if defined(MEASURE_CIPHER)
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if(ssl->out_msgtype == 23) {
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+                sprintf(buffer, "\nclient,decrypt,%lu", dec_msglen);
+            } else {
+                sprintf(buffer, "\nserver,decrypt,%lu", dec_msglen);
+            }
+
+            if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                return(ret);
+            }
+        }
+#endif
 
         if( dec_msglen != olen )
         {
@@ -2550,6 +2406,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( ssl->minor_ver > MBEDTLS_SSL_MINOR_VERSION_0 )
         {
+#if defined(MEASURE_MD)
+            int ret;
+#endif
             /*
              * Process MAC and always update for padlen afterwards to make
              * total time independent of padlen.
@@ -2619,10 +2478,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             extra_run &= correct * 0xFF;
 
 #if defined(MEASURE_MD)    
-            start_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            start_time_cpu = PAPI_get_virt_usec();
-#endif
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
 #endif
 
 #if defined(NEW_MD_HMAC_ALT)
@@ -2652,31 +2510,20 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            end_cycles_cpu = PAPI_get_virt_cyc();
-#if defined(MEASURE_TIME)
-            end_time_cpu = PAPI_get_virt_usec();
-            time_cpu = end_time_cpu - start_time_cpu;
-#endif
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
 
-#if defined(PRINT_MEASUREMENTS)
-            printf("\nMD: verify, %lld", cycles_cpu);
-#if defined(MEASURE_TIME)
-            printf(", %lld", time_cpu);
-#endif
-#endif /* PRINT_MEASUREMENTS */
-
-            if(ssl->in_msgtype == 23) {                
-                csv = fopen(md_fname, "a+");
+            if(ssl->out_msgtype == 23) {
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    fprintf(csv, "\nclient,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                    sprintf(buffer, "\nclient,verify,%lu", ssl->in_msglen);
                 } else {
-                    fprintf(csv, "\nserver,verify,%d,%lld", ssl->in_msglen, cycles_cpu);
+                    sprintf(buffer, "\nserver,verify,%lu", ssl->in_msglen);
                 }
-#if defined(MEASURE_TIME)
-                fprintf(csv, ",%lld", time_cpu);
-#endif
-                fclose(csv);
+
+                if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
+                    return(ret);
+                }
             }
 #endif
 
@@ -2776,10 +2623,6 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
     }
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= decrypt buf" ) );
-
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    PAPI_shutdown();
-#endif
 
     return( 0 );
 }
@@ -8523,8 +8366,10 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_KE)
     FILE *csv;
+#endif
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     const mbedtls_ssl_ciphersuite_t *suite_info;
     char path[40] = FILE_PATH;
 #endif
@@ -8571,13 +8416,10 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             cipher_fname = (char *) malloc((CIPHER_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
             strcpy(cipher_fname, path);
             strcat(cipher_fname, CIPHER_EXTENSION);
-            
-            csv = fopen(cipher_fname, "w");
-            fprintf(csv, "endpoint,operation,data_size,cycles");
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",time");
-#endif
-            fclose(csv);
+
+            if((ret = measure_starts(ssl->msr_ctx, cipher_fname, "endpoint,operation,data_size")) != 0) {
+                return(ret);
+            }
 #endif
 
 #if defined(MEASURE_MD)
@@ -8585,12 +8427,9 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcpy(md_fname, path);
             strcat(md_fname, MD_EXTENSION);
 
-            csv = fopen(md_fname, "w");
-            fprintf(csv, "endpoint,operation,data_size,cycles");
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",time");
-#endif
-            fclose(csv);
+            if((ret = measure_starts(ssl->msr_ctx, md_fname, "endpoint,operation,data_size")) != 0) {
+                return(ret);
+            }
 #endif
         }
 #endif /* MEASURE_CIPHER || MEASURE_MD */
@@ -9499,6 +9338,10 @@ void mbedtls_ssl_free( mbedtls_ssl_context *ssl )
 
 #if defined(MBEDTLS_SSL_DTLS_HELLO_VERIFY) && defined(MBEDTLS_SSL_SRV_C)
     mbedtls_free( ssl->cli_id );
+#endif
+
+#if defined(MEASUREMENT_MEASURE_C)
+    measure_free(ssl->msr_ctx);
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= free" ) );

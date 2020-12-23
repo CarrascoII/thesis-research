@@ -8,8 +8,8 @@
 #include "measurement/timelib.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 void measure_timelib_init(measure_timelib_context *ctx) {
@@ -50,9 +50,27 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
     return(0);
 }
 
-int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, const char *file_output) {
-    double final_time;
+int measure_timelib_starts(measure_timelib_context *ctx, const char *file_name, const char *file_output) {
     FILE *csv;
+
+    if(ctx == NULL || file_name == NULL || file_output == NULL) {
+        return(MEASURE_ERR_TIMELIB_BAD_INPUT_DATA);
+    }
+
+    if((csv = fopen(file_name, "w")) == NULL) {
+        return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
+    }
+
+    fprintf(csv, "%s", file_output);
+    fprintf(csv, ",time");
+    fclose(csv);
+
+    return(0);
+}
+
+int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, const char *file_output) {
+    FILE *csv;
+    double final_time;
 
     if(ctx == NULL || file_name == NULL || file_output == NULL) {
         return(MEASURE_ERR_TIMELIB_BAD_INPUT_DATA);
@@ -69,7 +87,10 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
     printf(", %d, %d", final_cycles, final_time);
 #endif
 
-    csv = fopen(file_name, "a+");
+    if((csv = fopen(file_name, "a+")) == NULL) {
+        return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
+    }
+
     fprintf(csv, "%s", file_output);
     fprintf(csv, ",%f", final_time);
     fclose(csv);

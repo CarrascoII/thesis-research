@@ -25,10 +25,17 @@ typedef struct measure_papi_context {
 } measure_papi_context;
 
 int measure_papi_init(measure_papi_context *ctx);
+
 void measure_papi_free(measure_papi_context *ctx);
+
 void measure_papi_reset(measure_papi_context *ctx);
+
 int measure_papi_get_cycles(measure_papi_context *ctx, int mode);
+
 int measure_papi_get_time(measure_papi_context *ctx, int mode);
+
+int measure_papi_starts(measure_papi_context *ctx, const char *file_name, const char *file_output);
+
 int measure_papi_finish(measure_papi_context *ctx, const char *file_name, const char *file_output);
 
 #endif /* MEASURE_PAPILIB_H */

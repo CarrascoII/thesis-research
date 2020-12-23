@@ -85,6 +85,14 @@ int measure_setup(measure_context_t *ctx, const measure_info_t *measure_info) {
     return(0);
 }
 
+int measure_starts(measure_context_t *ctx, const char *file_name, const char *file_output) {
+    if(ctx == NULL || file_name == NULL || file_output == NULL) {
+        return(MEASURE_ERR_BAD_INPUT_DATA);
+    }
+
+    return ctx->measure_info->base->starts_func(ctx->measure_ctx, file_name, file_output);
+}
+
 int measure_get_vals(measure_context_t *ctx, measure_val_t mode) {
     int ret;
 

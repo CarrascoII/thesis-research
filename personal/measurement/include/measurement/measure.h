@@ -225,6 +225,8 @@ static inline int can_measure_time(const measure_context_t *ctx) {
     return((ctx->measure_info->flags & MEASURE_TYPE_TIME) == MEASURE_TYPE_TIME);
 }
 
+int measure_starts(measure_context_t *ctx, const char *file_name, const char *file_output);
+
 int measure_get_vals(measure_context_t *ctx, measure_val_t mode);
 
 int measure_finish(measure_context_t *ctx, const char *file_name, const char *file_output);
