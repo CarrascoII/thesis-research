@@ -9,8 +9,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+#include <string.h>
 
 void measure_timelib_init(measure_timelib_context *ctx) {
     if(ctx == NULL) {
@@ -43,8 +43,10 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
 
     if(mode == MEASURE_TIMELIB_START) {
         ctx->start_time = clock();
+        printf("\nSTART_TIME = %ld", ctx->start_time);
     } else {
         ctx->end_time = clock();
+        printf("\nEND_TIME = %ld", ctx->end_time);
     }
 
     return(0);
@@ -84,7 +86,7 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
 
 #if defined(PRINT_MEASUREMENTS)
     printf("%s", file_output);
-    printf(", %d, %d", final_cycles, final_time);
+    printf(", %d", final_time);
 #endif
 
     if((csv = fopen(file_name, "a+")) == NULL) {

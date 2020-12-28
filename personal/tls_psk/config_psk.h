@@ -51,7 +51,7 @@
 #define MBEDTLS_NET_C
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -102,7 +102,7 @@
 #define MAX_INPUT_SIZE                  16384
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
-#define DEBUG_LEVEL                     1
+#define DEBUG_LEVEL                     0
 // #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MEASUREMENTS
 // #define PRINT_MSG_HEX
@@ -114,7 +114,7 @@
 /**
  * Profiling program flags
  */
-#include "measurement/config.h"
+// #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
 #define MEASURE_CIPHER
