@@ -114,7 +114,7 @@
 /**
  * Profiling program flags
  */
-// #include "measurement/config.h"
+#include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
 #define MEASURE_CIPHER

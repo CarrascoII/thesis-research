@@ -43,10 +43,10 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
 
     if(mode == MEASURE_TIMELIB_START) {
         ctx->start_time = clock();
-        printf("\nSTART_TIME = %ld", ctx->start_time);
+        printf("\nSTART_TIME = %f", (double) ctx->start_time / CLOCKS_PER_SEC);
     } else {
         ctx->end_time = clock();
-        printf("\nEND_TIME = %ld", ctx->end_time);
+        printf("\nEND_TIME = %f", (double) ctx->end_time / CLOCKS_PER_SEC);
     }
 
     return(0);
