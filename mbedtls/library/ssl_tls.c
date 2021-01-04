@@ -1600,9 +1600,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             }
 
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                sprintf(buffer, "\nclient,encrypt,%d", ssl->out_msglen);
+                sprintf(buffer, "\nclient,encrypt,%zu", ssl->out_msglen);
             } else {
-                sprintf(buffer, "\nserver,encrypt,%d", ssl->out_msglen);
+                sprintf(buffer, "\nserver,encrypt,%zu", ssl->out_msglen);
             }
 
             if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
@@ -1879,9 +1879,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                 }
 
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    sprintf(buffer, "\nclient,digest,%d", ssl->out_msglen);
+                    sprintf(buffer, "\nclient,digest,%zu", ssl->out_msglen);
                 } else {
-                    sprintf(buffer, "\nserver,digest,%d", ssl->out_msglen);
+                    sprintf(buffer, "\nserver,digest,%zu", ssl->out_msglen);
                 }
 
                 if((measure_finish(ssl->msr_ctx, md_fname, buffer)) != 0) {
@@ -1982,9 +1982,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             }
 
             if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                sprintf(buffer, "\nclient,decrypt,%d", ssl->in_msglen);
+                sprintf(buffer, "\nclient,decrypt,%zu", ssl->in_msglen);
             } else {
-                sprintf(buffer, "\nserver,decrypt,%d", ssl->in_msglen);
+                sprintf(buffer, "\nserver,decrypt,%zu", ssl->in_msglen);
             }
 
             if((measure_finish(ssl->msr_ctx, cipher_fname, buffer)) != 0) {
@@ -2190,9 +2190,9 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
                 }
 
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    sprintf(buffer, "\nclient,verify,%d", ssl->in_msglen);
+                    sprintf(buffer, "\nclient,verify,%zu", ssl->in_msglen);
                 } else {
-                    sprintf(buffer, "\nserver,verify,%d", ssl->in_msglen);
+                    sprintf(buffer, "\nserver,verify,%zu", ssl->in_msglen);
                 }
 
                 if((measure_finish(ssl->msr_ctx, md_fname, buffer)) != 0) {
