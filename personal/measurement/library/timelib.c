@@ -42,11 +42,15 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
     }
 
     if(mode == MEASURE_TIMELIB_START) {
-        ctx->start_time = clock();
-        printf("\nSTART_TIME = %f", (double) ctx->start_time / CLOCKS_PER_SEC);
+        gettimeofday(&ctx->start_time, NULL);
+#if defined(PRINT_MEASUREMENTS)
+        printf("\nSTART_TIME =  %ld", (long) (ctx->start_time.tv_sec*1e6 + ctx->start_time.tv_usec));
+#endif
     } else {
-        ctx->end_time = clock();
-        printf("\nEND_TIME = %f", (double) ctx->end_time / CLOCKS_PER_SEC);
+        gettimeofday(&ctx->end_time, NULL);
+#if defined(PRINT_MEASUREMENTS)
+        printf("\nEND_TIME =    %ld", (long) (ctx->end_time.tv_sec*1e6 + ctx->end_time.tv_usec));
+#endif
     }
 
     return(0);
@@ -63,8 +67,7 @@ int measure_timelib_starts(measure_timelib_context *ctx, const char *file_name, 
         return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
     }
 
-    fprintf(csv, "%s", file_output);
-    fprintf(csv, ",time");
+    fprintf(csv, "%s,time", file_output);
     fclose(csv);
 
     return(0);
@@ -72,29 +75,29 @@ int measure_timelib_starts(measure_timelib_context *ctx, const char *file_name, 
 
 int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, const char *file_output) {
     FILE *csv;
-    double final_time;
+    long final_time;
 
     if(ctx == NULL || file_name == NULL || file_output == NULL) {
         return(MEASURE_ERR_TIMELIB_BAD_INPUT_DATA);
     }
 
-    if(ctx->start_time == 0 || ctx->end_time == 0) {
+    if((ctx->start_time.tv_sec == 0 && ctx->start_time.tv_usec == 0) ||
+        (ctx->end_time.tv_sec == 0 && ctx->end_time.tv_usec == 0)) {
         return(MEASURE_ERR_TIMELIB_MISSING_VAL);
     }
 
-    final_time = (double) (ctx->end_time - ctx->start_time) / CLOCKS_PER_SEC;
+    final_time = (long) ((ctx->end_time.tv_sec - ctx->start_time.tv_sec)*1e6 +
+                        (ctx->end_time.tv_usec - ctx->start_time.tv_usec));
 
 #if defined(PRINT_MEASUREMENTS)
-    printf("%s", file_output);
-    printf(", %d", final_time);
+    printf("%s, %ld", file_output, final_time);
 #endif
 
     if((csv = fopen(file_name, "a+")) == NULL) {
         return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
     }
 
-    fprintf(csv, "%s", file_output);
-    fprintf(csv, ",%f", final_time);
+    fprintf(csv, "%s,%ld", file_output, final_time);
     fclose(csv);
 
     measure_timelib_reset(ctx);

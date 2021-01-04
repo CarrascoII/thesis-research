@@ -5,4 +5,6 @@
 // #define MEASUREMENT_PAPI_C
 #define MEASUREMENT_TIMELIB_C
 
+// #define PRINT_MEASUREMENTS
+
 #endif /* MEASUREMENT_CONFIG_H */

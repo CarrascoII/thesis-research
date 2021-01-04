@@ -7,7 +7,7 @@
 #include MEASURE_CONFIG_FILE
 #endif
 
-#include <time.h>
+#include <sys/time.h>
 
 #define MEASURE_TIMELIB_START       0 /**< TIMELIB start measurement. */
 #define MEASURE_TIMELIB_END         1 /**< TIMELIB end measurement. */
@@ -18,8 +18,8 @@
 #define MEASURE_ERR_TIMELIB_FILE_NOT_FOUND      -0xA203  /**< Could not open file */
 
 typedef struct measure_timelib_context {
-    clock_t start_time;
-    clock_t end_time;
+    struct timeval start_time;
+    struct timeval end_time;
 } measure_timelib_context;
 
 void measure_timelib_init(measure_timelib_context *ctx);
