@@ -1,3 +1,4 @@
+import os
 import sys, getopt
 import matplotlib.pyplot as plt
 import utils
@@ -216,33 +217,50 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:c:m:', ['help', 'filter=', 'cfile=', 'mfile='])
+        opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
 
-    if args:
-        print(f'Could not parse {args}')
+    if not args and not opts:
+        print('No ciphersuites where given')
+        sys.exit(2)
+
+    if len(args) > 1:
+        print('Too many arguments')
         sys.exit(2)
 
     weight = 1.5
-    algs = {}
+    algs = []
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('plotter.py [-f <weight>] [-c <cipher_file>] [-m <md_file>]')
-            print('plotter.py [--filter=<weight>] [--cfile=<cipher_file>] [--mfile=<md_file>]')
+            print('plotter.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
+            print('plotter.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
             sys.exit(0)
         if opt in ('-f', '--nfilter'):
             weight = float(arg)
-        elif opt in ('-c', '--cfile') or opt in ('-m', '--mfile'):
-            algs[opt] = arg
+        elif opt in ('-c', '--cipher'):
+            algs.append('cipher')
+        elif opt in ('-m', '--md'):
+            algs.append('md')
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
 
-    for key in algs:
-        make_figs(algs[key], weight=weight)
+    os.system('clear')
+    ciphersuites = utils.parse_ciphersuites(args[0])
+    current = 1
+
+    for ciphersuite in ciphersuites:
+        print(f'\nCreating graphs for: {ciphersuite} ({current}/{len(ciphersuites)})', end='')
+        current +=1
+        
+        for alg in algs:
+            print('\n' + alg.upper() + ' algorithm:')
+            fname = '../docs/' + ciphersuite + '/' + alg + '_data.csv'
+
+            make_figs(fname, weight=weight, spacing='  ')
 
 if __name__ == '__main__':
    main(sys.argv[1:])

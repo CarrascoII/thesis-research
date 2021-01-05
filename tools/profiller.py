@@ -62,8 +62,6 @@ def run_srv(min_size, n_tests, ciphersuite):
     return check_return_code(ret, 'server', ciphersuite, stdout, stderr)
 
 def exec_tls(filename, timeout, min_size, n_tests, weight):
-    os.system('clear')
-
     #Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
@@ -137,17 +135,17 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     print('\nData generation:')
     print(f'\t-Number of ciphersuites: {n_total}')
     print(f'\t-Number of successes: {n_success}')
-    print(f'\t-Number of n/a: {n_not}')
     print(f'\t-Number of errors: {n_error}')
-
-    if n_not > 0:
-        print('\t-N/A ciphersuites:')
-        for ciphersuite in not_ciphersuites:
-            print(f'\t\t{ciphersuite}')
+    print(f'\t-Number of n/a: {n_not}')
 
     if n_error > 0:
         print('\t-Error ciphersuites:')
         for ciphersuite in error_ciphersuites:
+            print(f'\t\t{ciphersuite}')
+
+    if n_not > 0:
+        print('\t-N/A ciphersuites:')
+        for ciphersuite in not_ciphersuites:
             print(f'\t\t{ciphersuite}')
 
     print('\nPlots generation:')
@@ -191,6 +189,7 @@ def main(argv):
         if opt in ('-f', '--filter'):
             weight = float(arg)
 
+    os.system('clear')
     exec_tls(args[0], timeout, min_size, n_tests, weight)
 
 if __name__ == '__main__':

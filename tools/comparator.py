@@ -1,10 +1,12 @@
+import os
 import sys, getopt
 import matplotlib.pyplot as plt
 import plotter, utils
 
 
 def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2):
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+    # fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
 
     op = []
     params1 = {'color': 'red', 'label': label1}
@@ -17,22 +19,23 @@ def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2):
 
     ax1 = plotter.multiple_custom_plots(stats1['data_size'], stats1['mean_out'], stats2['mean_out'], ax=ax1,
                                         title='Mean (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax2 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_out'], stats2['median_out'], ax=ax2,
+    # ax2 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_out'], stats2['median_out'], ax=ax2,
+    #                                     title='Median (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+    ax2 = plotter.multiple_custom_plots(stats1['data_size'], stats1['mean_in'], stats2['mean_in'], ax=ax2,
                                         title='Mean (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax3 = plotter.multiple_custom_plots(stats1['data_size'], stats1['mean_in'], stats2['mean_in'], ax=ax3,
-                                        title='Median (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax4 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_in'], stats2['median_in'], ax=ax4,
-                                        title='Median (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+    # ax4 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_in'], stats2['median_in'], ax=ax4,
+    #                                     title='Median (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-    plotter.save_fig(fig, '../../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
+    plotter.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
 
 def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
-    path1 = '../../docs/' + ciphersuite1 + '/'
-    path2 = '../../docs/' + ciphersuite2 + '/'
+    print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
+    path1 = '../docs/' + ciphersuite1 + '/'
+    path2 = '../docs/' + ciphersuite2 + '/'
 
     for alg in algs:
-        print(spacing + f'{alg} algorithm:')
-        print(spacing + '    Parsing data'.ljust(strlen, '.'), end=' ')
+        print('\n' + spacing + f'{alg.upper()} algorithm:')
+        print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
         data1, headers1 = utils.parse_csv_to_data(path1 + alg + '_data.csv')
         data2, headers2 = utils.parse_csv_to_data(path2 + alg + '_data.csv')
        
@@ -44,18 +47,18 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
         print('ok')
 
         if weight != 0:
-            print(spacing + '    Removing outliers from data'.ljust(strlen, '.'), end=' ')
+            print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
             data1 = utils.filter_iqr(data1, headers1, weight=weight)
             data2 = utils.filter_iqr(data2, headers2, weight=weight)
             print('ok')
 
         for header in headers1:
-            print(spacing + f'        [{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+            print(spacing + f'  [{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
             statistics1 = utils.calc_statistics(data1[header + '_out'], data1[header + '_in'])
             statistics2 = utils.calc_statistics(data2[header + '_out'], data2[header + '_in'])
             print('ok')
 
-            print(spacing + f'        [{header}] Generating figures'.ljust(strlen, '.'), end=' ')
+            print(spacing + f'  [{header}] Generating figures'.ljust(strlen, '.'), end=' ')
             make_cmp_plot(alg, header, statistics1, ciphersuite1, statistics2, ciphersuite2)
             print('ok')
 
@@ -92,6 +95,7 @@ def main(argv):
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
 
+    os.system('clear')
     make_cmp_figs(args[0], args[1], algs, weight=weight)
 
 if __name__ == '__main__':
