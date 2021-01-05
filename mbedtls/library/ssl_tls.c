@@ -8386,7 +8386,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     const mbedtls_ssl_ciphersuite_t *suite_info;
-    char path[40] = FILE_PATH;
+    char path[50] = FILE_PATH;
 #endif
 
     if( ssl == NULL || ssl->conf == NULL )
