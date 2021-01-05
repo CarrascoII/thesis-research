@@ -111,7 +111,7 @@ static const measure_base_t measure_timelib_base = {
 const measure_info_t measure_timelib_info = {
     MEASURE_TOOL_TIMELIB,
     "TIMELIB",
-    "SECONDS",
+    "MICROSECONDS",
     MEASURE_TYPE_TIME,
     &measure_timelib_base
 };

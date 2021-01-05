@@ -52,10 +52,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-.vscode
-*.txt
-*.pcapng
-
 ######### PYTHON #########
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -197,6 +193,8 @@ dmypy.json
 cython_debug/
 
 ######### OTHERS #########
-papi/*
+.vscode
+aux-files
+papi
 *.png
-aux-files/*
+*.pcapng

@@ -23,7 +23,6 @@ TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
 TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
 CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
 
-
 .PHONY: lib_measurement lib_measurement_papi alt_psk alt_rsa \
 		lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
 		psk_server run_psk_server psk_client run_psk_client psk \

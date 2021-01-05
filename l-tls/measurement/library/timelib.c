@@ -58,15 +58,10 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
 
 int measure_timelib_starts(measure_timelib_context *ctx, const char *file_name, const char *file_output) {
     FILE *csv;
-    char path[200];
 
     if(ctx == NULL || file_name == NULL || file_output == NULL) {
         return(MEASURE_ERR_TIMELIB_BAD_INPUT_DATA);
     }
-
-    realpath(file_name, path);
-    printf("\nstarts: %s", file_name);
-    printf("\nabsolute:%s\n", path);
     
     if((csv = fopen(file_name, "w")) == NULL) {
         return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
@@ -99,7 +94,6 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
 #endif
 
     if((csv = fopen(file_name, "a+")) == NULL) {
-        printf("\nfinish: %s", file_name);
         return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
     }
 
