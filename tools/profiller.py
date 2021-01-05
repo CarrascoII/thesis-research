@@ -41,7 +41,7 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     return return_code
     
 def run_cli(min_size, n_tests, ciphersuite):
-    args = ['./../tls_psk/client.out', 'input_size=' + min_size,
+    args = ['./../l-tls/tls_psk/client.out', 'input_size=' + min_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -52,7 +52,7 @@ def run_cli(min_size, n_tests, ciphersuite):
     
 
 def run_srv(min_size, n_tests, ciphersuite):
-    args = ['./../tls_psk/server.out', 'input_size=' + min_size,
+    args = ['./../l-tls/tls_psk/server.out', 'input_size=' + min_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

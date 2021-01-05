@@ -1,7 +1,7 @@
 MBEDTLS_INC_DIR = ../mbedtls/include
 MBEDTLS_LIB_DIR = ../mbedtls/library
 MBEDTLS_PROG_DIR = ../mbedtls/programs
-PERSONAL_DIR = ../../personal
+PERSONAL_DIR = ../../l-tls
 MY_AES = my_aes/aes_alt
 MY_SHA256 = my_sha256/sha256_alt
 PAPI_INC_DIR = ../papi/src/install/include
@@ -26,10 +26,10 @@ CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
 
 .PHONY: lib_measurement lib_measurement_papi alt_psk alt_rsa \
 		lib_mbedtls lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
-		psk_server run_psk_server psk_client run_psk_client tls_psk \
-		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi tls_psk_papi \
-		rsa_server run_rsa_server rsa_client run_rsa_client tls_rsa \
-		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi tls_rsa_papi \
+		psk_server run_psk_server psk_client run_psk_client psk \
+		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi psk_papi \
+		rsa_server run_rsa_server rsa_client run_rsa_client rsa \
+		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi rsa_papi \
 		cipher run_cipher cipher_papi run_cipher_papi \
 		clean_local clean
 
@@ -64,16 +64,16 @@ lib_mbedtls:
 	$(MBEDTLS_LIB_MAKE)
 
 lib_psk: lib_measurement alt_psk
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR) -L../../personal/$(MEASUREMENT_LIB_DIR) -lmeasurement"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../../l-tls/$(MEASUREMENT_INC_DIR) -L../../l-tls/$(MEASUREMENT_LIB_DIR) -lmeasurement"
 
 lib_psk_papi: lib_measurement_papi alt_psk
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_PSK_CONFIG) -I../../l-tls/$(MEASUREMENT_INC_DIR) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
 
 lib_rsa: lib_measurement alt_rsa
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR)"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../../l-tls/$(MEASUREMENT_INC_DIR)"
 
 lib_rsa_papi: lib_measurement_papi alt_rsa
-	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../../personal/$(MEASUREMENT_INC_DIR) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
+	$(MBEDTLS_LIB_MAKE) CFLAGS="$(TLS_RSA_CONFIG) -I../../l-tls/$(MEASUREMENT_INC_DIR) -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi"
 
 lib_cipher:
 	gcc $(ALL_CFLAGS) $(CIPHER_CONFIG) -I$(MBEDTLS_INC_DIR) -c $(MY_AES).c -o $(MY_AES).o
@@ -98,7 +98,7 @@ psk_client: lib_psk
 run_psk_client: psk_client
 	./tls_psk/client.out
 
-tls_psk: clean psk_server psk_client
+psk: clean psk_server psk_client
 
 ### MAKE TLS PSK PAPI ###
 psk_server_papi: lib_psk_papi
@@ -115,7 +115,7 @@ psk_client_papi: lib_psk_papi
 run_psk_client_papi: psk_client_papi
 	./tls_psk/client.out
 
-tls_psk_papi: clean psk_server_papi psk_client_papi
+psk_papi: clean psk_server_papi psk_client_papi
 
 ### MAKE TLS RSA ###
 rsa_server: lib_rsa
@@ -132,7 +132,7 @@ rsa_client: lib_rsa
 run_rsa_client: rsa_client
 	./tls_rsa/client.out
 
-tls_rsa: clean rsa_server rsa_client
+rsa: clean rsa_server rsa_client
 
 ### MAKE TLS RSA PAPI ###
 rsa_server_papi: lib_rsa_papi
@@ -149,7 +149,7 @@ rsa_client_papi: lib_rsa_papi
 run_rsa_client_papi: rsa_client_papi
 	./tls_rsa/client.out
 
-tls_rsa_papi: clean rsa_server_papi rsa_client_papi
+rsa_papi: clean rsa_server_papi rsa_client_papi
 
 ### MAKE TEST CIPHER ###
 cipher: lib_cipher
