@@ -2,61 +2,7 @@ import os
 import sys, getopt
 import matplotlib.pyplot as plt
 import utils
-# import seaborn as sns
 
-
-def save_fig(fig, fname):
-    fig.tight_layout()
-    fig.savefig(fname)
-    plt.close(fig)
-    plt.cla()
-
-def custom_errorbar(x, y, e, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
-    if ax is None:
-        ax = plt.gca()
-
-    ax.errorbar(x, y, yerr=e, fmt='.', capsize=5, barsabove=True, **kwargs)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
-
-    return(ax)
-
-def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={}, kwargs2={}):
-    if ax is None:
-        ax = plt.gca()
-
-    ax.plot(x, y1, **kwargs1)
-    ax.plot(x, y2, **kwargs2)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
-    ax.legend()
-
-    return(ax)
-
-# def custom_hist(x, ax=None, title=None, ylabel=None, kwargs={}):
-#     if ax is None:
-#         ax = plt.gca()
-
-#     # Alt.1 Using simple histogram
-#     ax.hist(x, **kwargs)
-
-#     # Alt.2 Using a kernel density estimation
-#     for i in range(len(x)):
-#         sns.kdeplot(x[i], ax=ax, label=kwargs['label'][i])
-
-#     ax.set(xlabel=ylabel, title=title)
-#     ax.legend()
-
-#     return(ax)
-
-def custom_scatter(x, y, ax=None, title=None, xlabel=None, xticks=None, xtickslabels=None, ylabel=None, kwargs={}):
-    if ax is None:
-        ax = plt.gca()
-
-    ax.scatter(x, y, marker='.', **kwargs)
-    ax.set_xticks(xticks)
-    ax.set_xticklabels(xtickslabels)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
-
-    return(ax)
 
 def make_errorbar(ylabel, file_path, stats):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -70,12 +16,12 @@ def make_errorbar(ylabel, file_path, stats):
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1,
+    ax1 = utils.custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1,
                             title=operations[0], ylabel=ylabel, kwargs=params2)
-    ax2 = custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2,
+    ax2 = utils.custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2,
                             title=operations[1], ylabel=ylabel, kwargs=params4)
 
-    save_fig(fig, file_path + ylabel + '_deviation.png')
+    utils.save_fig(fig, file_path + ylabel + '_deviation.png')
 
 def make_plot(ylabel, file_path, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
@@ -90,14 +36,14 @@ def make_plot(ylabel, file_path, stats):
         params1['label'] = 'digest'
         params2['label'] = 'verify'
 
-    ax1 = multiple_custom_plots(stats['data_size'], stats['mean_out'], stats['mean_in'],
+    ax1 = utils.multiple_custom_plots(stats['data_size'], stats['mean_out'], stats['mean_in'],
                                 ax=ax1, title='Mean', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax2 = multiple_custom_plots(stats['data_size'], stats['median_out'], stats['median_in'],
+    ax2 = utils.multiple_custom_plots(stats['data_size'], stats['median_out'], stats['median_in'],
                                 ax=ax2, title='Median', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax3 = multiple_custom_plots(stats['data_size'], stats['mode_out'], stats['mode_in'],
+    ax3 = utils.multiple_custom_plots(stats['data_size'], stats['mode_out'], stats['mode_in'],
                                 ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-    save_fig(fig, file_path + ylabel + '_statistics.png')
+    utils.save_fig(fig, file_path + ylabel + '_statistics.png')
 
 # def make_hist(ylabel, file_path, data_out, data_in):
 #     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -119,8 +65,8 @@ def make_plot(ylabel, file_path, stats):
 #     for key in data_in:
 #         x2.append(data_in[key])
 
-#     ax1 = custom_hist(x1, ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
-#     ax2 = custom_hist(x2, ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
+#     ax1 = utils.custom_hist(x1, ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
+#     ax2 = utils.custom_hist(x2, ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
 
 #     save_fig(fig, file_path + ylabel + '_hist.png')
 
@@ -155,12 +101,12 @@ def make_scatter(ylabel, file_path, data_out, data_in):
         y2 += data_in[key]
         i += 1
 
-    ax1 = custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks1,
+    ax1 = utils.custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks1,
                             xtickslabels=xtickslabels1, ylabel=ylabel, kwargs={'color': 'red'})
-    ax2 = custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks2,
+    ax2 = utils.custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks2,
                             xtickslabels=xtickslabels2, ylabel=ylabel, kwargs={'color': 'blue'})
 
-    save_fig(fig, file_path + ylabel + '_distribution.png')
+    utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
 def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
@@ -169,50 +115,21 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     data, headers = utils.parse_csv_to_data(filename)
     print('ok')
 
-    # total1 = []
-    # for header in headers:
-    #     tmp = 0
-    #     for data_size in data[header + '_out']:
-    #         tmp += len(data[header + '_out'][data_size])
-    #     total1.append(tmp)
-
-    #     tmp = 0
-    #     for data_size in data[header + '_in']:
-    #         tmp += len(data[header + '_in'][data_size])
-    #     total1.append(tmp)
-
     if weight != 0:
         print(spacing + 'Removing outliers from data'.ljust(strlen, '.'), end=' ')
         data = utils.filter_iqr(data, headers, weight=weight)
         print('ok')
-    
-    # total2 = []
-    # for header in headers:
-    #     tmp = 0
-    #     for data_size in data[header + '_out']:
-    #         tmp += len(data[header + '_out'][data_size])
-    #     total2.append(tmp)
 
-    #     tmp = 0
-    #     for data_size in data[header + '_in']:
-    #         tmp += len(data[header + '_in'][data_size])
-    #     total2.append(tmp)
-
-    # print(f'cycles_out: {total2[0]/total1[0]}')
-    # print(f'cycles_in: {total2[1]/total1[1]}')
-    # print(f'time_out: {total2[2]/total1[2]}')
-    # print(f'time_in: {total2[3]/total1[3]}')
-
-    for header in headers:
-        print(spacing + f'[{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-        statistics = utils.calc_statistics(data[header + '_out'], data[header + '_in'])
+    for hdr in headers:
+        print(spacing + f'[{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+        statistics = utils.calc_statistics(data[hdr + '_out'], data[hdr + '_in'])
         print('ok')
 
-        print(spacing + f'[{header}] Generating figures'.ljust(strlen, '.'), end=' ')
-        make_scatter(header, path, data[header + '_out'], data[header + '_in'])
-        # make_hist(header, path, data[header + '_out'], data[header + '_in'])
-        make_plot(header, path, statistics)
-        make_errorbar(header, path, statistics)
+        print(spacing + f'[{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
+        make_scatter(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
+        # make_hist(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
+        make_plot(hdr, path, statistics)
+        make_errorbar(hdr, path, statistics)
         print('ok')
 
 def main(argv):
@@ -252,13 +169,13 @@ def main(argv):
     ciphersuites = utils.parse_ciphersuites(args[0])
     current = 1
 
-    for ciphersuite in ciphersuites:
-        print(f'\nCreating graphs for: {ciphersuite} ({current}/{len(ciphersuites)})', end='')
+    for suite in ciphersuites:
+        print(f'\nCreating graphs for: {suite} ({current}/{len(ciphersuites)})', end='')
         current +=1
         
         for alg in algs:
             print('\n' + alg.upper() + ' algorithm:')
-            fname = '../docs/' + ciphersuite + '/' + alg + '_data.csv'
+            fname = '../docs/' + suite + '/' + alg + '_data.csv'
 
             make_figs(fname, weight=weight, spacing='  ')
 

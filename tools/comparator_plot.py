@@ -1,7 +1,7 @@
 import os
 import sys, getopt
 import matplotlib.pyplot as plt
-import plotter, utils
+import utils
 
 
 def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2):
@@ -17,16 +17,16 @@ def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2):
     elif alg == 'md':
         op = ['hash', 'verify']
 
-    ax1 = plotter.multiple_custom_plots(stats1['data_size'], stats1['mean_out'], stats2['mean_out'], ax=ax1,
+    ax1 = utils.multiple_custom_plots(stats1['data_size'], stats1['mean_out'], stats2['mean_out'], ax=ax1,
                                         title='Mean (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    # ax2 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_out'], stats2['median_out'], ax=ax2,
-    #                                     title='Median (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax2 = plotter.multiple_custom_plots(stats1['data_size'], stats1['mean_in'], stats2['mean_in'], ax=ax2,
+    ax2 = utils.multiple_custom_plots(stats1['data_size'], stats1['mean_in'], stats2['mean_in'], ax=ax2,
                                         title='Mean (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    # ax4 = plotter.multiple_custom_plots(stats1['data_size'], stats1['median_in'], stats2['median_in'], ax=ax4,
+    # ax3 = utils.multiple_custom_plots(stats1['data_size'], stats1['median_out'], stats2['median_out'], ax=ax3,
+    #                                     title='Median (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+    # ax4 = utils.multiple_custom_plots(stats1['data_size'], stats1['median_in'], stats2['median_in'], ax=ax4,
     #                                     title='Median (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-    plotter.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
+    utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
 
 def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
     print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
@@ -52,21 +52,21 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
             data2 = utils.filter_iqr(data2, headers2, weight=weight)
             print('ok')
 
-        for header in headers1:
-            print(spacing + f'  [{header}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-            statistics1 = utils.calc_statistics(data1[header + '_out'], data1[header + '_in'])
-            statistics2 = utils.calc_statistics(data2[header + '_out'], data2[header + '_in'])
+        for hdr in headers1:
+            print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+            statistics1 = utils.calc_statistics(data1[hdr + '_out'], data1[hdr + '_in'])
+            statistics2 = utils.calc_statistics(data2[hdr + '_out'], data2[hdr + '_in'])
             print('ok')
 
-            print(spacing + f'  [{header}] Generating figures'.ljust(strlen, '.'), end=' ')
-            make_cmp_plot(alg, header, statistics1, ciphersuite1, statistics2, ciphersuite2)
+            print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
+            make_cmp_plot(alg, hdr, statistics1, ciphersuite1, statistics2, ciphersuite2)
             print('ok')
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "plotter.py -h" for help')
+        print('One of the options does not exit.\nUse: "comparator.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:

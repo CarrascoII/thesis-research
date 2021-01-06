@@ -3,10 +3,10 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import utils, plotter
+import plotter, utils
+
 
 strlen = 40
-
 
 def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     last_msg = [
@@ -84,20 +84,20 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     pool = ThreadPool(processes=2)
 
-    for ciphersuite in total_ciphersuites:
-        print(f'\nStarting analysis for: {ciphersuite} ({current}/{n_total})')
+    for suite in total_ciphersuites:
+        print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
         current += 1
 
     #Step 2: Start server in thread 1
         print('\tStarting server'.ljust(strlen, '.'), end=' ')
-        async_result_srv = pool.apply_async(run_srv, (min_size, n_tests, ciphersuite))
+        async_result_srv = pool.apply_async(run_srv, (min_size, n_tests, suite))
         print('ok')
 
         time.sleep(timeout)
 
     #Step 3: Start client in thread 2
         print('\tStarting client'.ljust(strlen, '.'), end=' ')
-        async_result_cli = pool.apply_async(run_cli, (min_size, n_tests, ciphersuite))
+        async_result_cli = pool.apply_async(run_cli, (min_size, n_tests, suite))
         print('ok')
 
     #Step 4: Verify result from server and client
@@ -105,29 +105,29 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
         cli_ret = async_result_cli.get()
 
         if srv_ret == 1 and cli_ret == 1:
-            not_ciphersuites.append(ciphersuite)
+            not_ciphersuites.append(suite)
             n_not += 1
         elif srv_ret != 0 or cli_ret != 0:
-            error_ciphersuites.append(ciphersuite)
+            error_ciphersuites.append(suite)
             n_error += 1
         else:
             print('\n\tData successfully obtained!!!')
-            success_ciphersuites.append(ciphersuite)
+            success_ciphersuites.append(suite)
             n_success += 1
 
     #Step 5: Analyse and create plots for ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     current = 1
 
-    for ciphersuite in success_ciphersuites:
-        print(f'\nCreating graphs for: {ciphersuite} ({current}/{n_success})')
+    for suite in success_ciphersuites:
+        print(f'\nCreating graphs for: {suite} ({current}/{n_success})')
         current +=1
 
         print('\n    Cipher algorithm:')
-        plotter.make_figs('../docs/' + ciphersuite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
+        plotter.make_figs('../docs/' + suite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
         print('\n    MAC algorithm:')
-        plotter.make_figs('../docs/' + ciphersuite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
+        plotter.make_figs('../docs/' + suite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
     #Step 6: Report final status
     print('\n--- FINAL STATUS ---')
@@ -140,13 +140,13 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
 
     if n_error > 0:
         print('\t-Error ciphersuites:')
-        for ciphersuite in error_ciphersuites:
-            print(f'\t\t{ciphersuite}')
+        for suite in error_ciphersuites:
+            print(f'\t\t{suite}')
 
     if n_not > 0:
         print('\t-N/A ciphersuites:')
-        for ciphersuite in not_ciphersuites:
-            print(f'\t\t{ciphersuite}')
+        for suite in not_ciphersuites:
+            print(f'\t\t{suite}')
 
     print('\nPlots generation:')
     print(f'\t-Number of ciphersuites: {n_success}')
