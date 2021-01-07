@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import plotter, utils
+import comparator_bar, plotter, utils
 
 
 strlen = 40
@@ -115,7 +115,7 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
             success_ciphersuites.append(suite)
             n_success += 1
 
-    #Step 5: Analyse and create plots for ciphersuites that ended successfully
+    #Step 5: Analyse data and create individual plots for ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     current = 1
 
@@ -129,7 +129,15 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
         print('\n    MAC algorithm:')
         plotter.make_figs('../docs/' + suite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
 
-    #Step 6: Report final status
+    #Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
+    print(f'\nCreating comparison graphs from all ciphersuites:')
+
+    print('\n    Cipher algorithm:')
+    comparator_bar.make_cmp_figs(success_ciphersuites, 'cipher', weight=weight, strlen=strlen, spacing='\t')
+    print('\n    MAC algorithm:')
+    comparator_bar.make_cmp_figs(success_ciphersuites, 'md', weight=weight, strlen=strlen, spacing='\t')
+
+    #Step 7: Report final status
     print('\n--- FINAL STATUS ---')
 
     print('\nData generation:')

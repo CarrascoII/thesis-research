@@ -4,29 +4,30 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_cmp_bar(alg, ylabel, stats, labels):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 10))
-    op = []
-    xtickslabels = stats[0]['data_size']
-    y1 = []
-    y2 = []
-    width = 0.5
+def make_cmp_bar(alg, ylabel, stats, labels, hdrs):
+    for hdr in hdrs:
+        fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+        xtickslabels = stats[0]['data_size']
+        y_lst = [[], []]
+        op = []
+        width = 0.5
 
-    if alg == 'cipher':
-        op = ['cipher', 'decipher']
-    elif alg == 'md':
-        op = ['hash', 'verify']
+        if alg == 'cipher':
+            op = ['cipher', 'decipher']
+        elif alg == 'md':
+            op = ['hash', 'verify']
 
-    for stat in stats:
-        y1 += [stat['mean_out']]
-        y2 += [stat['mean_in']]
+        for stat in stats:
+            y_lst[0] += [stat[hdr + '_out']]
+            y_lst[1] += [stat[hdr + '_in']]
 
-    ax1 = utils.custom_bar(y1, ax=ax1, width=width, title=op[0], labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-    ax2 = utils.custom_bar(y2, ax=ax2, width=width, title=op[1], labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+        for i in range(len(axes)):
+            axes[i] = utils.multiple_custom_bar(y_lst[i], ax=axes[i], width=width, title=op[i] + ' (' + hdr + ')',
+                                            labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
 
-    utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_bar.png')
+        utils.save_fig(fig, '../docs/cmp_mult_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
-def make_cmp_figs2(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
+def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     all_data = []
     all_headers = []
     print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
@@ -56,20 +57,25 @@ def make_cmp_figs2(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         print('ok')
 
     all_stats = []
+    stats_type = ['mean']
 
     for hdr in all_headers[0]:
         print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
 
         for data in all_data:
-            stats = utils.calc_statistics(data[hdr + '_out'], data[hdr + '_in'])
-            all_stats.append({key: stats[key] for key in ['data_size', 'mean_out', 'mean_in']})
+            stats = utils.calc_statistics(data, hdr, stats_type)
+            
+            if stats == None:
+                sys.exit(2)
+            
+            all_stats.append(stats)
 
         print('ok')
         print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
-        make_cmp_bar(alg, hdr, all_stats, ciphersuites)
+        make_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
         print('ok')
 
-def main2(argv):
+def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
     except getopt.GetoptError:
@@ -107,8 +113,7 @@ def main2(argv):
     
     for alg in algs:
         print('\n' + alg.upper() + ' algorithm:')
-
-        make_cmp_figs2(ciphersuites, alg, weight=weight)
+        make_cmp_figs(ciphersuites, alg, weight=weight)
 
 if __name__ == '__main__':
-   main2(sys.argv[1:])
+   main(sys.argv[1:])

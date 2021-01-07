@@ -6,26 +6,24 @@ import utils
 
 def make_errorbar(ylabel, file_path, stats):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-
-    operations = None
-    params2 = {'color': 'red'}
-    params4 = {'color': 'blue'}
+    operations = []
+    params1 = {'color': 'red'}
+    params2 = {'color': 'blue'}
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = utils.custom_errorbar(stats['data_size'], stats['mean_out'], stats['stdev_out'], ax=ax1,
-                            title=operations[0], ylabel=ylabel, kwargs=params2)
-    ax2 = utils.custom_errorbar(stats['data_size'], stats['mean_in'], stats['stdev_in'], ax=ax2,
-                            title=operations[1], ylabel=ylabel, kwargs=params4)
+    ax1 = utils.custom_errorbar(stats['data_size'], stats['mean_out'], stats['stddev_out'],
+                            ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
+    ax2 = utils.custom_errorbar(stats['data_size'], stats['mean_in'], stats['stddev_in'],
+                            ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_deviation.png')
 
 def make_plot(ylabel, file_path, stats):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
-
     params1 = {'color': 'red', 'linestyle': '-'}
     params2 = {'color': 'blue', 'linestyle': '--'}
 
@@ -37,11 +35,11 @@ def make_plot(ylabel, file_path, stats):
         params2['label'] = 'verify'
 
     ax1 = utils.multiple_custom_plots(stats['data_size'], stats['mean_out'], stats['mean_in'],
-                                ax=ax1, title='Mean', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+                                    ax=ax1, title='Mean', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
     ax2 = utils.multiple_custom_plots(stats['data_size'], stats['median_out'], stats['median_in'],
-                                ax=ax2, title='Median', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+                                    ax=ax2, title='Median', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
     ax3 = utils.multiple_custom_plots(stats['data_size'], stats['mode_out'], stats['mode_in'],
-                                ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+                                    ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_statistics.png')
 
@@ -72,17 +70,13 @@ def make_plot(ylabel, file_path, stats):
 
 def make_scatter(ylabel, file_path, data_out, data_in):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-
-    operations = None
+    operations = []
     x1 = []
-    y1 = []
-    xticks1 = [tick + 1 for tick in range(len(data_out))]
-    xtickslabels1 = list(data_out.keys())
-
     x2 = []
+    y1 = []
     y2 = []
-    xticks2 = [tick + 1 for tick in range(len(data_in))]
-    xtickslabels2 = list(data_in.keys())
+    xticks = [tick + 1 for tick in range(len(data_out))]
+    xtickslabels = list(data_out.keys())
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
@@ -91,20 +85,16 @@ def make_scatter(ylabel, file_path, data_out, data_in):
 
     i = 0
     for key in data_out:
-        x1 += [xticks1[i] for j in range(len(data_out[key]))]
+        x1 += [xticks[i] for j in range(len(data_out[key]))]
+        x2 += [xticks[i] for j in range(len(data_in[key]))]
         y1 += data_out[key]
-        i += 1
-
-    i = 0
-    for key in data_in:
-        x2 += [xticks2[i] for j in range(len(data_in[key]))]
         y2 += data_in[key]
         i += 1
 
-    ax1 = utils.custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks1,
-                            xtickslabels=xtickslabels1, ylabel=ylabel, kwargs={'color': 'red'})
-    ax2 = utils.custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks2,
-                            xtickslabels=xtickslabels2, ylabel=ylabel, kwargs={'color': 'blue'})
+    ax1 = utils.custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks,
+                            xtickslabels=xtickslabels, ylabel=ylabel, kwargs={'color': 'red'})
+    ax2 = utils.custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks,
+                            xtickslabels=xtickslabels, ylabel=ylabel, kwargs={'color': 'blue'})
 
     utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
@@ -120,16 +110,17 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
         data = utils.filter_iqr(data, headers, weight=weight)
         print('ok')
 
+    stats_type = ['mean', 'stddev','median', 'mode']
     for hdr in headers:
         print(spacing + f'[{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-        statistics = utils.calc_statistics(data[hdr + '_out'], data[hdr + '_in'])
+        stats = utils.calc_statistics(data, hdr, stats_type)
         print('ok')
 
         print(spacing + f'[{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
         make_scatter(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
         # make_hist(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
-        make_plot(hdr, path, statistics)
-        make_errorbar(hdr, path, statistics)
+        make_plot(hdr, path, stats)
+        make_errorbar(hdr, path, stats)
         print('ok')
 
 def main(argv):

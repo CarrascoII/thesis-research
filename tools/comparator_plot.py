@@ -4,29 +4,25 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2):
-    # fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 10))
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2, hdrs):
+    for hdr in hdrs:
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+        params1 = {'color': 'red', 'label': label1}
+        params2 = {'color': 'blue', 'label': label2}
+        op = []
+        ext = ['_out', '_in']
 
-    op = []
-    params1 = {'color': 'red', 'label': label1}
-    params2 = {'color': 'blue', 'label': label2}
+        if alg == 'cipher':
+            op = ['cipher', 'decipher']
+        elif alg == 'md':
+            op = ['hash', 'verify']
 
-    if alg == 'cipher':
-        op = ['cipher', 'decipher']
-    elif alg == 'md':
-        op = ['hash', 'verify']
+        for i in range(len(axes)):
+            axes[i] = utils.multiple_custom_plots(
+                            stats1['data_size'], stats1[hdr + ext[i]], stats2[hdr + ext[i]], ax=axes[i],
+                            title=op[i] + ' (' + hdr + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-    ax1 = utils.multiple_custom_plots(stats1['data_size'], stats1['mean_out'], stats2['mean_out'], ax=ax1,
-                                        title='Mean (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax2 = utils.multiple_custom_plots(stats1['data_size'], stats1['mean_in'], stats2['mean_in'], ax=ax2,
-                                        title='Mean (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    # ax3 = utils.multiple_custom_plots(stats1['data_size'], stats1['median_out'], stats2['median_out'], ax=ax3,
-    #                                     title='Median (' + op[0] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    # ax4 = utils.multiple_custom_plots(stats1['data_size'], stats1['median_in'], stats2['median_in'], ax=ax4,
-    #                                     title='Median (' + op[1] + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-
-    utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_statistics.png')
+        utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '_statistics.png')
 
 def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
     print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
@@ -52,14 +48,19 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
             data2 = utils.filter_iqr(data2, headers2, weight=weight)
             print('ok')
 
+        stats_type = ['mean', 'median']
+
         for hdr in headers1:
             print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-            statistics1 = utils.calc_statistics(data1[hdr + '_out'], data1[hdr + '_in'])
-            statistics2 = utils.calc_statistics(data2[hdr + '_out'], data2[hdr + '_in'])
-            print('ok')
+            stats1 = utils.calc_statistics(data1, hdr, stats_type)
+            stats2 = utils.calc_statistics(data2, hdr, stats_type)
 
+            if stats1 == None or stats2 == None:
+                sys.exit(2)
+
+            print('ok')
             print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
-            make_cmp_plot(alg, hdr, statistics1, ciphersuite1, statistics2, ciphersuite2)
+            make_cmp_plot(alg, hdr, stats1, ciphersuite1, stats2, ciphersuite2, stats_type)
             print('ok')
 
 def main(argv):

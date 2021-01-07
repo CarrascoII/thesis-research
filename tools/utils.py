@@ -85,7 +85,7 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={
 
     return(ax)
 
-def custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xtickslabels=None, ylabel=None):
+def multiple_custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xtickslabels=None, ylabel=None):
     if ax is None:
         ax = plt.gca()
 
@@ -94,7 +94,6 @@ def custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xtickslabels=
 
     for i in range(len(y_list)):
         x1 = x + (i + (1 - len(y_list))/2)*width
-
         ax.bar(x1, y_list[i], width=width, label=labels[i])
 
     ax.set_xticks(x)
@@ -167,36 +166,35 @@ def filter_iqr(data, headers, weight=1.5):
 
     return data
 
-def calc_statistics(out_op, in_op):
-    stats = {
-        'data_size': [],
-        'mean_out': [], 'mean_in': [],
-        'stdev_out': [], 'stdev_in': [],
-        'median_out': [], 'median_in': [],
-        'mode_out': [], 'mode_in': []
-    }
+def calc_statistics(data, hdr, stats_type):
+    stats = {'data_size': []}
 
-    for key in out_op:
+    for stat in stats_type:
+        stats[stat + '_out'] = []
+        stats[stat + '_in'] = []
+
+    for key in data[hdr + '_out']:
         stats['data_size'].append(key)
 
-        mean = np.mean(out_op[key])
-        stdev = np.std(out_op[key])
-        median = np.median(out_op[key])
-        mode = statistics.mode(out_op[key])
+        for stat in stats_type:
+            if stat == 'mean':
+                stats['mean_out'].append(np.mean(data[hdr + '_out'][key]))
+                stats['mean_in'].append(np.mean(data[hdr + '_in'][key]))
 
-        stats['mean_out'].append(mean)
-        stats['stdev_out'].append(stdev)
-        stats['median_out'].append(median)
-        stats['mode_out'].append(mode)
+            elif stat == 'stddev':
+                stats['stddev_out'].append(np.std(data[hdr + '_out'][key]))
+                stats['stddev_in'].append(np.std(data[hdr + '_in'][key]))
 
-        mean = np.mean(in_op[key])
-        stdev = np.std(in_op[key])
-        median = np.median(in_op[key])
-        mode = statistics.mode(in_op[key])
+            elif stat == 'median':
+                stats['median_out'].append(np.median(data[hdr + '_out'][key]))
+                stats['median_in'].append(np.median(data[hdr + '_in'][key]))
 
-        stats['mean_in'].append(mean)
-        stats['stdev_in'].append(stdev)
-        stats['median_in'].append(median)
-        stats['mode_in'].append(mode)
+            elif stat == 'mode':
+                stats['mode_out'].append(statistics.mode(data[hdr + '_out'][key]))
+                stats['mode_in'].append(statistics.mode(data[hdr + '_in'][key]))
+
+            else:
+                print(f' {stat} is not an allowed type of statistic')
+                return None
 
     return stats
