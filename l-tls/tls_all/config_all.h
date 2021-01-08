@@ -8,11 +8,30 @@
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
 /* Key exchange algorithms */
-#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 
 /**
  * mbed TLS modules
  */
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
+/* Key Exchange algorithm */
+#define MBEDTLS_RSA_C
+#define MBEDTLS_BIGNUM_C
+#define MBEDTLS_OID_C
+
+#define MBEDTLS_PKCS1_V15
+
+#define MBEDTLS_X509_CRT_PARSE_C
+#define MBEDTLS_X509_USE_C
+#define MBEDTLS_ASN1_PARSE_C
+#define MBEDTLS_PK_PARSE_C
+#define MBEDTLS_PK_C
+
+#define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_BASE64_C
+#endif
+
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 
@@ -49,6 +68,9 @@
 
 /* Imports */
 #define MBEDTLS_NET_C
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
+#define MBEDTLS_CERTS_C
+#endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
 #define MBEDTLS_DEBUG_C
@@ -67,28 +89,56 @@
 /**
  * mbed TLS ciphersuites
  */
-// #define MBEDTLS_SSL_CIPHERSUITES
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
-                // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
-                // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
-                // MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
+#define MBEDTLS_SSL_CIPHERSUITES \
+            MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA
+            /* Regular PSK ciphersuites */
+            // MBEDTLS_TLS_RSA_WITH_3DES_EDE_CBC_SHA,          
+            // MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA,           
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA,           
+            // MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA256,        
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256,        
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,      
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,      
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256,   
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256,   
+            // MBEDTLS_TLS_RSA_WITH_ARIA_128_CBC_SHA256,       
+            // MBEDTLS_TLS_RSA_WITH_ARIA_256_CBC_SHA384
 
-                // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256        
-                // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
-                // MBEDTLS_TLS_PSK_WITH_ARIA_128_GCM_SHA256,       
-                // MBEDTLS_TLS_PSK_WITH_ARIA_256_GCM_SHA384,       
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256,   
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384,   
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
-                // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
+            /* AEAD RSA ciphersuites */
+            // MBEDTLS_TLS_RSA_WITH_AES_128_GCM_SHA256,        
+            // MBEDTLS_TLS_RSA_WITH_AES_256_GCM_SHA384,        
+            // MBEDTLS_TLS_RSA_WITH_ARIA_128_GCM_SHA256,       
+            // MBEDTLS_TLS_RSA_WITH_ARIA_256_GCM_SHA384,       
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256,   
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384,   
+            // MBEDTLS_TLS_RSA_WITH_AES_128_CCM,               
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CCM,               
+            // MBEDTLS_TLS_RSA_WITH_AES_128_CCM_8,             
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CCM_8
+
+            /* Regular PSK ciphersuites */
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
+            // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
+            // MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
+
+            /* AEAD PSK ciphersuites */
+            // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
+            // MBEDTLS_TLS_PSK_WITH_ARIA_128_GCM_SHA256,       
+            // MBEDTLS_TLS_PSK_WITH_ARIA_256_GCM_SHA384,       
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256,   
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384,   
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
+            // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
 
 #include "mbedtls/check_config.h"
 
@@ -99,7 +149,7 @@
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  32
-#define MAX_INPUT_SIZE                  16384
+#define MAX_INPUT_SIZE                  8192
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
@@ -108,6 +158,9 @@
 #endif
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
+#endif
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
+// #define MUTUAL_AUTH
 #endif
 
 /**
@@ -146,8 +199,8 @@ char *ke_fname;
 /**
  * New alternative implementation flags
  */
-#define NEW_CIPHER_ALG_ALT
-#define NEW_MD_HMAC_ALT
+// #define NEW_CIPHER_ALG_ALT
+// #define NEW_MD_HMAC_ALT
 
 #if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
 #define NEW_SHA256_PROCESS_ALT
