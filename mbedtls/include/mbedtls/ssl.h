@@ -65,7 +65,7 @@
 #include "platform_time.h"
 #endif
 
-#if defined(MEASUREMENT_MEASURE_C)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #include "measurement/measure.h"
 #endif
 
@@ -1181,7 +1181,7 @@ struct mbedtls_ssl_context
     char peer_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
 
-#if defined(MEASUREMENT_MEASURE_C)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     measure_context_t *msr_ctx;
 #endif
 };
@@ -1256,10 +1256,6 @@ void mbedtls_ssl_init( mbedtls_ssl_context *ssl );
  */
 int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
                        const mbedtls_ssl_config *conf );
-
-#if defined(MEASUREMENT_MEASURE_C)
-int mbedtls_measure_config(mbedtls_ssl_context *ctx);
-#endif
 
 /**
  * \brief          Reset an already initialized SSL context for re-use

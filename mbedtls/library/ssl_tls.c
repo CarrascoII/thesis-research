@@ -53,12 +53,9 @@
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 #include "mbedtls/oid.h"
 #endif
+
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
-#include "measurement/measure.h"
-
 #include <sys/stat.h>
-
-#include <sys/types.h>
 #include <unistd.h>
 #endif
 
@@ -7129,35 +7126,6 @@ static void ssl_reset_in_out_pointers( mbedtls_ssl_context *ssl )
     ssl_update_in_pointers ( ssl, NULL /* no transform enabled */ );
 }
 
-#if defined(MEASUREMENT_MEASURE_C)
-int mbedtls_measure_config(mbedtls_ssl_context *ctx) {
-    const measure_info_t *tmp;
-    const int *tool_list;
-
-    if((tool_list = measure_tools_list()) == MEASURE_TOOL_NONE) {
-        return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
-    }
-
-    ctx->msr_ctx = calloc(1, sizeof(measure_context_t));
-
-    if(ctx->msr_ctx == NULL) {
-        return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
-    }
-
-    measure_init(ctx->msr_ctx);
-
-    for(; *tool_list != MEASURE_TOOL_NONE; tool_list++) {
-        tmp = measure_info_from_type(*tool_list);
-
-        if(tmp != NULL) {
-            return measure_setup(ctx->msr_ctx, tmp);
-        }
-    }
-
-    return(MBEDTLS_ERR_SSL_INTERNAL_ERROR);
-}
-#endif
-
 int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
                        const mbedtls_ssl_config *conf )
 {
@@ -7193,8 +7161,18 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
     if( ( ret = ssl_handshake_init( ssl ) ) != 0 )
         goto error;
 
-#if defined(MEASUREMENT_MEASURE_C)
-    if((ret = mbedtls_measure_config(ssl)) != 0) {
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+    ssl->msr_ctx = calloc(1, sizeof(measure_context_t));
+
+    if(ssl->msr_ctx == NULL) {
+        MBEDTLS_SSL_DEBUG_MSG( 1, ( "alloc(%d bytes) failed", sizeof(measure_context_t)) );
+        ret = MBEDTLS_ERR_SSL_ALLOC_FAILED;
+        goto error;
+    }
+
+    measure_init(ssl->msr_ctx);
+
+    if((ret = measurement_measure_config(ssl->msr_ctx)) != 0) {
         goto error;
     }
 #endif
@@ -7202,7 +7180,7 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
     return( 0 );
 
 error:
-#if defined(MEASUREMENT_MEASURE_C)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
     measure_free(ssl->msr_ctx);
     ssl->msr_ctx = NULL;
 #endif
@@ -8428,7 +8406,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             mkdir(path, 0777);
 
 #if defined(MEASURE_CIPHER)
-            cipher_fname = (char *) malloc((CIPHER_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
+            cipher_fname = (char *) malloc((strlen(path) + CIPHER_FNAME_SIZE)*sizeof(char));
             strcpy(cipher_fname, path);
             strcat(cipher_fname, CIPHER_EXTENSION);
 
@@ -8438,7 +8416,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_MD)
-            md_fname = (char *) malloc((MD_FNAME_SIZE + strlen(suite_info->name))*sizeof(char));
+            md_fname = (char *) malloc((strlen(path) + MD_FNAME_SIZE)*sizeof(char));
             strcpy(md_fname, path);
             strcat(md_fname, MD_EXTENSION);
 
@@ -9355,7 +9333,7 @@ void mbedtls_ssl_free( mbedtls_ssl_context *ssl )
     mbedtls_free( ssl->cli_id );
 #endif
 
-#if defined(MEASUREMENT_MEASURE_C)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
     measure_free(ssl->msr_ctx);
 #endif
 

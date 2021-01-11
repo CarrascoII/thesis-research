@@ -14,6 +14,11 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 
+#if defined(MEASURE_SESSION)
+#include "measurement/measure.h"
+
+#include <sys/stat.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -139,9 +144,17 @@ int main(int argc, char **argv) {
     psk_entry *psk_info = NULL;
 #endif
 
+#if defined(MEASURE_SESSION)
+    measure_context_t measure;
+
+    char path[50] = FILE_PATH;
+    char buffer[40];
+#endif
+
     int ret,
         i, n_tests = N_TESTS,
-        input_size = MIN_INPUT_SIZE,
+        init_size = MIN_INPUT_SIZE,
+        input_size = MAX_INPUT_SIZE,
 #if defined(MBEDTLS_DEBUG_C)
         debug = DEBUG_LEVEL,
 #endif
@@ -179,8 +192,8 @@ int main(int argc, char **argv) {
                 return(1);
             }
 		} else if(strcmp(p, "input_size") == 0) {
-            input_size = atoi(q);
-            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
+            init_size = atoi(q);
+            if(init_size < MIN_INPUT_SIZE || init_size > MAX_INPUT_SIZE || init_size % MIN_INPUT_SIZE != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Input size must be multiple of %d, between %d and %d \n", \
                         MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
@@ -225,6 +238,10 @@ int main(int argc, char **argv) {
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
     mbedtls_ssl_init(&tls);
+
+#if defined(MEASURE_SESSION)
+    measure_init(&measure);
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
@@ -379,6 +396,15 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+#if defined(MEASURE_SESSION)
+    if((ret = measurement_measure_config(&measure)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! measurement_measure_config returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+#endif
+
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
@@ -404,6 +430,15 @@ int main(int argc, char **argv) {
     fflush(stdout);
 #endif 
 
+#if defined(MEASURE_SESSION)
+    if((ret = measure_get_vals(&measure, MEASURE_START)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! measure_get_vals returned -0x%04x\n", -ret);
+#endif 
+        goto exit;
+    }
+#endif
+
     while((ret = mbedtls_ssl_handshake(&tls)) != 0) {
         if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -413,12 +448,25 @@ int main(int argc, char **argv) {
         }
     }
 
+#if defined(MEASURE_SESSION)
+    strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
+    mkdir(path, 0777);
+    strcat(path, SESSION_EXTENSION);
+
+    if((ret = measure_starts(&measure, path, "endpoint,n_tests,min_input,max_input")) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! measure_starts returned -0x%04x\n", -ret);
+#endif 
+        goto exit;
+    }
+#endif
+
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
     printf("\nPerforming TLS record:");
 #endif 
 
-    for(; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
+    for(input_size = init_size; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
 
@@ -491,6 +539,24 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+#if defined(MEASURE_SESSION)
+    if((ret = measure_get_vals(&measure, MEASURE_END)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! measure_get_vals returned -0x%04x\n", -ret);
+#endif 
+        goto exit;
+    }
+
+    sprintf(buffer, "\nserver,%d,%d,%d", n_tests, init_size, input_size/2);
+
+    if((ret = measure_finish(&measure, path, buffer)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! measure_starts returned -0x%04x\n", -ret);
+#endif 
+        goto exit;
+    }
+#endif
+
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif 
@@ -515,11 +581,15 @@ int main(int argc, char **argv) {
         printf("\n  -Server certificate:\n%s", crt_buf);
     }
 #endif
-#endif
+#endif /* MBEDTLS_DEBUG_C */
 
     printf("\n");
 
 exit:
+#if defined(MEASURE_SESSION)
+    measure_free(&measure);
+#endif
+
     mbedtls_ssl_free(&tls);
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
@@ -536,17 +606,6 @@ exit:
 #endif
     mbedtls_net_free(&client);
     mbedtls_net_free(&server);
-
-#if defined(MEASURE_CIPHER)
-    if(cipher_fname != NULL) {
-        free(cipher_fname);
-    }
-#endif
-#if defined(MEASURE_MD)
-    if(md_fname != NULL) {
-        free(md_fname);
-    }
-#endif
 
     return(ret);
 }

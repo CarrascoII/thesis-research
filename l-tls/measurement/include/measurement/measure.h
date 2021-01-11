@@ -147,6 +147,8 @@ void measure_free(measure_context_t *ctx);
  */
 int measure_setup(measure_context_t *ctx, const measure_info_t *measure_info);
 
+int measurement_measure_config(measure_context_t *ctx);
+
 /**
  * \brief       This function extracts the measurement tool name from the
  *              measurement tool information structure.
@@ -225,9 +227,9 @@ static inline int can_measure_time(const measure_context_t *ctx) {
     return((ctx->measure_info->flags & MEASURE_TYPE_TIME) == MEASURE_TYPE_TIME);
 }
 
-int measure_starts(measure_context_t *ctx, const char *file_name, const char *file_output);
-
 int measure_get_vals(measure_context_t *ctx, measure_val_t mode);
+
+int measure_starts(measure_context_t *ctx, const char *file_name, const char *file_output);
 
 int measure_finish(measure_context_t *ctx, const char *file_name, const char *file_output);
 

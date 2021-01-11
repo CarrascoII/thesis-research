@@ -85,12 +85,21 @@ int measure_setup(measure_context_t *ctx, const measure_info_t *measure_info) {
     return(0);
 }
 
-int measure_starts(measure_context_t *ctx, const char *file_name, const char *file_output) {
-    if(ctx == NULL || file_name == NULL || file_output == NULL) {
-        return(MEASURE_ERR_BAD_INPUT_DATA);
+int measurement_measure_config(measure_context_t *ctx) {
+    const measure_info_t *tmp;
+    const int *tool_list;
+
+    if((tool_list = measure_tools_list()) == MEASURE_TOOL_NONE) {
+        return(MEASURE_ERR_FEATURE_UNAVAILABLE);
     }
 
-    return ctx->measure_info->base->starts_func(ctx->measure_ctx, file_name, file_output);
+    for(; *tool_list != MEASURE_TOOL_NONE; tool_list++) {
+        if((tmp = measure_info_from_type(*tool_list)) != NULL) {
+            return measure_setup(ctx, tmp);
+        }
+    }
+
+    return(MEASURE_ERR_FEATURE_UNAVAILABLE);
 }
 
 int measure_get_vals(measure_context_t *ctx, measure_val_t mode) {
@@ -113,6 +122,14 @@ int measure_get_vals(measure_context_t *ctx, measure_val_t mode) {
     }
 
     return(0);
+}
+
+int measure_starts(measure_context_t *ctx, const char *file_name, const char *file_output) {
+    if(ctx == NULL || file_name == NULL || file_output == NULL) {
+        return(MEASURE_ERR_BAD_INPUT_DATA);
+    }
+
+    return ctx->measure_info->base->starts_func(ctx->measure_ctx, file_name, file_output);
 }
 
 int measure_finish(measure_context_t *ctx, const char *file_name, const char *file_output) {

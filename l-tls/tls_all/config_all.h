@@ -73,7 +73,7 @@
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
+// #define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -169,31 +169,29 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-#define MEASURE_CIPHER
-#define MEASURE_MD
-// #define MEASURE_KE
+#define MEASURE_SESSION
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 #endif
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
-#define FILE_PATH           "../docs/"
+#if defined(MEASURE_SESSION) || defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#define FILE_PATH       "../docs/"
+#endif
+
+#if defined(MEASURE_SESSION)
+#define SESSION_EXTENSION   "/session_data.csv"
 #endif
 
 #if defined(MEASURE_CIPHER)
 #define CIPHER_EXTENSION    "/cipher_data.csv"
-#define CIPHER_FNAME_SIZE   25 /* = len(FILE_PATH) + len(CIPHER_EXTENSION) + len("\0") */
+#define CIPHER_FNAME_SIZE   17 /* = len(CIPHER_EXTENSION) + len("\0") */
 char *cipher_fname;
 #endif
 
 #if defined(MEASURE_MD)
 #define MD_EXTENSION        "/md_data.csv"
-#define MD_FNAME_SIZE       21 /* = len(FILE_PATH) + len(MD_EXTENSION) + len("\0") */
+#define MD_FNAME_SIZE       13 /* = len(MD_EXTENSION) + len("\0") */
 char *md_fname;
-#endif
-
-#if defined(MEASURE_KE)
-#define KE_EXTENSION        "/ke_data.csv"
-#define KE_FNAME_SIZE       21 /* = len(FILE_PATH) + len(KE_EXTENSION) + len("\0") */
-char *ke_fname;
 #endif
 
 /**
