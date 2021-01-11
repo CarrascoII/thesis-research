@@ -8,7 +8,7 @@
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
 /* Key exchange algorithms */
-// #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 
 /**
@@ -170,28 +170,11 @@
 
 #if defined(MEASUREMENT_MEASURE_C)
 #define MEASURE_SESSION
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
-#endif
-
-#if defined(MEASURE_SESSION) || defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-#define FILE_PATH       "../docs/"
 #endif
 
 #if defined(MEASURE_SESSION)
+#define FILE_PATH           "../docs/"
 #define SESSION_EXTENSION   "/session_data.csv"
-#endif
-
-#if defined(MEASURE_CIPHER)
-#define CIPHER_EXTENSION    "/cipher_data.csv"
-#define CIPHER_FNAME_SIZE   17 /* = len(CIPHER_EXTENSION) + len("\0") */
-char *cipher_fname;
-#endif
-
-#if defined(MEASURE_MD)
-#define MD_EXTENSION        "/md_data.csv"
-#define MD_FNAME_SIZE       13 /* = len(MD_EXTENSION) + len("\0") */
-char *md_fname;
 #endif
 
 /**
