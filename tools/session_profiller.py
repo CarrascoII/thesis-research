@@ -40,9 +40,8 @@ def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
     print('ok')
     return return_code
     
-def run_cli(min_size, n_tests, ciphersuite):
-    args = ['./../l-tls/tls_psk/client.out', 'input_size=' + min_size,
-            'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+def run_cli(n_tests, ciphersuite):
+    args = ['./../l-tls/tls_all/client.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -51,9 +50,8 @@ def run_cli(min_size, n_tests, ciphersuite):
     return check_return_code(ret, 'client', ciphersuite, stdout, stderr)
     
 
-def run_srv(min_size, n_tests, ciphersuite):
-    args = ['./../l-tls/tls_psk/server.out', 'input_size=' + min_size,
-            'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+def run_srv(n_tests, ciphersuite):
+    args = ['./../l-tls/tls_all/server.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -61,7 +59,7 @@ def run_srv(min_size, n_tests, ciphersuite):
 
     return check_return_code(ret, 'server', ciphersuite, stdout, stderr)
 
-def exec_tls(filename, timeout, min_size, n_tests, weight):
+def exec_tls(filename, timeout, n_tests, weight):
     #Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
@@ -78,7 +76,7 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     
     print(f'ok\nGot {n_total} ciphersuites')
     print('\nRunning with options:')
-    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Starting input size: {min_size} bytes')
+    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}')
 
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     pool = ThreadPool(processes=2)
@@ -89,14 +87,14 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
 
     #Step 2: Start server in thread 1
         print('\tStarting server'.ljust(strlen, '.'), end=' ')
-        async_result_srv = pool.apply_async(run_srv, (min_size, n_tests, suite))
+        async_result_srv = pool.apply_async(run_srv, (n_tests, suite))
         print('ok')
 
         time.sleep(timeout)
 
     #Step 3: Start client in thread 2
         print('\tStarting client'.ljust(strlen, '.'), end=' ')
-        async_result_cli = pool.apply_async(run_cli, (min_size, n_tests, suite))
+        async_result_cli = pool.apply_async(run_cli, (n_tests, suite))
         print('ok')
 
     #Step 4: Verify result from server and client
@@ -114,29 +112,12 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
             success_ciphersuites.append(suite)
             n_success += 1
 
-    #Step 5: Analyse data and create individual plots for ciphersuites that ended successfully
+    #Step 5: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
-    current = 1
-
-    for suite in success_ciphersuites:
-        print(f'\nCreating graphs for: {suite} ({current}/{n_success})')
-        current +=1
-
-        print('\n    Cipher algorithm:')
-        plotter.make_figs('../docs/' + suite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
-
-        print('\n    MAC algorithm:')
-        plotter.make_figs('../docs/' + suite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
-
-    #Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print(f'\nCreating comparison graphs from all ciphersuites:')
+    comparator_bar.make_cmp_figs(success_ciphersuites, 'session', weight=weight, strlen=strlen, spacing='\t')
 
-    print('\n    Cipher algorithm:')
-    comparator_bar.make_cmp_figs(success_ciphersuites, 'cipher', weight=weight, strlen=strlen, spacing='\t')
-    print('\n    MAC algorithm:')
-    comparator_bar.make_cmp_figs(success_ciphersuites, 'md', weight=weight, strlen=strlen, spacing='\t')
-
-    #Step 7: Report final status
+    #Step 6: Report final status
     print('\n--- FINAL STATUS ---')
 
     print('\nData generation:')
@@ -163,9 +144,9 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'ht:m:n:f:', ['help', 'timeout=', 'min_size=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'ht:n:f:', ['help', 'timeout=', 'n_tests=', 'filter='])
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "profiller.py -h" for help')
+        print('One of the options does not exit.\nUse: "session_profiller.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -177,27 +158,23 @@ def main(argv):
         sys.exit(2)
 
     timeout = 2
-    min_size = '32'
     n_tests = '500'
     weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('profiller.py [-t <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
-            print('profiller.py [--timeout=<timeout>] [--min_size=<min_input_size>] ' +
-                  '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
+            print('profiller.py [-t <timeout>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
+            print('profiller.py [--timeout=<timeout>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
         if opt in ('-t', '--timeout'):
             timeout = int(arg)
-        if opt in ('-m', '--min_size'):
-            min_size = arg
         if opt in ('-n', '--n_tests'):
             n_tests = arg
         if opt in ('-f', '--filter'):
             weight = float(arg)
 
     os.system('clear')
-    exec_tls(args[0], timeout, min_size, n_tests, weight)
+    exec_tls(args[0], timeout, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

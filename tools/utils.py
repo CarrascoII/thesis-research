@@ -24,7 +24,7 @@ def parse_algorithms(filename):
 
         return ciphersuites
 
-def parse_csv_to_data(filename):
+def parse_alg_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
         headers = csv_reader.fieldnames[3:]
@@ -55,6 +55,29 @@ def parse_csv_to_data(filename):
                         data[hdr][data_size] = []
 
                     data[hdr][data_size].append(val)
+        
+        return data, headers
+
+def parse_session_data(filename):
+    with open(filename, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+        headers = csv_reader.fieldnames[3:]
+        data = {}
+
+        for hdr in headers:
+            data[hdr] = {}
+            
+            for endpoint in ['server', 'client']:
+                data[hdr][endpoint] = []
+
+        for row in csv_reader:
+            endpoint = row['endpoint']
+
+            for hdr in headers:
+                val = int(row[hdr])
+
+                if val != 0:
+                    data[hdr][endpoint].append(val)
         
         return data, headers
 
@@ -115,58 +138,58 @@ def custom_scatter(x, y, ax=None, title=None, xticks=None, xtickslabels=None, yl
     return(ax)
 
 ########## DATA ANALYSIS UTILS ##########
-def filter_z_score(data, headers, weight=2):
-    for hdr in headers:
-        for ext in ['_out', '_in']:
-            entry = hdr + ext
-            op_dict = data[entry]
+def filter_z_score(data, weight=2):
+    keys = data.keys()
+
+    for entry in keys:
+        op_dict = data[entry]
+        
+        for key in op_dict:
+            tmp = []
+            mean = np.mean(op_dict[key])
+            stdev = np.std(op_dict[key])
+
+            for val in op_dict[key]:
+                stdw = weight * stdev
+
+                if val > (mean + stdw):
+                    continue
+                elif val < (mean - stdw):
+                    continue
+                else:
+                    tmp.append(val)
             
-            for key in op_dict:
-                tmp = []
-                mean = np.mean(op_dict[key])
-                stdev = np.std(op_dict[key])
-
-                for val in op_dict[key]:
-                    stdw = weight * stdev
-
-                    if val > (mean + stdw):
-                        continue
-                    elif val < (mean - stdw):
-                        continue
-                    else:
-                        tmp.append(val)
-                
-                data[entry][key] = tmp
+            data[entry][key] = tmp
 
     return data
 
-def filter_iqr(data, headers, weight=1.5):
-    for hdr in headers:
-        for ext in ['_out', '_in']:
-            entry = hdr + ext
-            op_dict = data[entry]
+def filter_iqr(data, weight=1.5):
+    keys = data.keys()
+
+    for entry in keys:
+        op_dict = data[entry]
+
+        for key in op_dict:
+            tmp = []
+            q1 = np.quantile(op_dict[key], 0.25)
+            q3 = np.quantile(op_dict[key], 0.75)
+            iqr = q3 - q1
+
+            for val in op_dict[key]:
+                iqrw = weight * iqr
+
+                if val > (q3 + iqrw):
+                    continue
+                elif val < (q1 - iqrw):
+                    continue
+                else:
+                    tmp.append(val)
             
-            for key in op_dict:
-                tmp = []
-                q1 = np.quantile(op_dict[key], 0.25)
-                q3 = np.quantile(op_dict[key], 0.75)
-                iqr = q3 - q1
-
-                for val in op_dict[key]:
-                    iqrw = weight * iqr
-
-                    if val > (q3 + iqrw):
-                        continue
-                    elif val < (q1 - iqrw):
-                        continue
-                    else:
-                        tmp.append(val)
-                
-                data[entry][key] = tmp
+            data[entry][key] = tmp
 
     return data
 
-def calc_statistics(data, hdr, stats_type):
+def calc_alg_statistics(data, hdr, stats_type):
     stats = {'data_size': []}
 
     for stat in stats_type:
@@ -192,6 +215,34 @@ def calc_statistics(data, hdr, stats_type):
             elif stat == 'mode':
                 stats['mode_out'].append(statistics.mode(data[hdr + '_out'][key]))
                 stats['mode_in'].append(statistics.mode(data[hdr + '_in'][key]))
+
+            else:
+                print(f' {stat} is not an allowed type of statistic')
+                return None
+
+    return stats
+
+def calc_session_statistics(data, hdr, stats_type):
+    stats = {'keys': []}
+
+    for stat in stats_type:
+        stats[stat] = {}
+
+    for key in data[hdr]:
+        stats['keys'].append(key)
+
+        for stat in stats_type:
+            if stat == 'mean':
+                stats['mean'][key] = np.mean(data[hdr][key])
+
+            elif stat == 'stddev':
+                stats['stddev'][key] = np.std(data[hdr][key])
+
+            elif stat == 'median':
+                stats['median'][key] = np.median(data[hdr][key])
+
+            elif stat == 'mode':
+                stats['mode'][key] = statistics.mode(data[hdr][key])
 
             else:
                 print(f' {stat} is not an allowed type of statistic')

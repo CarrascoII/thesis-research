@@ -32,8 +32,8 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
     for alg in algs:
         print('\n' + spacing + f'{alg.upper()} algorithm:')
         print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
-        data1, headers1 = utils.parse_csv_to_data(path1 + alg + '_data.csv')
-        data2, headers2 = utils.parse_csv_to_data(path2 + alg + '_data.csv')
+        data1, headers1 = utils.parse_alg_data(path1 + alg + '_data.csv')
+        data2, headers2 = utils.parse_alg_data(path2 + alg + '_data.csv')
        
         if headers1 != headers2:
             print('error')
@@ -44,16 +44,16 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
 
         if weight != 0:
             print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
-            data1 = utils.filter_iqr(data1, headers1, weight=weight)
-            data2 = utils.filter_iqr(data2, headers2, weight=weight)
+            data1 = utils.filter_iqr(data1, weight=weight)
+            data2 = utils.filter_iqr(data2, weight=weight)
             print('ok')
 
         stats_type = ['mean', 'median']
 
         for hdr in headers1:
             print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-            stats1 = utils.calc_statistics(data1, hdr, stats_type)
-            stats2 = utils.calc_statistics(data2, hdr, stats_type)
+            stats1 = utils.calc_alg_statistics(data1, hdr, stats_type)
+            stats2 = utils.calc_alg_statistics(data2, hdr, stats_type)
 
             if stats1 == None or stats2 == None:
                 sys.exit(2)

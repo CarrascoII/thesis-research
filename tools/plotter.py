@@ -102,18 +102,18 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
 
     print(spacing + 'Parsing obtained data'.ljust(strlen, '.'), end=' ')
-    data, headers = utils.parse_csv_to_data(filename)
+    data, headers = utils.parse_alg_data(filename)
     print('ok')
 
     if weight != 0:
         print(spacing + 'Removing outliers from data'.ljust(strlen, '.'), end=' ')
-        data = utils.filter_iqr(data, headers, weight=weight)
+        data = utils.filter_iqr(data, weight=weight)
         print('ok')
 
     stats_type = ['mean', 'stddev','median', 'mode']
     for hdr in headers:
         print(spacing + f'[{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-        stats = utils.calc_statistics(data, hdr, stats_type)
+        stats = utils.calc_alg_statistics(data, hdr, stats_type)
         print('ok')
 
         print(spacing + f'[{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')

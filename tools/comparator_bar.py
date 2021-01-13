@@ -4,7 +4,22 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_cmp_bar(alg, ylabel, stats, labels, hdrs):
+def make_session_cmp_bar(name, ylabel, stats, labels, hdrs):
+    for hdr in hdrs:
+        fig, ax = plt.subplots(1, 1, figsize=(15, 5))
+        xtickslabels = stats[0]['keys']
+        y_lst = []
+        width = 0.5
+
+
+        for stat in stats:
+            y_lst.append([stat[hdr][xtickslabels[0]], stat[hdr][xtickslabels[1]]])
+
+        ax = utils.multiple_custom_bar(y_lst, ax=ax, width=width, labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+
+        utils.save_fig(fig, '../docs/cmp_mult_' + name + '_' + ylabel + '_' + hdr + '.png')
+
+def make_alg_cmp_bar(alg, ylabel, stats, labels, hdrs):
     for hdr in hdrs:
         fig, axes = plt.subplots(1, 2, figsize=(15, 10))
         xtickslabels = stats[0]['data_size']
@@ -34,9 +49,15 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
 
     for suite in ciphersuites:
         path = '../docs/' + suite + '/' + alg + '_data.csv'
-        data, hdr = utils.parse_csv_to_data(path)
+        data = {}
+        hdr = []
 
-        all_data.append(data)    
+        if alg != 'session':
+            data, hdr = utils.parse_alg_data(path)
+        else:
+            data, hdr = utils.parse_session_data(path)
+
+        all_data.append(data)
         all_headers.append(hdr)
 
     for hdr in all_headers[1:]:
@@ -51,7 +72,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
         
         for i in range(len(all_data)):
-            data = utils.filter_iqr(all_data[i], all_headers[i], weight=weight)
+            data = utils.filter_iqr(all_data[i], weight=weight)
             all_data[i] = data
         
         print('ok')
@@ -63,21 +84,79 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
 
         for data in all_data:
-            stats = utils.calc_statistics(data, hdr, stats_type)
-            
+            stats = {}
+
+            if alg != 'session':
+                stats = utils.calc_alg_statistics(data, hdr, stats_type)
+            else:
+                stats = utils.calc_session_statistics(data, hdr, stats_type)
+
             if stats == None:
-                sys.exit(2)
+                return None
             
             all_stats.append(stats)
 
         print('ok')
+
         print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
-        make_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
+        if alg != 'session':
+            make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
+        else:
+            make_session_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
+
         print('ok')
+
+# def make_session_cmp_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
+#     all_data = []
+#     all_headers = []
+#     print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
+
+#     for suite in ciphersuites:
+#         path = '../docs/' + suite + '/session_data.csv'
+#         data, hdr = utils.parse_session_data(path)
+
+#         all_data.append(data)
+#         all_headers.append(hdr)
+
+#     for hdr in all_headers[1:]:
+#         if all_headers[0] != hdr:
+#             print('error')
+#             print(spacing + 'Data has different headers. Cannot be compared!!!\n')
+#             return
+
+#     print('ok')
+
+#     if weight != 0:
+#         print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
+        
+#         for i in range(len(all_data)):
+#             data = utils.filter_iqr(all_data[i], weight=weight)
+#             all_data[i] = data
+        
+#         print('ok')
+
+#     all_stats = []
+#     stats_type = ['mean']
+
+#     for hdr in all_headers[0]:
+#         print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+
+#         for data in all_data:
+#             stats = utils.calc_session_statistics(data, hdr, stats_type)
+            
+#             if stats == None:
+#                 return None
+            
+#             all_stats.append(stats)
+
+#         print('ok')
+#         print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
+#         make_session_cmp_bar('session', hdr, all_stats, ciphersuites, stats_type)
+#         print('ok')
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
+        opts, args = getopt.getopt(argv, 'hf:cms', ['help', 'filter=', 'cipher', 'md', 'session'])
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
         sys.exit(2)
@@ -95,15 +174,18 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('comparator.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
-            print('comparator.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
+            print('comparator.py [-f <weight>] [-c] [-m] [-s] <ciphersuite_list>')
+            print('comparator.py [--filter=<weight>] [--cipher] [--md] [--session] <ciphersuite_list>')
             sys.exit(0)
+
         if opt in ('-f', '--nfilter'):
             weight = float(arg)
         elif opt in ('-c', '--cipher'):
             algs.append('cipher')
         elif opt in ('-m', '--md'):
             algs.append('md')
+        elif opt in ('-s', '--session'):
+            algs.append('session')
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
@@ -112,8 +194,10 @@ def main(argv):
     ciphersuites = utils.parse_ciphersuites(args[0])
     
     for alg in algs:
-        print('\n' + alg.upper() + ' algorithm:')
+        print('\n' + alg.upper() + ' data:')
         make_cmp_figs(ciphersuites, alg, weight=weight)
+
+    # make_session_cmp_figs(ciphersuites, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
