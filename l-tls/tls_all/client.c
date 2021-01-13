@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 #if defined(MEASURE_SESSION)
     measure_context_t measure;
 
-    char path[50] = FILE_PATH;
+    char path[70] = FILE_PATH;
     char buffer[40];
 #endif
 

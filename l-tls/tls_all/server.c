@@ -133,8 +133,8 @@ int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server, client;
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
-    mbedtls_x509_crt cacert, srvcert, srvcert2;
-    mbedtls_pk_context privkey, privkey2;
+    mbedtls_x509_crt cacert, srvcert;
+    mbedtls_pk_context privkey;
 #endif
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
 #if defined(MEASURE_SESSION)
     measure_context_t measure;
 
-    char path[50] = FILE_PATH;
+    char path[70] = FILE_PATH;
     char buffer[40];
 #endif
 
@@ -232,9 +232,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
     mbedtls_x509_crt_init(&cacert);
     mbedtls_x509_crt_init(&srvcert);
-    mbedtls_x509_crt_init(&srvcert2);
     mbedtls_pk_init(&privkey);
-    mbedtls_pk_init(&privkey2);
 #endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
@@ -381,11 +379,6 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
 
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &srvcert, &privkey)) != 0) {
-        printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
-        goto exit;
-    }
-
-    if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &srvcert2, &privkey2)) != 0) {
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
         goto exit;
     }
@@ -619,9 +612,7 @@ exit:
     psk_free(psk_info);
 #endif
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
-    mbedtls_pk_free(&privkey2);
     mbedtls_pk_free(&privkey);
-    mbedtls_x509_crt_free(&srvcert2);
     mbedtls_x509_crt_free(&srvcert);
     mbedtls_x509_crt_free(&cacert);
 #endif
