@@ -16,27 +16,31 @@
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 
-#define MBEDTLS_DES_C
+// #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
+// #define MBEDTLS_AES_ALT
 // #define MBEDTLS_AES_ENCRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_ENC_ALT
 // #define MBEDTLS_AES_DECRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
-#define MBEDTLS_ARIA_C
-#define MBEDTLS_CAMELLIA_C
-// #define MBEDTLS_CHACHA20_C
+// #define MBEDTLS_ARIA_C
+// #define MBEDTLS_CAMELLIA_C
 
+/* Cipher mode */
 #define MBEDTLS_CIPHER_MODE_CBC
+
+/* AEAD algorithms */
+// #define MBEDTLS_CHACHA20_C
 // #define MBEDTLS_GCM_C
 // #define MBEDTLS_CCM_C
 
 /* Message authentication algorithms */
 #define MBEDTLS_MD_C
 
-#define MBEDTLS_SHA1_C
+// #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
 // #define MBEDTLS_SHA256_PROCESS_ALT
-#define MBEDTLS_SHA512_C
+// #define MBEDTLS_SHA512_C
 // #define MBEDTLS_POLY1305_C
 
 /* AEAD algorithms */
@@ -66,29 +70,31 @@
 
 /**
  * mbed TLS ciphersuites
+ * \note first block are regular PSK ciphersuites
+ * \note second block are AEAD PSK ciphersuites
  */
-// #define MBEDTLS_SSL_CIPHERSUITES
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
-                // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
-                // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
-                // MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
+ #define MBEDTLS_SSL_CIPHERSUITES \
+            MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
+            // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
+            // MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
 
-                // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256        
-                // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
-                // MBEDTLS_TLS_PSK_WITH_ARIA_128_GCM_SHA256,       
-                // MBEDTLS_TLS_PSK_WITH_ARIA_256_GCM_SHA384,       
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256,   
-                // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384,   
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
-                // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
-                // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
-                // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
+            // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
+            // MBEDTLS_TLS_PSK_WITH_ARIA_128_GCM_SHA256,       
+            // MBEDTLS_TLS_PSK_WITH_ARIA_256_GCM_SHA384,       
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256,   
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384,   
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
+            // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
 
 #include "mbedtls/check_config.h"
 
