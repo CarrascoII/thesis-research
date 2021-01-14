@@ -16,9 +16,9 @@ LOCAL_CFLAGS = $(MY_AES).o $(MY_AES_MODULE).o -I$(MY_AES_MODULE_DIR) $(MBEDTLS_C
 
 CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_aes.h>'
 
-.PHONY: alt_lib lib \
-		local run \
-		clean_local clean
+.SILENT:
+
+.PHONY: alt_lib lib local run clean_local clean
 
 ### MAKE ALT MBEDTLS LIB ###
 alt_lib:
@@ -28,7 +28,7 @@ alt_lib:
 lib: alt_lib
 	$(MBEDTLS_LIB_MAKE) CFLAGS="$(CONFIG) -I$(MY_AES_MODULE_DIR) $(PAPI_CFLAGS)"
 
-### MAKE TLS ###
+### MAKE LOCAL ###
 local: lib
 	rm -f test_aes.out
 	gcc $(ALL_CFLAGS) test_aes.c $(LOCAL_CFLAGS) -o test_aes.out
