@@ -23,7 +23,7 @@ MEASUREMENT_CFLAGS = -I$(MEASUREMENT_INC_DIR) -L$(MEASUREMENT_LIB_DIR) -lmeasure
 TLS_ALL_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_all/config_all.h>'
 TLS_PSK_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_psk/config_psk.h>'
 TLS_RSA_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/tls_rsa/config_rsa.h>'
-CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_cipher.h>'
+CIPHER_CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/cipher/config_aes.h>'
 
 .PHONY: lib_measurement lib_measurement_papi alt_all alt_psk alt_rsa \
 		lib_mbedtls lib_all lib_all_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
@@ -205,19 +205,19 @@ rsa_papi: clean rsa_server_papi rsa_client_papi
 
 ### MAKE TEST CIPHER ###
 cipher: lib_cipher
-	rm -f cipher/cipher.out
-	gcc $(ALL_CFLAGS) cipher/cipher.c -lm $(LOCAL_CFLAGS) -o cipher/cipher.out
+	rm -f cipher/test_aes.out
+	gcc $(ALL_CFLAGS) cipher/test_aes.c -lm $(LOCAL_CFLAGS) -o cipher/test_aes.out
 
 run_cipher: cipher
-	./cipher/cipher.out
+	./cipher/test_aes.out
 
 ### MAKE TEST CIPHER PAPI ###
 cipher_papi: lib_cipher
-	rm -f cipher/cipher.out
-	gcc $(ALL_CFLAGS) cipher/cipher.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher/cipher.out
+	rm -f cipher/test_aes.out
+	gcc $(ALL_CFLAGS) cipher/test_aes.c -lm $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o cipher/test_aes.out
 
 run_cipher_papi: cipher_papi
-	./cipher/cipher.out
+	./cipher/test_aes.out
 
 ### CLEAN ###
 clean_local:
@@ -227,7 +227,7 @@ clean_local:
 	rm -f tls_psk/client.out
 	rm -f tls_rsa/server.out
 	rm -f tls_rsa/client.out
-	rm -f cipher/cipher.out
+	rm -f cipher/test_aes.out
 	
 clean: clean_local
 	$(MBEDTLS_PROGS_MAKE) clean

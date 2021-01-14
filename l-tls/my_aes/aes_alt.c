@@ -6,14 +6,8 @@
 
 #if defined(MBEDTLS_AES_ENCRYPT_ALT) || defined(MBEDTLS_AES_SETKEY_ENC_ALT) || defined(MBEDTLS_AES_DECRYPT_ALT) || defined(MBEDTLS_AES_SETKEY_DEC_ALT)
 #include "aes_alt.h"
-#if defined(NEW_AES_ENCRYPT_ALT) || defined(NEW_AES_SETKEY_ENC_ALT) || defined(NEW_AES_DECRYPT_ALT) || defined(NEW_AES_SETKEY_DEC_ALT)
-#if defined(MBEDTLS_PLATFORM_C)
-#include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#define mbedtls_printf printf
-#endif
-#endif
+
+#include <stdlib.h>
 #endif
 
 /**************************** MACROS & AUX FUNC *****************************/ 
@@ -251,25 +245,15 @@ int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, u
 
 #if defined(NEW_AES_SETKEY_ENC_ALT)
 int mbedtls_aes_setkey_enc(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits) {
-    int ret, i;
+    int ret;
 
 	if((ret = aes_setkey_enc_og(ctx, key, keybits)) != 0) {
 		return ret;
 	}
 
-	// mbedtls_printf("\nRound Key Enc (OG):");
-	// for(i = 0; i < ctx->nr + 1; i++) {
-	// 	mbedtls_printf("\n  %.8x%.8x%.8x%.8x", ctx->rk[4*i], ctx->rk[4*i + 1], ctx->rk[4*i + 2], ctx->rk[4*i + 3]);
-	// }
-
 	if((ret = aes_setkey_enc_alt_1(ctx, key, keybits)) != 0) {
 		return ret;
 	}
-
-	// mbedtls_printf("\nRound Key Enc (ALT_1):");
-	// for(i = 0; i < ctx->nr + 1; i++) {
-	// 	mbedtls_printf("\n  %.8x%.8x%.8x%.8x", ctx->rk_alt_1[4*i], ctx->rk_alt_1[4*i + 1], ctx->rk_alt_1[4*i + 2], ctx->rk_alt_1[4*i + 3]);
-	// }
 
     return ret;
 }
@@ -329,19 +313,9 @@ int mbedtls_aes_setkey_dec(mbedtls_aes_context *ctx, const unsigned char *key, u
 		return ret;
 	}
 
-	// mbedtls_printf("\nRound Key Dec (OG):");
-	// for(i = 0; i < ctx->nr + 1; i++) {
-	// 	mbedtls_printf("\n  %.8x%.8x%.8x%.8x", ctx->rk[4*i], ctx->rk[4*i + 1], ctx->rk[4*i + 2], ctx->rk[4*i + 3]);
-	// }
-
 	if((ret = aes_setkey_dec_alt_1(ctx, key, keybits)) != 0) {
 		return ret;
 	}
-
-	// mbedtls_printf("\nRound Key Dec (ALT_1):");
-	// for(i = 0; i < ctx->nr + 1; i++) {
-	// 	mbedtls_printf("\n  %.8x%.8x%.8x%.8x", ctx->rk_alt_1[4*i], ctx->rk_alt_1[4*i + 1], ctx->rk_alt_1[4*i + 2], ctx->rk_alt_1[4*i + 3]);
-	// }
 
     return ret;
 }
@@ -472,10 +446,8 @@ int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char i
 #if defined(NEW_AES_ENCRYPT_ALT)
 int mbedtls_internal_aes_encrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
     if(ctx->aes_total <= AES_ENC_THRESHOLD) {
-        // mbedtls_printf("\nUsing ENC_OG (%d)", ctx->aes_total);
         return internal_aes_encrypt_og(ctx, input, output);
     } else {
-        // mbedtls_printf("\nUsing ENC_ALT_1 (%d)", ctx->aes_total);
     	return internal_aes_encrypt_alt_1(ctx, input, output);
     }
 }
@@ -634,10 +606,8 @@ int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char i
 #if defined(NEW_AES_DECRYPT_ALT)
 int mbedtls_internal_aes_decrypt(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]) {
     if(ctx->aes_total <= AES_DEC_THRESHOLD) {
-        // mbedtls_printf("\nUsing DEC_OG (%d)", ctx->aes_total);
         return internal_aes_decrypt_og(ctx, input, output);
     } else {
-        // mbedtls_printf("\nUsing DEC_ALT_1 (%d)", ctx->aes_total);
     	return internal_aes_decrypt_alt_1(ctx, input, output);
     }
 }
