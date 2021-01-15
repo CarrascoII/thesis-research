@@ -2,6 +2,7 @@ import csv
 import matplotlib.pyplot as plt
 import statistics
 import numpy as np
+import subprocess
 
 ########## FILE PARSING UTILS ##########
 def parse_ciphersuites(filename):
@@ -249,3 +250,62 @@ def calc_session_statistics(data, hdr, stats_type):
                 return None
 
     return stats
+
+########## PROFILLER UTILS ##########
+def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strlen):
+    last_msg = [
+        'Final status:',
+        f'  -Suite being used:          {ciphersuite}'
+    ]
+    strout = stdout.decode('utf-8').strip('\n')
+    last_out = strout.split('\n')[-2:]
+    strerr = stderr.decode('utf-8').strip('\n')
+    last_err = strerr.split('\n')
+
+    print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ')
+
+    if return_code != 0:
+        print('error\n\tGot an unexpected return code!!!' + 
+             f'\n\tDetails: {return_code}')
+        return return_code
+
+    if last_err[0] != '':
+        print('error\n\tAn unexpected error occured!!!' +
+             f'\n\tDetails:\n\t\t{last_err}')
+        return -1
+
+    for i in range(0, len(last_msg)):
+        if last_msg[i] != last_out[i]:
+            print('error\n\tLast message was not the expected one!!!' +
+                 f'\n\t\tExpected:\n\t\t{last_msg[0]}\n\t\t{last_msg[1]}' +
+                 f'\n\n\t\tObtained:\n\t\t{last_out[0]}\n\t\t{last_out[1]}')
+            return -1
+
+    print('ok')
+    return return_code
+
+def check_make_ret(return_code, stdout, stderr):
+    strerr = stderr.decode('utf-8').strip('\n')
+    last_err = strerr.split('\n')
+
+    if return_code != 0:
+        print('error\n\tCompilation failed!!!' + 
+             f'\n\tDetails: {return_code}')
+        return return_code
+
+    if last_err[0] != '':
+        print('error\n\tAn unexpected error occured!!!' +
+             f'\n\tDetails:\n\t\t{last_err}')
+        return -1
+
+    print('ok')
+    return return_code
+
+def make_progs(target):
+    args = ['make', '-C', '../l-tls', target]
+
+    p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    ret = p.returncode
+
+    return check_make_ret(ret, stdout, stderr)

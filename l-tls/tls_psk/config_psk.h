@@ -16,34 +16,32 @@
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 
-// #define MBEDTLS_DES_C
+#define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
 // #define MBEDTLS_AES_ALT
 // #define MBEDTLS_AES_ENCRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_ENC_ALT
 // #define MBEDTLS_AES_DECRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
-// #define MBEDTLS_ARIA_C
-// #define MBEDTLS_CAMELLIA_C
+#define MBEDTLS_ARIA_C
+#define MBEDTLS_CAMELLIA_C
 
 /* Cipher mode */
 #define MBEDTLS_CIPHER_MODE_CBC
 
-/* AEAD algorithms */
-// #define MBEDTLS_CHACHA20_C
-// #define MBEDTLS_GCM_C
-// #define MBEDTLS_CCM_C
-
 /* Message authentication algorithms */
 #define MBEDTLS_MD_C
 
-// #define MBEDTLS_SHA1_C
+#define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
 // #define MBEDTLS_SHA256_PROCESS_ALT
-// #define MBEDTLS_SHA512_C
-// #define MBEDTLS_POLY1305_C
+#define MBEDTLS_SHA512_C
 
 /* AEAD algorithms */
+// #define MBEDTLS_GCM_C
+// #define MBEDTLS_CCM_C
+// #define MBEDTLS_CHACHA20_C
+// #define MBEDTLS_POLY1305_C
 // #define MBEDTLS_CHACHAPOLY_C
 
 /* TLS protocol */

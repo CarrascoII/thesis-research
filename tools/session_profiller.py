@@ -8,38 +8,6 @@ import comparator_bar, plotter, utils
 
 strlen = 40
 
-def check_return_code(return_code, endpoint, ciphersuite, stdout, stderr):
-    last_msg = [
-        'Final status:',
-        f'  -Suite being used:          {ciphersuite}'
-    ]
-    strout = stdout.decode('utf-8').strip('\n')
-    last_out = strout.split('\n')[-2:]
-    strerr = stderr.decode('utf-8').strip('\n')
-    last_err = strerr.split('\n')
-
-    print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ')
-
-    if return_code != 0:
-        print('error\n\tGot an unexpected return code!!!' + 
-             f'\n\tDetails: {return_code}')
-        return return_code
-
-    if last_err[0] != '':
-        print('error\n\tAn unexpected error occured!!!' +
-             f'\n\tDetails:\n\t\t{last_err}')
-        return -1
-
-    for i in range(0, len(last_msg)):
-        if last_msg[i] != last_out[i]:
-            print('error\n\tLast message was not the expected one!!!' +
-                 f'\n\t\tExpected:\n\t\t{last_msg[0]}\n\t\t{last_msg[1]}' +
-                 f'\n\n\t\tObtained:\n\t\t{last_out[0]}\n\t\t{last_out[1]}')
-            return -1
-
-    print('ok')
-    return return_code
-    
 def run_cli(n_tests, ciphersuite):
     args = ['./../l-tls/tls_all/client.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
@@ -47,8 +15,7 @@ def run_cli(n_tests, ciphersuite):
     stdout, stderr = p.communicate()
     ret = p.returncode
 
-    return check_return_code(ret, 'client', ciphersuite, stdout, stderr)
-    
+    return utils.check_endpoint_ret(ret, 'client', ciphersuite, stdout, stderr, strlen)
 
 def run_srv(n_tests, ciphersuite):
     args = ['./../l-tls/tls_all/server.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
@@ -57,7 +24,7 @@ def run_srv(n_tests, ciphersuite):
     stdout, stderr = p.communicate()
     ret = p.returncode
 
-    return check_return_code(ret, 'server', ciphersuite, stdout, stderr)
+    return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
 
 def exec_tls(filename, timeout, n_tests, weight):
     #Step 1: Parse ciphersuite list
@@ -78,26 +45,35 @@ def exec_tls(filename, timeout, n_tests, weight):
     print('\nRunning with options:')
     print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}')
 
+    #Step 2: Compile libs and programs
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
+    print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
+    pool = ThreadPool(processes=1)
+    async_result_make = pool.apply_async(utils.make_progs, ('all',))
+    make_ret = async_result_make.get()
+    
+    if make_ret != 0:
+        sys.exit(2)
+    
     pool = ThreadPool(processes=2)
 
     for suite in total_ciphersuites:
         print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
         current += 1
 
-    #Step 2: Start server in thread 1
+    #Step 3: Start server in thread 1
         print('\tStarting server'.ljust(strlen, '.'), end=' ')
         async_result_srv = pool.apply_async(run_srv, (n_tests, suite))
         print('ok')
 
         time.sleep(timeout)
 
-    #Step 3: Start client in thread 2
+    #Step 4: Start client in thread 2
         print('\tStarting client'.ljust(strlen, '.'), end=' ')
         async_result_cli = pool.apply_async(run_cli, (n_tests, suite))
         print('ok')
 
-    #Step 4: Verify result from server and client
+    #Step 5: Verify result from server and client
         srv_ret = async_result_srv.get()
         cli_ret = async_result_cli.get()
 
@@ -112,12 +88,12 @@ def exec_tls(filename, timeout, n_tests, weight):
             success_ciphersuites.append(suite)
             n_success += 1
 
-    #Step 5: Analyse data and create comparison plots for all ciphersuites that ended successfully
+    #Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     print(f'\nCreating comparison graphs from all ciphersuites:')
     comparator_bar.make_cmp_figs(success_ciphersuites, 'session', weight=weight, strlen=strlen, spacing='\t')
 
-    #Step 6: Report final status
+    #Step 7: Report final status
     print('\n--- FINAL STATUS ---')
 
     print('\nData generation:')
@@ -140,7 +116,7 @@ def exec_tls(filename, timeout, n_tests, weight):
     print(f'\t-Number of ciphersuites: {n_success}')
 
     print('\nData aquisition and analysis has ended.')
-    print('You can check all the csv data and png figure files in the docs/<ciphersuite_name> directories.')
+    print('You can check all the csv data and png figure files in the docs directory and its subdirectories.')
 
 def main(argv):
     try:
