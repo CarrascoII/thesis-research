@@ -1,26 +1,30 @@
-MY_AES = my_aes/aes_alt
-MY_AES_MODULE = my_aes_module/aes_alt
-MY_SHA256 = my_sha256/sha256_alt
-
-MBEDTLS_INC_DIR = ../mbedtls/include
+MY_MBEDTLS_DIR = my_mbedtls
+MEASUREMENT_LIB_DIR = measurement/library
+MY_AES_MODULE_DIR = ../../l-tls/my_mbedtls/aes_module
 MBEDTLS_LIB_DIR = ../mbedtls/library
 MBEDTLS_PROG_DIR = ../mbedtls/programs
 PERSONAL_DIR = ../../l-tls
-MEASUREMENT_LIB_DIR = measurement/library
+PAPI_INC_DIR = ../../papi/src/install/include
+PAPI_LIB_DIR = ../../papi/src/install/lib
 
+MY_AES = $(MY_MBEDTLS_DIR)/aes/aes_alt
+MY_AES_MODULE = $(MY_MBEDTLS_DIR)/aes_module/aes_alt
+MY_SHA256 = $(MY_MBEDTLS_DIR)/sha256/sha256_alt
+
+MEASUREMENT_LIB_MAKE = $(MAKE) -C $(MEASUREMENT_LIB_DIR)
+MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
 MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
-MEASUREMENT_LIB_MAKE = $(MAKE) -C $(MEASUREMENT_LIB_DIR)
+CIPHER_MAKE = $(MAKE) -C cipher
 TLS_ALL_MAKE = $(MAKE) -C tls_all
 TLS_PSK_MAKE = $(MAKE) -C tls_psk
 TLS_RSA_MAKE = $(MAKE) -C tls_rsa
-CIPHER_MAKE = $(MAKE) -C cipher
 
-ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
+PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement alt_all alt_psk alt_rsa alt_cipher \
+.PHONY: lib_measurement lib_measurement_papi alt_all alt_psk alt_rsa alt_cipher \
 		lib_mbedtls lib_all lib_all_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
 		all_server run_all_server all_client run_all_client all \
 		all_server_papi run_all_server_papi all_client_papi run_all_client_papi all_papi \		
@@ -34,6 +38,9 @@ ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
 ### MAKE MEASUREMENT LIBRARY ###
 lib_measurement:
 	$(MEASUREMENT_LIB_MAKE)
+
+lib_measurement_papi:
+	$(MEASUREMENT_LIB_MAKE) PAPI_CFLAGS="$(PAPI_CFLAGS)"
 	
 ### MAKE MBEDTLS ALT ###
 alt_all:
@@ -50,9 +57,8 @@ alt_cipher:
 
 ### MAKE MBEDTLS LIBRARY ###
 lib_mbedtls:
-	gcc $(ALL_CFLAGS) -I$(MBEDTLS_INC_DIR) -c $(MY_AES).c -o $(MY_AES).o
-	gcc $(ALL_CFLAGS) -I$(MBEDTLS_INC_DIR) -c $(MY_AES_MODULE).c -o $(MY_AES_MODULE).o
-	gcc $(ALL_CFLAGS) -I$(MBEDTLS_INC_DIR) -c $(MY_SHA256).c -o $(MY_SHA256).o 
+	$(MY_MBEDTLS_MAKE)
+	echo "make mbedtls:"
 	$(MBEDTLS_LIB_MAKE)
 
 lib_all:
@@ -78,7 +84,7 @@ lib_cipher:
 
 ### MAKE MBEDTLS PROGRAMS ###
 progs: lib_mbedtls
-	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I../../l-tls/my_aes_module $(PERSONAL_DIR)/$(MY_AES).o $(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I$(MY_AES_MODULE_DIR) $(PERSONAL_DIR)/$(MY_AES).o $(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
 
 ### MAKE TLS ALL ###
 all_server:
@@ -185,15 +191,15 @@ run_cipher:
 
 ### CLEAN ###
 clean_local:
+	$(CIPHER_MAKE) clean_local
 	$(TLS_ALL_MAKE) clean_local
 	$(TLS_PSK_MAKE) clean_local
 	$(TLS_RSA_MAKE) clean_local
-	$(CIPHER_MAKE) clean_local
 	
 clean: clean_local
-	$(MBEDTLS_PROGS_MAKE) clean
-	$(MBEDTLS_LIB_MAKE) clean
-	rm -f $(MY_AES).o
-	rm -f $(MY_AES_MODULE).o
-	rm -f $(MY_SHA256).o
 	$(MEASUREMENT_LIB_MAKE) clean
+	$(MY_MBEDTLS_MAKE) clean
+	echo -n "Cleaning mbedtls......... "
+	$(MBEDTLS_LIB_MAKE) clean
+	$(MBEDTLS_PROGS_MAKE) clean
+	echo "ok"

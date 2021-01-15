@@ -1,6 +1,6 @@
 .SILENT:
 
-.PHONY: all lib papi clean
+.PHONY: all lib clean
 
 all: lib
 

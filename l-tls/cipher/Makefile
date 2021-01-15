@@ -1,12 +1,14 @@
-MY_AES = ../my_aes/aes_alt
-MY_AES_MODULE = ../my_aes_module/aes_alt
-
-MY_AES_MODULE_DIR = ../../l-tls/my_aes_module
+MY_MBEDTLS_DIR = ../my_mbedtls
+MY_AES_MODULE_DIR = ../../l-tls/my_mbedtls/aes_module
 MBEDTLS_INC_DIR = ../../mbedtls/include
 MBEDTLS_LIB_DIR = ../../mbedtls/library
 PAPI_INC_DIR = ../../papi/src/install/include
 PAPI_LIB_DIR = ../../papi/src/install/lib
 
+MY_AES = $(MY_MBEDTLS_DIR)/aes/aes_alt
+MY_AES_MODULE = $(MY_MBEDTLS_DIR)/aes_module/aes_alt
+
+MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
 
 ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
@@ -18,29 +20,33 @@ CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_aes.h>'
 
 .SILENT:
 
-.PHONY: alt_lib lib local run clean_local clean
+.PHONY: all alt_lib lib local run clean_local clean
+
+all: local
 
 ### MAKE ALT MBEDTLS LIB ###
 alt_lib:
-	gcc $(ALL_CFLAGS) $(CONFIG) -I$(MBEDTLS_INC_DIR) -c $(MY_AES).c -o $(MY_AES).o
-	gcc $(ALL_CFLAGS) $(CONFIG) -I$(MBEDTLS_INC_DIR) -c $(MY_AES_MODULE).c -o $(MY_AES_MODULE).o
+	$(MY_MBEDTLS_MAKE) cipher CONFIG="$(CONFIG)"
 
 lib: alt_lib
+	echo "make mbedtls:"
 	$(MBEDTLS_LIB_MAKE) CFLAGS="$(CONFIG) -I$(MY_AES_MODULE_DIR) $(PAPI_CFLAGS)"
 
 ### MAKE LOCAL ###
-local: lib
-	rm -f test_aes.out
+local: clean lib
 	gcc $(ALL_CFLAGS) test_aes.c $(LOCAL_CFLAGS) -o test_aes.out
 
-run: clean local
+run: local
 	./test_aes.out
 
 ### MAKE CLEAN ###
 clean_local:
-	rm -f test_aes.out
+	echo -n "Cleaning cipher.......... "
+	rm -f *.out
+	echo "ok"
 
 clean: clean_local
-	rm -f $(MY_AES).o
-	rm -f $(MY_AES_MODULE).o
+	$(MY_MBEDTLS_MAKE) clean
+	echo -n "Cleaning mbedtls......... "
 	$(MBEDTLS_LIB_MAKE) clean
+	echo "ok"
