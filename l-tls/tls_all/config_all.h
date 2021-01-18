@@ -8,14 +8,17 @@
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
 /* Key exchange algorithms */
-#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
+#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 /**
  * mbed TLS modules
  */
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)
 /* Key Exchange algorithm */
+#define MBEDTLS_DHM_C
+
 #define MBEDTLS_RSA_C
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_OID_C
@@ -30,7 +33,7 @@
 
 #define MBEDTLS_PEM_PARSE_C
 #define MBEDTLS_BASE64_C
-#endif
+#endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED || MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED */
 
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
@@ -43,11 +46,8 @@
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_ARIA_C
 #define MBEDTLS_CAMELLIA_C
-// #define MBEDTLS_CHACHA20_C
 
 #define MBEDTLS_CIPHER_MODE_CBC
-// #define MBEDTLS_GCM_C
-// #define MBEDTLS_CCM_C
 
 /* Message authentication algorithms */
 #define MBEDTLS_MD_C
@@ -56,9 +56,12 @@
 #define MBEDTLS_SHA256_C
 // #define MBEDTLS_SHA256_PROCESS_ALT
 #define MBEDTLS_SHA512_C
-// #define MBEDTLS_POLY1305_C
 
 /* AEAD algorithms */
+// #define MBEDTLS_GCM_C
+// #define MBEDTLS_CCM_C
+// #define MBEDTLS_CHACHA20_C
+// #define MBEDTLS_POLY1305_C
 // #define MBEDTLS_CHACHAPOLY_C
 
 /* TLS protocol */
@@ -68,7 +71,7 @@
 
 /* Imports */
 #define MBEDTLS_NET_C
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)
 #define MBEDTLS_CERTS_C
 #endif
 #define MBEDTLS_CTR_DRBG_C
@@ -90,55 +93,81 @@
  * mbed TLS ciphersuites
  */
 #define MBEDTLS_SSL_CIPHERSUITES \
-            MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA
-            /* Regular PSK ciphersuites */
+            MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256
+            /* Regular DHE_RSA ciphersuites - 11 */
+            // MBEDTLS_TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_ARIA_128_CBC_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_ARIA_256_CBC_SHA384,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256,
+
+            /* AEAD DHE_RSA ciphersuites - 11 */
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CCM,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_128_CCM_8,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CCM,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CCM_8,
+            // MBEDTLS_TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
+            // MBEDTLS_TLS_DHE_RSA_WITH_ARIA_128_GCM_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_ARIA_256_GCM_SHA384,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_128_GCM_SHA256,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CAMELLIA_256_GCM_SHA384,
+            // MBEDTLS_TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+
+            /* Regular PSK ciphersuites - 11 */
             // MBEDTLS_TLS_RSA_WITH_3DES_EDE_CBC_SHA,          
             // MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA,           
-            // MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA,           
             // MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA256,        
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA,           
             // MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA256,        
-            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,      
-            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,      
-            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256,   
-            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256,   
             // MBEDTLS_TLS_RSA_WITH_ARIA_128_CBC_SHA256,       
-            // MBEDTLS_TLS_RSA_WITH_ARIA_256_CBC_SHA384
+            // MBEDTLS_TLS_RSA_WITH_ARIA_256_CBC_SHA384,
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,      
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256,   
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,      
+            // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256,   
 
-            /* AEAD RSA ciphersuites */
+            /* AEAD RSA ciphersuites - 10 */
+            // MBEDTLS_TLS_RSA_WITH_AES_128_CCM,               
+            // MBEDTLS_TLS_RSA_WITH_AES_128_CCM_8,             
             // MBEDTLS_TLS_RSA_WITH_AES_128_GCM_SHA256,        
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CCM,               
+            // MBEDTLS_TLS_RSA_WITH_AES_256_CCM_8,
             // MBEDTLS_TLS_RSA_WITH_AES_256_GCM_SHA384,        
             // MBEDTLS_TLS_RSA_WITH_ARIA_128_GCM_SHA256,       
             // MBEDTLS_TLS_RSA_WITH_ARIA_256_GCM_SHA384,       
             // MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_GCM_SHA256,   
             // MBEDTLS_TLS_RSA_WITH_CAMELLIA_256_GCM_SHA384,   
-            // MBEDTLS_TLS_RSA_WITH_AES_128_CCM,               
-            // MBEDTLS_TLS_RSA_WITH_AES_256_CCM,               
-            // MBEDTLS_TLS_RSA_WITH_AES_128_CCM_8,             
-            // MBEDTLS_TLS_RSA_WITH_AES_256_CCM_8
 
-            /* Regular PSK ciphersuites */
-            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
+            /* Regular PSK ciphersuites - 9 */
             // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
             // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
             // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
             // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
             // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
             // MBEDTLS_TLS_PSK_WITH_ARIA_256_CBC_SHA384,       
             // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256,
-            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384
+            // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_CBC_SHA384,
 
-            /* AEAD PSK ciphersuites */
+            /* AEAD PSK ciphersuites - 11 */
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
             // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
+            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
             // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
             // MBEDTLS_TLS_PSK_WITH_ARIA_128_GCM_SHA256,       
             // MBEDTLS_TLS_PSK_WITH_ARIA_256_GCM_SHA384,       
             // MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256,   
             // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384,   
-            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
-            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
-            // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
-            // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
-            // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
+            // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256,
 
 #include "mbedtls/check_config.h"
 
@@ -159,7 +188,7 @@
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)
 // #define MUTUAL_AUTH
 #endif
 
