@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_client generate request";
     char *p, *q;
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     const char psk_id[] = CLI_ID;
     const unsigned char test_psk[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -268,11 +268,11 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     if(suite_id != 0) {
         mbedtls_ssl_conf_ciphersuites(&tls_conf, &suite_id);
     }
 
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     if((ret = mbedtls_ssl_conf_psk(&tls_conf, test_psk, sizeof(test_psk), (const unsigned char *) psk_id, sizeof(psk_id) - 1)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_psk returned -0x%04x\n", -ret);

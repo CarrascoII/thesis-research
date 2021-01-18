@@ -58,7 +58,7 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 }
 #endif /* MBEDTLS_DEBUG_C */
 
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
 typedef struct _psk_entry psk_entry;
 
 struct _psk_entry {
@@ -127,7 +127,7 @@ int psk_callback(void *p_info, mbedtls_ssl_context *ssl, const unsigned char *na
 
     return(-1);
 }
-#endif /* MBEDTLS_KEY_EXCHANGE_PSK_ENABLED */
+#endif /* MBEDTLS_KEY_EXCHANGE_PSK_ENABLED || MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED */
 
 int main(int argc, char **argv) {
     // Initial setup
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     psk_entry *psk_info = NULL;
 #endif
 
@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_server generates response";
     char *p, *q;
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     const unsigned char test_psk[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
     mbedtls_debug_set_threshold(debug);
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     // Load psk list
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the psk list......................");
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif
+#endif /* MBEDTLS_KEY_EXCHANGE_PSK_ENABLED || MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED */
 
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)
     // Load certificates and key
@@ -364,11 +364,11 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     if(suite_id != 0) {
         mbedtls_ssl_conf_ciphersuites(&tls_conf, &suite_id);
     }
 
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
 #endif
 
@@ -608,7 +608,7 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     psk_free(psk_info);
 #endif
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)
