@@ -6,7 +6,7 @@ import utils
 
 def make_session_cmp_bar(name, ylabel, stats, labels, hdrs):
     for hdr in hdrs:
-        fig, ax = plt.subplots(1, 1, figsize=(15, 5))
+        fig, ax = plt.subplots(1, 1, figsize=(30, 10))
         xtickslabels = stats[0]['keys']
         y_lst = []
         width = 0.5
