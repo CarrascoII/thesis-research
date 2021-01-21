@@ -5,10 +5,7 @@
 #endif
 
 #include "mbedtls/net_sockets.h"
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
 #include "mbedtls/certs.h"
 #endif
 #if defined(MBEDTLS_DEBUG_C)
@@ -64,21 +61,14 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt ca_cert;
 #endif
-#if (defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
     mbedtls_x509_crt rsa_cert;
     mbedtls_pk_context rsa_key;
 #endif
-#if (defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
     mbedtls_x509_crt ec_cert;
     mbedtls_pk_context ec_key;
 #endif
@@ -105,8 +95,7 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_client generate request";
     char *p, *q;
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(USE_PSK_C)
     const char psk_id[] = CLI_ID;
     const unsigned char test_psk[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -117,10 +106,7 @@ int main(int argc, char **argv) {
 #endif
     };
 #endif
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     uint32_t flags;
 #endif
 
@@ -178,20 +164,14 @@ int main(int argc, char **argv) {
     }
 
     mbedtls_net_init(&server);
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
-#if (defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
     mbedtls_x509_crt_init(&rsa_cert);
     mbedtls_pk_init(&rsa_key);
 #endif
-#if (defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
     mbedtls_x509_crt_init(&ec_cert);
     mbedtls_pk_init(&ec_key);
 #endif
@@ -209,10 +189,7 @@ int main(int argc, char **argv) {
 #endif
 
     // Load CA certificate(s)
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the ca certificate(s).............");
     fflush(stdout);
@@ -233,9 +210,7 @@ int main(int argc, char **argv) {
 #endif
 
     // Load RSA certificate and key
-#if (defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the rsa client certificate........");
     fflush(stdout);
@@ -265,14 +240,10 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* (MBEDTLS_KEY_EXCHANGE_RSA_ENABLED || MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED ||
-          MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED || MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) &&
-          MUTUAL_AUTH */
+#endif /* MBEDTLS_RSA_C && MUTUAL_AUTH */
 
     // Load EC certificate and key
-#if (defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the ec client certificate.........");
     fflush(stdout);
@@ -302,9 +273,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* (MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED || MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED ||
-          MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED || MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED) &&
-          MUTUAL_AUTH */
+#endif /* MBEDTLS_ECDSA_C && MUTUAL_AUTH */
 
     // Seed the RNG
 #if defined(MBEDTLS_DEBUG_C)
@@ -322,7 +291,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    // Setup ssl session
+    // Setup TLS session
     printf("\nSetting up TLS session....................");
     fflush(stdout);
 #endif
@@ -343,8 +312,7 @@ int main(int argc, char **argv) {
         mbedtls_ssl_conf_ciphersuites(&tls_conf, &suite_id);
     }
 
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(USE_PSK_C)
     if((ret = mbedtls_ssl_conf_psk(&tls_conf, test_psk, sizeof(test_psk), (const unsigned char *) psk_id, sizeof(psk_id) - 1)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_psk returned -0x%04x\n", -ret);
@@ -353,16 +321,11 @@ int main(int argc, char **argv) {
     }
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
 #endif
 
-#if (defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
@@ -371,9 +334,7 @@ int main(int argc, char **argv) {
     }
 #endif
 
-#if (defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
@@ -398,10 +359,7 @@ int main(int argc, char **argv) {
     }
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     if((ret = mbedtls_ssl_set_hostname(&tls, SERVER_IP)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_set_hostname returned -0x%04x\n", -ret);
@@ -490,10 +448,7 @@ int main(int argc, char **argv) {
 #endif
 
         // Verify server certificate
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nVerifying server certificate..............");
 #endif
@@ -621,18 +576,15 @@ int main(int argc, char **argv) {
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
 
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
         char crt_buf[512];
-        
+
         mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
         printf("\n  -Server certificate:\n%s", crt_buf);
     }
 #endif
-#endif /* MEBEDTLS_DEBUG_C */
+#endif
 
     printf("\n");
 
@@ -645,22 +597,15 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
-#if (defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
     mbedtls_pk_free(&ec_key);
     mbedtls_x509_crt_free(&ec_cert);
 #endif
-#if (defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)) && \
-    defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
     mbedtls_pk_free(&rsa_key);
     mbedtls_x509_crt_free(&rsa_cert);
 #endif
-#if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_free(&ca_cert);
 #endif
     mbedtls_net_free(&server);
