@@ -5,19 +5,18 @@ import utils
 
 
 def make_session_cmp_bar(name, ylabel, stats, labels, hdrs):
+    endpoint = stats[0]['keys']
+    
     for hdr in hdrs:
-        fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-        xtickslabels = stats[0]['keys']
-        y_lst = []
-        width = 0.5
+        for end in endpoint:
+            fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+            y_lst = []
 
+            for stat in stats:
+                y_lst.append([stat[hdr][end]])
 
-        for stat in stats:
-            y_lst.append([stat[hdr][xtickslabels[0]], stat[hdr][xtickslabels[1]]])
-
-        ax = utils.multiple_custom_bar(y_lst, ax=ax, width=width, labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-
-        utils.save_fig(fig, '../docs/cmp_mult_' + name + '_' + ylabel + '_' + hdr + '.png')
+            ax = utils.custom_bar(y_lst, ax=ax, xlabel='ciphersuite', xtickslabels=labels, title=end, ylabel=ylabel)
+            utils.save_fig(fig, '../docs/' + end + '_' + name + '_' + ylabel + '_' + hdr + '.png')
 
 def make_alg_cmp_bar(alg, ylabel, stats, labels, hdrs):
     for hdr in hdrs:

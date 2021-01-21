@@ -89,27 +89,45 @@ def save_fig(fig, fname):
     plt.close(fig)
     plt.cla()
 
-def custom_errorbar(x, y, e, ax=None, title=None, xlabel=None, ylabel=None, kwargs={}):
+def custom_errorbar(x, y, e, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
 
     ax.errorbar(x, y, yerr=e, fmt='.', capsize=5, barsabove=True, **kwargs)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
 
     return(ax)
 
-def multiple_custom_plots(x, y1, y2, ax=None, title=None, ylabel=None, kwargs1={}, kwargs2={}):
+def multiple_custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs1={}, kwargs2={}):
     if ax is None:
         ax = plt.gca()
 
     ax.plot(x, y1, **kwargs1)
     ax.plot(x, y2, **kwargs2)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
 
     return(ax)
 
-def multiple_custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xtickslabels=None, ylabel=None):
+def custom_bar(y_list, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+    x_list = []
+
+    if ax is None:
+        ax = plt.gca()
+
+    for i in range(len(y_list)):
+        x = (i + (1 - len(y_list)))
+        x_list.append(x)
+        ax.bar(x, y_list[i], alpha=0.7, align='center')
+
+    ax.set_xticks(x_list)
+    ax.set_xticklabels(xtickslabels, y=0.25, rotation='vertical', ha='center', va='center')
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+    # ax.legend()
+
+    return(ax)
+
+def multiple_custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
     if ax is None:
         ax = plt.gca()
 
@@ -122,19 +140,19 @@ def multiple_custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xtic
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
 
     return(ax)
 
-def custom_scatter(x, y, ax=None, title=None, xticks=None, xtickslabels=None, ylabel=None, kwargs={}):
+def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xticks=None, xtickslabels=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
 
     ax.scatter(x, y, marker='.', **kwargs)
     ax.set_xticks(xticks)
     ax.set_xticklabels(xtickslabels)
-    ax.set(xlabel='data_size', ylabel=ylabel, title=title)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
 
     return(ax)
 
