@@ -485,15 +485,15 @@ int main(int argc, char **argv) {
                 goto exit;
             }
 
-#if defined(MBEDTLS_DEBUG_C)
             // Send request
+#if defined(MBEDTLS_DEBUG_C)
             printf("\n  < Write to server:");
             fflush(stdout);
 #endif
 
             if((ret = mbedtls_ssl_write(&tls, request, input_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf(" mbedtls_net_send returned -0x%04x\n", -ret);
+                printf(" mbedtls_ssl_write returned -0x%04x\n", -ret);
 #endif
                 goto exit;
             }
@@ -514,7 +514,7 @@ int main(int argc, char **argv) {
 
             if((ret = mbedtls_ssl_read(&tls, response, input_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf(" mbedtls_net_recv returned -0x%04x\n", -ret);
+                printf(" mbedtls_ssl_read returned -0x%04x\n", -ret);
 #endif
                 goto exit;
             }
@@ -562,7 +562,7 @@ int main(int argc, char **argv) {
 #endif
 
 #if defined(MBEDTLS_DEBUG_C)
-        printf(" ok\n");
+        printf(" ok");
 #endif
     }
 

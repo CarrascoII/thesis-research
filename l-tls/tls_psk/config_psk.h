@@ -153,11 +153,6 @@ char *ke_fname;
 #define NEW_CIPHER_ALG_ALT
 #define NEW_MD_HMAC_ALT
 
-#if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
-#define NEW_SHA256_PROCESS_ALT
-#define SHA256_THRESHOLD    1024
-#endif
-
 #if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_ENCRYPT_ALT)
 #define NEW_AES_ENCRYPT_ALT
 #define AES_ENC_THRESHOLD   2048
@@ -174,6 +169,11 @@ char *ke_fname;
 
 #if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_SETKEY_DEC_ALT)
 #define NEW_AES_SETKEY_DEC_ALT
+#endif
+
+#if defined(NEW_MD_HMAC_ALT) && defined(MBEDTLS_SHA256_PROCESS_ALT)
+#define NEW_SHA256_PROCESS_ALT
+#define SHA256_THRESHOLD    1024
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

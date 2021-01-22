@@ -579,8 +579,8 @@ int main(int argc, char **argv) {
                 goto exit;
             }
 
-#if defined(MBEDTLS_DEBUG_C)
             // Receive request
+#if defined(MBEDTLS_DEBUG_C)
             printf("\n  > Read from client:");
             fflush(stdout);
 #endif
@@ -655,7 +655,7 @@ int main(int argc, char **argv) {
 #endif
 
 #if defined(MBEDTLS_DEBUG_C)
-        printf(" ok\n");
+        printf(" ok");
 #endif
     }
 
