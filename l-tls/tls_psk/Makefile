@@ -54,23 +54,31 @@ lib_papi: measurement_papi alt_lib
 
 ### MAKE LOCAL ###
 server: lib
+	echo -n "Making server............ "
 	rm -f server.out
 	gcc $(ALL_CFLAGS) server.c $(LOCAL_CFLAGS) -o server.out
+	echo "ok"
 
 client: lib
+	echo -n "Making client............ "
 	rm -f client.out
 	gcc $(ALL_CFLAGS) client.c $(LOCAL_CFLAGS) -o client.out
+	echo "ok"
 
 local: clean server client
 
 ### MAKE LOCAL PAPI ###
 server_papi: lib_papi
+	echo -n "Making server............ "
 	rm -f server.out
 	gcc $(ALL_CFLAGS) server.c $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o server.out
+	echo "ok"
 
 client_papi: lib_papi
+	echo -n "Making client............ "
 	rm -f client.out
 	gcc $(ALL_CFLAGS) client.c $(LOCAL_CFLAGS) $(PAPI_CFLAGS) -o client.out
+	echo "ok"
 
 local_papi: clean server_papi client_papi
 

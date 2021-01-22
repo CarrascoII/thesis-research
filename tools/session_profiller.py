@@ -9,7 +9,7 @@ import comparator_bar, plotter, utils
 strlen = 40
 
 def run_cli(n_tests, ciphersuite):
-    args = ['./../l-tls/tls_all/client.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+    args = ['./../l-tls/tls_session/client.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -18,7 +18,7 @@ def run_cli(n_tests, ciphersuite):
     return utils.check_endpoint_ret(ret, 'client', ciphersuite, stdout, stderr, strlen)
 
 def run_srv(n_tests, ciphersuite):
-    args = ['./../l-tls/tls_all/server.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+    args = ['./../l-tls/tls_session/server.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()

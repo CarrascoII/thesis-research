@@ -8,21 +8,21 @@
 #define MBEDTLS_SSL_PROTO_TLS1_2
 
 /* Key exchange algorithms */
-#define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
-#define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
+// #define MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
 /**
  * mbed TLS modules
  */
-/* Key Exchange algorithm */
+/* Key Exchange / Authentication algorithm */
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
     defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)
 #define MBEDTLS_RSA_C
@@ -107,7 +107,7 @@
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -125,7 +125,9 @@
  * 
  * \note Supported/Total := 94/175
  */
-// #define MBEDTLS_SSL_CIPHERSUITES
+#define MBEDTLS_SSL_CIPHERSUITES \
+            MBEDTLS_TLS_RSA_PSK_WITH_AES_128_CBC_SHA256
+
             /* Regular PSK ciphersuites - 9 */
             // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
             // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
@@ -351,9 +353,9 @@
 #define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  8192
-#define N_TESTS                         1
+#define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
-#define DEBUG_LEVEL                     1
+#define DEBUG_LEVEL                     2
 // #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MSG_HEX
 #endif

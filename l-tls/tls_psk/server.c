@@ -5,6 +5,9 @@
 #endif
 
 #include "mbedtls/net_sockets.h"
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#include "mbedtls/certs.h"
+#endif
 #if defined(MBEDTLS_DEBUG_C)
 #include "mbedtls/debug.h"
 #endif
@@ -121,6 +124,17 @@ int psk_callback(void *p_info, mbedtls_ssl_context *ssl, const unsigned char *na
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server, client;
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt ca_cert;
+#endif
+#if defined(MBEDTLS_RSA_C)
+    mbedtls_x509_crt rsa_cert;
+    mbedtls_pk_context rsa_key;
+#endif
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt ec_cert;
+    mbedtls_pk_context ec_key;
+#endif
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
@@ -201,6 +215,17 @@ int main(int argc, char **argv) {
 	}
 
     mbedtls_net_init(&server);
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt_init(&ca_cert);
+#endif
+#if defined(MBEDTLS_RSA_C)
+    mbedtls_x509_crt_init(&rsa_cert);
+    mbedtls_pk_init(&rsa_key);
+#endif
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt_init(&ec_cert);
+    mbedtls_pk_init(&ec_key);
+#endif
     mbedtls_net_init(&client);
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
@@ -225,8 +250,97 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
+#endif
     
+    // Load CA certificate(s)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the ca certificate(s).............");
+    fflush(stdout);
+#endif
+
+    for(i = 0; mbedtls_test_cas[i] != NULL; i++) {
+        if((ret = mbedtls_x509_crt_parse(&ca_cert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_x509_crt_parse_ca returned -0x%04x\n", -ret);
+#endif
+            goto exit;
+        }
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif
+
+    // Load RSA certificate and key
+#if defined(MBEDTLS_RSA_C)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the rsa server certificate........");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_x509_crt_parse(&rsa_cert, (const unsigned char *) mbedtls_test_srv_crt_rsa, mbedtls_test_srv_crt_rsa_len)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+
+    printf("\nLoading the rsa server key................");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_pk_parse_key(&rsa_key, (const unsigned char *) mbedtls_test_srv_key_rsa, mbedtls_test_srv_key_rsa_len, NULL, 0)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif /* MBEDTLS_RSA_C */
+
+    // Load EC certificate and key
+#if defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the ec server certificate.........");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_x509_crt_parse(&ec_cert, (const unsigned char *) mbedtls_test_srv_crt_ec, mbedtls_test_srv_crt_ec_len)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+
+    printf("\nLoading the ec server key.................");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_pk_parse_key(&ec_key, (const unsigned char *) mbedtls_test_srv_key_ec, mbedtls_test_srv_key_ec_len, NULL, 0)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif /* MBEDTLS_ECP_C */
+
     // Seed the RNG
+#if defined(MBEDTLS_DEBUG_C)
     printf("\nSeeding the random number generator.......");
     fflush(stdout);
 #endif
@@ -278,6 +392,23 @@ int main(int argc, char **argv) {
     }
     
     mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
+#endif
+
+#if defined(MBEDTLS_RSA_C)
+    if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+        printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+        goto exit;
+    }
+#endif
+
+#if defined(MBEDTLS_ECP_C)
+    if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
+        printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+        goto exit;
+    }
+#endif
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -420,6 +551,17 @@ exit:
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     psk_free(psk_info);
+#if defined(MBEDTLS_ECP_C)
+    mbedtls_pk_free(&ec_key);
+    mbedtls_x509_crt_free(&ec_cert);
+#endif
+#if defined(MBEDTLS_RSA_C)
+    mbedtls_pk_free(&rsa_key);
+    mbedtls_x509_crt_free(&rsa_cert);
+#endif
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt_free(&ca_cert);
+#endif
     mbedtls_net_free(&client);
     mbedtls_net_free(&server);
 

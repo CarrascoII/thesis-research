@@ -21,7 +21,7 @@ MBEDTLS_CFLAGS = -I$(MBEDTLS_INC_DIR) -L$(MBEDTLS_LIB_DIR) -lmbedx509 -lmbedtls 
 PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 LOCAL_CFLAGS = $(MY_AES).o $(MY_AES_MODULE).o $(MY_SHA256).o -I$(MY_AES_MODULE_DIR) $(MBEDTLS_CFLAGS) $(MEASUREMENT_CFLAGS)
 
-CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_all.h>'
+CONFIG = -DMBEDTLS_CONFIG_FILE='<$(CURDIR)/config_session.h>'
 
 .SILENT:
 
@@ -84,7 +84,7 @@ local_papi: clean server_papi client_papi
 
 ### MAKE CLEAN ###
 clean_local:
-	echo -n "Cleaning tls_all......... "
+	echo -n "Cleaning tls_session..... "
 	rm -f *.out
 	echo "ok"
 

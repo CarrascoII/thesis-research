@@ -5,6 +5,9 @@
 #endif
 
 #include "mbedtls/net_sockets.h"
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#include "mbedtls/certs.h"
+#endif
 #if defined(MBEDTLS_DEBUG_C)
 #include "mbedtls/debug.h"
 #endif
@@ -53,6 +56,9 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt ca_cert;
+#endif
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
@@ -77,6 +83,9 @@ int main(int argc, char **argv) {
         ,0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
 #endif
     };
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    uint32_t flags;
+#endif
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
@@ -132,6 +141,9 @@ int main(int argc, char **argv) {
 	}
 
     mbedtls_net_init(&server);
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt_init(&ca_cert);
+#endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
@@ -139,8 +151,31 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
+#endif
+
+    // Load CA certificate(s)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the ca certificate(s).............");
+    fflush(stdout);
+#endif
+
+    for(i = 0; mbedtls_test_cas[i] != NULL; i++) {
+        if((ret = mbedtls_x509_crt_parse(&ca_cert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
+#endif
+            goto exit;
+        }
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif
 
     // Seed the RNG
+#if defined(MBEDTLS_DEBUG_C)
     printf("\nSeeding the random number generator.......");
     fflush(stdout);
 #endif
@@ -183,12 +218,25 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
+#endif
+
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_setup returned -0x%04x\n", -ret);
 #endif
         goto exit;
     }
+
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    if((ret = mbedtls_ssl_set_hostname(&tls, SERVER_IP)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_ssl_set_hostname returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+#endif
 
     mbedtls_ssl_set_bio(&tls, &server, mbedtls_net_send, mbedtls_net_recv, NULL);
 
@@ -226,6 +274,29 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
+#endif
+    
+        // Verify server certificate
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nVerifying server certificate..............");
+#endif
+
+    if((flags = mbedtls_ssl_get_verify_result(&tls)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        char vrfy_buf[512];
+        mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "", flags);
+        printf(" failed! mbedtls_ssl_get_verify_result returned %s\n", vrfy_buf);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif
+
+#if defined(MBEDTLS_DEBUG_C)
     printf("\nPerforming TLS record:");
 #endif
 
@@ -316,6 +387,15 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
+
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
+        char crt_buf[512];
+
+        mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
+        printf("\n  -Server certificate:\n%s", crt_buf);
+    }
+#endif
 #endif
     printf("\n");
 
@@ -324,6 +404,9 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+    mbedtls_x509_crt_free(&ca_cert);
+#endif
     mbedtls_net_free(&server);
 
 #if defined(MEASURE_CIPHER)

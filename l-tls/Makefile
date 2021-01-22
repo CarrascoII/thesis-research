@@ -16,7 +16,7 @@ MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
 MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
 CIPHER_MAKE = $(MAKE) -C cipher
-TLS_ALL_MAKE = $(MAKE) -C tls_all
+TLS_SESSION_MAKE = $(MAKE) -C tls_session
 TLS_PSK_MAKE = $(MAKE) -C tls_psk
 TLS_RSA_MAKE = $(MAKE) -C tls_rsa
 
@@ -24,10 +24,10 @@ PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement lib_measurement_papi alt_all alt_psk alt_rsa alt_cipher \
-		lib_mbedtls lib_all lib_all_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
-		all_server run_all_server all_client run_all_client all \
-		all_server_papi run_all_server_papi all_client_papi run_all_client_papi all_papi \		
+.PHONY: lib_measurement lib_measurement_papi alt_session alt_psk alt_rsa alt_cipher \
+		lib_mbedtls lib_session lib_session_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
+		session_server run_session_server session_client run_session_client session \
+		session_server_papi run_session_server_papi session_client_papi run_session_client_papi session_papi \		
 		psk_server run_psk_server psk_client run_psk_client psk \
 		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi psk_papi \
 		rsa_server run_rsa_server rsa_client run_rsa_client rsa \
@@ -43,8 +43,8 @@ lib_measurement_papi:
 	$(MEASUREMENT_LIB_MAKE) PAPI_CFLAGS="$(PAPI_CFLAGS)"
 	
 ### MAKE MBEDTLS ALT ###
-alt_all:
-	$(TLS_ALL_MAKE) alt_lib
+alt_session:
+	$(TLS_SESSION_MAKE) alt_lib
 
 alt_psk:
 	$(TLS_PSK_MAKE) alt_lib
@@ -61,11 +61,11 @@ lib_mbedtls:
 	echo "make mbedtls:"
 	$(MBEDTLS_LIB_MAKE)
 
-lib_all:
-	$(TLS_ALL_MAKE) lib
+lib_session:
+	$(TLS_SESSION_MAKE) lib
 
-lib_all_papi:
-	$(TLS_ALL_MAKE) lib_papi
+lib_session_papi:
+	$(TLS_SESSION_MAKE) lib_papi
 
 lib_psk:
 	$(TLS_PSK_MAKE) lib
@@ -86,37 +86,37 @@ lib_cipher:
 progs: lib_mbedtls
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I$(MY_AES_MODULE_DIR) $(PERSONAL_DIR)/$(MY_AES).o $(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
 
-### MAKE TLS ALL ###
-all_server:
-	$(TLS_ALL_MAKE) server
+### MAKE TLS SESSION ###
+session_server:
+	$(TLS_SESSION_MAKE) server
 
-run_all_server: all_server
-	./tls_all/server.out
+run_session_server: session_server
+	./tls_session/server.out
 
-all_client:
-	$(TLS_ALL_MAKE) client
+session_client:
+	$(TLS_SESSION_MAKE) client
 
-run_all_client: all_client
-	./tls_all/client.out
+run_session_client: session_client
+	./tls_session/client.out
 
-all:
-	$(TLS_ALL_MAKE) local
+session:
+	$(TLS_SESSION_MAKE) local
 
-### MAKE TLS ALL PAPI ###
-all_server_papi:
-	$(TLS_ALL_MAKE) server_papi
+### MAKE TLS SESSION PAPI ###
+session_server_papi:
+	$(TLS_SESSION_MAKE) server_papi
 
-run_all_server_papi: all_server_papi
-	./tls_all/server.out
+run_session_server_papi: session_server_papi
+	./tls_session/server.out
 
-all_client_papi:
-	$(TLS_ALL_MAKE) client_papi
+session_client_papi:
+	$(TLS_SESSION_MAKE) client_papi
 
-run_all_client_papi: all_client_papi
-	./tls_all/client.out
+run_session_client_papi: session_client_papi
+	./tls_session/client.out
 
-all_papi:
-	$(TLS_ALL_MAKE) local_papi
+session_papi:
+	$(TLS_SESSION_MAKE) local_papi
 
 ### MAKE TLS PSK ###
 psk_server:
@@ -192,7 +192,7 @@ run_cipher:
 ### CLEAN ###
 clean_local:
 	$(CIPHER_MAKE) clean_local
-	$(TLS_ALL_MAKE) clean_local
+	$(TLS_SESSION_MAKE) clean_local
 	$(TLS_PSK_MAKE) clean_local
 	$(TLS_RSA_MAKE) clean_local
 	
