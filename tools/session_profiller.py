@@ -49,7 +49,7 @@ def exec_tls(filename, timeout, n_tests, weight):
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
     pool = ThreadPool(processes=1)
-    async_result_make = pool.apply_async(utils.make_progs, ('all',))
+    async_result_make = pool.apply_async(utils.make_progs, ('session',))
     make_ret = async_result_make.get()
     
     if make_ret != 0:
