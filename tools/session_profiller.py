@@ -26,7 +26,7 @@ def run_srv(n_tests, ciphersuite):
 
     return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
 
-def exec_tls(filename, timeout, n_tests, weight):
+def exec_tls(filename, target, timeout, n_tests, weight):
     #Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
@@ -49,7 +49,7 @@ def exec_tls(filename, timeout, n_tests, weight):
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
     pool = ThreadPool(processes=1)
-    async_result_make = pool.apply_async(utils.make_progs, ('session',))
+    async_result_make = pool.apply_async(utils.make_progs, (target,))
     make_ret = async_result_make.get()
     
     if make_ret != 0:
@@ -120,7 +120,7 @@ def exec_tls(filename, timeout, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'ht:n:f:', ['help', 'timeout=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'hc:t:n:f:', ['help', 'compile=', 'timeout=', 'n_tests=', 'filter='])
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "session_profiller.py -h" for help')
         sys.exit(2)
@@ -133,15 +133,18 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
+    target = 'session'
     timeout = 2
     n_tests = '500'
     weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('profiller.py [-t <timeout>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
-            print('profiller.py [--timeout=<timeout>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
+            print('profiller.py [-c <compilation_target>] [-t <timeout>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
+            print('profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
+        if opt in ('-c', '--compile'):
+            target = arg
         if opt in ('-t', '--timeout'):
             timeout = int(arg)
         if opt in ('-n', '--n_tests'):
@@ -150,7 +153,7 @@ def main(argv):
             weight = float(arg)
 
     os.system('clear')
-    exec_tls(args[0], timeout, n_tests, weight)
+    exec_tls(args[0], target, timeout, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

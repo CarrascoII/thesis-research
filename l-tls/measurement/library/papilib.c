@@ -6,6 +6,7 @@
 
 #if defined(MEASUREMENT_PAPI_C)
 #include "measurement/papilib.h"
+#include "papi.h"
 
 #include <stdio.h>
 #include <stdlib.h>

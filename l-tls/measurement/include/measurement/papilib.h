@@ -7,8 +7,6 @@
 #include MEASURE_CONFIG_FILE
 #endif
 
-#include "papi.h"
-
 #define MEASURE_PAPI_START      0 /**< PAPI start. */
 #define MEASURE_PAPI_END        1 /**< PAPI end. */
 
