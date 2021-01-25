@@ -307,6 +307,9 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 #endif
+#if defined(MBEDTLS_ARC4_C)
+    mbedtls_ssl_conf_arc4_support(&tls_conf, MBEDTLS_SSL_ARC4_ENABLED);
+#endif
 
     if(suite_id != 0) {
         mbedtls_ssl_conf_ciphersuites(&tls_conf, &suite_id);
