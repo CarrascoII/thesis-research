@@ -202,6 +202,9 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 #endif
+#if defined(MBEDTLS_ARC4_C)
+    mbedtls_ssl_conf_arc4_support(&tls_conf, MBEDTLS_SSL_ARC4_ENABLED);
+#endif
     mbedtls_ssl_conf_ca_chain(&tls_conf, &cacert, NULL);
 
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &srvcert, &privkey)) != 0) {
