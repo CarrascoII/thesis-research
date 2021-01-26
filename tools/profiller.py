@@ -28,7 +28,7 @@ def run_srv(min_size, n_tests, ciphersuite):
 
     return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
 
-def exec_tls(filename, timeout, min_size, n_tests, weight):
+def exec_tls(filename, target, timeout, min_size, n_tests, weight):
     #Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
@@ -51,7 +51,7 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
     thread = ThreadPool(processes=1)
-    async_result_make = thread.apply_async(utils.make_progs, ('psk',))
+    async_result_make = thread.apply_async(utils.make_progs, (target,))
     make_ret = async_result_make.get()
     
     if make_ret != 0:
@@ -139,7 +139,7 @@ def exec_tls(filename, timeout, min_size, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'ht:m:n:f:', ['help', 'timeout=', 'min_size=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'hc:t:m:n:f:', ['help', 'compile=', 'timeout=', 'min_size=', 'n_tests=', 'filter='])
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "profiller.py -h" for help')
         sys.exit(2)
@@ -152,6 +152,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
+    target = 'psk'
     timeout = 2
     min_size = '32'
     n_tests = '500'
@@ -159,10 +160,12 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('profiller.py [-t <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
-            print('profiller.py [--timeout=<timeout>] [--min_size=<min_input_size>] ' +
+            print('profiller.py [-c <compilation_target>] [-t <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
+            print('profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--min_size=<min_input_size>] ' +
                   '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
+        if opt in ('-c', '--compile'):
+            target = arg
         if opt in ('-t', '--timeout'):
             timeout = int(arg)
         if opt in ('-m', '--min_size'):
@@ -173,7 +176,7 @@ def main(argv):
             weight = float(arg)
 
     os.system('clear')
-    exec_tls(args[0], timeout, min_size, n_tests, weight)
+    exec_tls(args[0], target, timeout, min_size, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
