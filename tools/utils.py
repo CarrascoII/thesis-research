@@ -127,7 +127,7 @@ def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size',
 
     return(ax)
 
-def multiple_custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
     if ax is None:
         ax = plt.gca()
 
@@ -136,7 +136,7 @@ def multiple_custom_bar(y_list, width=0.25, ax=None, title=None, labels=[], xlab
 
     for i in range(len(y_list)):
         x1 = x + (i + (1 - len(y_list))/2)*width
-        ax.bar(x1, y_list[i], width=width, label=labels[i])
+        ax.bar(x1, y_list[i], width=width, label=labels[i], yerr=yerr[i], capsize=6*width)
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)

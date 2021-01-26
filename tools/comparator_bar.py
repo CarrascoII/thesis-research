@@ -22,12 +22,11 @@ def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
 
 def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
     for stype in stats_type:
-        fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+        fig, axes = plt.subplots(2, 1, figsize=(20, 15))
         xtickslabels = stats[0]['data_size']
         y = [[], []]
         yerr = [[], []]
         op = []
-        width = 0.5
 
         if alg == 'cipher':
             op = ['cipher', 'decipher']
@@ -41,10 +40,10 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
             yerr[1] += [stat['stddev_in']]
 
         for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_bar(y[i], yerr[i], ax=axes[i], width=width, title=op[i] + ' (' + stype + ')',
+            axes[i] = utils.multiple_custom_bar(y[i], yerr[i], ax=axes[i], title=op[i] + ' (' + stype + ')',
                                             labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
 
-        utils.save_fig(fig, '../docs/cmp_mult_' + alg + '_' + ylabel + '_' + stype + '.png')
+        utils.save_fig(fig, '../docs/' + alg + '_alg_' + ylabel + '_' + stype + '.png')
 
 def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     all_data = []
@@ -108,12 +107,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         if alg != 'session':
             make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
         else:
-<<<<<<< HEAD
             make_session_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
-=======
-            # print(f'\nalg: {alg}\nhdr: {hdr}\nall_stats: {all_stats}\nciphersuites: {ciphersuites}\nstats_type: {stats_type}')
-            make_session_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
->>>>>>> be9fff1b037f98023b7413dd5e99fd05a34af89c
 
         print('ok')
 
