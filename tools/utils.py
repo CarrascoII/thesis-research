@@ -109,7 +109,7 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', yl
 
     return(ax)
 
-def custom_bar(y_list, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
     x_list = []
 
     if ax is None:
@@ -118,10 +118,10 @@ def custom_bar(y_list, ax=None, title=None, labels=[], xlabel='data_size', xtick
     for i in range(len(y_list)):
         x = (i + (1 - len(y_list)))
         x_list.append(x)
-        ax.bar(x, y_list[i], alpha=0.7, align='center')
+        ax.bar(x, y_list[i], alpha=0.7, align='center', yerr=yerr[i], capsize=5)
 
     ax.set_xticks(x_list)
-    ax.set_xticklabels(xtickslabels, y=0.25, rotation='vertical', ha='center', va='center')
+    ax.set_xticklabels(xtickslabels, rotation=60, ha='right', va='top')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     # ax.legend()
 
