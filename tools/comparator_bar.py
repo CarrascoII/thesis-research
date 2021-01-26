@@ -35,21 +35,13 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
             op = ['hash', 'verify']
 
         for stat in stats:
-<<<<<<< HEAD
-            y[0] += [stat[hdr + '_out']]
-            y[1] += [stat[hdr + '_in']]
+            y[0] += [stat[stype + '_out']]
+            y[1] += [stat[stype + '_in']]
             yerr[0] += [stat['stddev_out']]
             yerr[1] += [stat['stddev_in']]
 
         for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_bar(y[i], yerr[i], ax=axes[i], width=width, title=op[i] + ' (' + hdr + ')',
-=======
-            y_lst[0] += [stat[stype + '_out']]
-            y_lst[1] += [stat[stype + '_in']]
-
-        for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_bar(y_lst[i], ax=axes[i], width=width, title=op[i] + ' (' + stype + ')',
->>>>>>> be9fff1b037f98023b7413dd5e99fd05a34af89c
+            axes[i] = utils.multiple_custom_bar(y[i], yerr[i], ax=axes[i], width=width, title=op[i] + ' (' + stype + ')',
                                             labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
 
         utils.save_fig(fig, '../docs/cmp_mult_' + alg + '_' + ylabel + '_' + stype + '.png')
@@ -90,12 +82,8 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         
         print('ok')
 
-<<<<<<< HEAD
     all_stats = []
     stats_type = ['mean', 'stddev']
-=======
-    stats_type = ['mean']
->>>>>>> be9fff1b037f98023b7413dd5e99fd05a34af89c
 
     for hdr in all_headers[0]:
         print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
