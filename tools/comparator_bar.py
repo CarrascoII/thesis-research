@@ -18,32 +18,32 @@ def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
                 yerr.append([stat['stddev'][end]])
 
             ax = utils.custom_bar(y, yerr, ax=ax, xlabel='ciphersuite', xtickslabels=labels, title=end, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/' + end + '_' + name + '_' + ylabel + '_' + stype + '.png')
+            utils.save_fig(fig, '../docs/' + end + '_' + name + '_' + stype + '_' + ylabel + '.png')
 
 def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
     for stype in stats_type:
-        fig, axes = plt.subplots(2, 1, figsize=(20, 15))
         xtickslabels = stats[0]['data_size']
-        y = [[], []]
-        yerr = [[], []]
-        op = []
+        operations = []
+        extentions = ['_out', '_in']
 
         if alg == 'cipher':
-            op = ['cipher', 'decipher']
+            operations = ['encrypt', 'decrypt']
         elif alg == 'md':
-            op = ['hash', 'verify']
+            operations = ['hash', 'verify']
 
-        for stat in stats:
-            y[0] += [stat[stype + '_out']]
-            y[1] += [stat[stype + '_in']]
-            yerr[0] += [stat['stddev_out']]
-            yerr[1] += [stat['stddev_in']]
+        for ext, op in zip(extentions, operations):
+            fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+            y = []
+            yerr = []
+        
+            for stat in stats:
+                y.append(stat[stype + ext])
+                yerr.append(stat['stddev' + ext])
 
-        for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_bar(y[i], yerr[i], ax=axes[i], title=op[i] + ' (' + stype + ')',
-                                            labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+            ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
+                                        labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
 
-        utils.save_fig(fig, '../docs/' + alg + '_alg_' + ylabel + '_' + stype + '.png')
+            utils.save_fig(fig, '../docs/' + alg + '_alg_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     all_data = []
@@ -111,54 +111,6 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
 
         print('ok')
 
-# def make_session_cmp_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
-#     all_data = []
-#     all_headers = []
-#     print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
-
-#     for suite in ciphersuites:
-#         path = '../docs/' + suite + '/session_data.csv'
-#         data, hdr = utils.parse_session_data(path)
-
-#         all_data.append(data)
-#         all_headers.append(hdr)
-
-#     for hdr in all_headers[1:]:
-#         if all_headers[0] != hdr:
-#             print('error')
-#             print(spacing + 'Data has different headers. Cannot be compared!!!\n')
-#             return
-
-#     print('ok')
-
-#     if weight != 0:
-#         print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
-        
-#         for i in range(len(all_data)):
-#             data = utils.filter_iqr(all_data[i], weight=weight)
-#             all_data[i] = data
-        
-#         print('ok')
-
-#     all_stats = []
-#     stats_type = ['mean']
-
-#     for hdr in all_headers[0]:
-#         print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-
-#         for data in all_data:
-#             stats = utils.calc_session_statistics(data, hdr, stats_type)
-            
-#             if stats == None:
-#                 return None
-            
-#             all_stats.append(stats)
-
-#         print('ok')
-#         print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
-#         make_session_cmp_bar('session', hdr, all_stats, ciphersuites, stats_type)
-#         print('ok')
-
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cms', ['help', 'filter=', 'cipher', 'md', 'session'])
@@ -183,7 +135,7 @@ def main(argv):
             print('comparator.py [--filter=<weight>] [--cipher] [--md] [--session] <ciphersuite_list>')
             sys.exit(0)
 
-        if opt in ('-f', '--nfilter'):
+        if opt in ('-f', '--filter'):
             weight = float(arg)
         elif opt in ('-c', '--cipher'):
             algs.append('cipher')
@@ -201,8 +153,6 @@ def main(argv):
     for alg in algs:
         print('\n' + alg.upper() + ' data:')
         make_cmp_figs(ciphersuites, alg, weight=weight)
-
-    # make_session_cmp_figs(ciphersuites, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

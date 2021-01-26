@@ -86,7 +86,7 @@ def main(argv):
             print('comparator.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
             print('comparator.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
             sys.exit(0)
-        if opt in ('-f', '--nfilter'):
+        if opt in ('-f', '--filter'):
             weight = float(arg)
         elif opt in ('-c', '--cipher'):
             algs.append('cipher')
