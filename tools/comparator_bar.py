@@ -4,22 +4,22 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_session_cmp_bar(name, ylabel, stats, labels, hdrs):
-    endpoint = stats[0]['keys']
+def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
+    endpoints = stats[0]['keys']
     
-    for hdr in hdrs:
-        for end in endpoint:
+    for stype in stats_type:
+        for end in endpoints:
             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
             y_lst = []
 
             for stat in stats:
-                y_lst.append([stat[hdr][end]])
+                y_lst.append([stat[stype][end]])
 
-            ax = utils.custom_bar(y_lst, ax=ax, xlabel='ciphersuite', xtickslabels=labels, title=end, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/' + end + '_' + name + '_' + ylabel + '_' + hdr + '.png')
+            ax = utils.custom_bar(y_lst, ax=ax, xlabel='ciphersuites', xtickslabels=labels, title=end, ylabel=ylabel)
+            utils.save_fig(fig, '../docs/' + end + '_' + name + '_' + ylabel + '_' + stype + '.png')
 
-def make_alg_cmp_bar(alg, ylabel, stats, labels, hdrs):
-    for hdr in hdrs:
+def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
+    for stype in stats_type:
         fig, axes = plt.subplots(1, 2, figsize=(15, 10))
         xtickslabels = stats[0]['data_size']
         y_lst = [[], []]
@@ -32,14 +32,14 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, hdrs):
             op = ['hash', 'verify']
 
         for stat in stats:
-            y_lst[0] += [stat[hdr + '_out']]
-            y_lst[1] += [stat[hdr + '_in']]
+            y_lst[0] += [stat[stype + '_out']]
+            y_lst[1] += [stat[stype + '_in']]
 
         for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_bar(y_lst[i], ax=axes[i], width=width, title=op[i] + ' (' + hdr + ')',
+            axes[i] = utils.multiple_custom_bar(y_lst[i], ax=axes[i], width=width, title=op[i] + ' (' + stype + ')',
                                             labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
 
-        utils.save_fig(fig, '../docs/cmp_mult_' + alg + '_' + ylabel + '_' + hdr + '.png')
+        utils.save_fig(fig, '../docs/cmp_mult_' + alg + '_' + ylabel + '_' + stype + '.png')
 
 def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     all_data = []
@@ -63,7 +63,8 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         if all_headers[0] != hdr:
             print('error')
             print(spacing + 'Data has different headers. Cannot be compared!!!\n')
-            return
+            
+            return None
 
     print('ok')
 
@@ -76,11 +77,11 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         
         print('ok')
 
-    all_stats = []
     stats_type = ['mean']
 
     for hdr in all_headers[0]:
         print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
+        all_stats = []
 
         for data in all_data:
             stats = {}
@@ -101,6 +102,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         if alg != 'session':
             make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
         else:
+            # print(f'\nalg: {alg}\nhdr: {hdr}\nall_stats: {all_stats}\nciphersuites: {ciphersuites}\nstats_type: {stats_type}')
             make_session_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type)
 
         print('ok')
