@@ -5,40 +5,41 @@ import utils
 
 
 def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
-    endpoints = stats[0]['keys']
-    
+    endpoints = stats[labels[0]]['keys']
+    ke = utils.parse_ke(labels)
+
     for stype in stats_type:
-        for end in endpoints:
+        for i in range(len(endpoints)):
             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
             y = []
             yerr = []
 
-            for stat in stats:
-                y.append([stat[stype][end]])
-                yerr.append([stat['stddev'][end]])
+            for suite in stats:
+                y.append([stats[suite][stype + '_' + ylabel][i]])
+                yerr.append([stats[suite]['stddev_' + ylabel][i]])
 
-            ax = utils.custom_bar(y, yerr, ax=ax, xlabel='ciphersuite', xtickslabels=labels, title=end, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/' + end + '_' + name + '_' + stype + '_' + ylabel + '.png')
+            ax = utils.custom_bar(y, yerr, ax=ax, xlabel='ciphersuites', xtickslabels=labels, title=endpoints[i], ylabel=ylabel)
+            utils.save_fig(fig, '../docs/' + endpoints[i] + '_' + name + '_' + stype + '_' + ylabel + '.png')
 
 def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
+    xtickslabels = stats[labels[0]]['keys']
+    operations = []
+    extentions = ['_out', '_in']
+
+    if alg == 'cipher':
+        operations = ['encrypt', 'decrypt']
+    elif alg == 'md':
+        operations = ['hash', 'verify']
+
     for stype in stats_type:
-        xtickslabels = stats[0]['data_size']
-        operations = []
-        extentions = ['_out', '_in']
-
-        if alg == 'cipher':
-            operations = ['encrypt', 'decrypt']
-        elif alg == 'md':
-            operations = ['hash', 'verify']
-
         for ext, op in zip(extentions, operations):
             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
             y = []
             yerr = []
         
-            for stat in stats:
-                y.append(stat[stype + ext])
-                yerr.append(stat['stddev' + ext])
+            for suite in stats:
+                y.append(stats[suite][stype + '_' + ylabel + ext])
+                yerr.append(stats[suite]['stddev_' + ylabel + ext])
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
@@ -46,7 +47,7 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
             utils.save_fig(fig, '../docs/' + alg + '_alg_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
-    all_data = []
+    all_data = {}
     all_headers = []
     print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
 
@@ -60,7 +61,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         else:
             data, hdr = utils.parse_session_data(path)
 
-        all_data.append(data)
+        all_data[suite] = data
         all_headers.append(hdr)
 
     for hdr in all_headers[1:]:
@@ -75,35 +76,28 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     if weight != 0:
         print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
         
-        for i in range(len(all_data)):
-            data = utils.filter_iqr(all_data[i], weight=weight)
-            all_data[i] = data
+        for suite in ciphersuites:
+            data = utils.filter_iqr(all_data[suite], weight=weight)
+            all_data[suite] = data
         
         print('ok')
 
-    all_stats = []
+    all_stats = {}
     stats_type = ['mean', 'stddev']
+    print(spacing + f'  Calculating statistics'.ljust(strlen, '.'), end=' ')
+
+    for suite in ciphersuites:
+        stats = utils.calc_statistics(all_data[suite], stats_type)
+
+        if stats == None:
+            return None
+
+        all_stats[suite] = stats
+
+    print('ok')
+    print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
 
     for hdr in all_headers[0]:
-        print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-        all_stats = []
-
-        for data in all_data:
-            stats = {}
-
-            if alg != 'session':
-                stats = utils.calc_alg_statistics(data, hdr, stats_type)
-            else:
-                stats = utils.calc_session_statistics(data, hdr, stats_type)
-
-            if stats == None:
-                return None
-            
-            all_stats.append(stats)
-
-        print('ok')
-
-        print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
         if alg != 'session':
             make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
         else:

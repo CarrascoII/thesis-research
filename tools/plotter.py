@@ -4,28 +4,29 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_errorbar(ylabel, file_path, stats):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+def make_errorbar(ylabel, file_path, stats, types):
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     operations = []
-    params1 = {'color': 'red'}
-    params2 = {'color': 'blue'}
+    params = [{'color': 'red'}, {'color': 'blue'}]
+    entry = ['_out', '_in']
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    ax1 = utils.custom_errorbar(stats['data_size'], stats['mean_out'], stats['stddev_out'],
-                            ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
-    ax2 = utils.custom_errorbar(stats['data_size'], stats['mean_in'], stats['stddev_in'],
-                            ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
+    for i in range(len(axes)):
+        axes[i] = utils.custom_errorbar(stats['keys'], stats[types[0] + '_' + ylabel + entry[i]],
+                                    stats[types[1] + '_' + ylabel + entry[i]], ax=axes[i], title=operations[i],
+                                    ylabel=ylabel, kwargs=params[i])
 
     utils.save_fig(fig, file_path + ylabel + '_deviation.png')
 
-def make_plot(ylabel, file_path, stats):
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+def make_plot(ylabel, file_path, stats, types):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     params1 = {'color': 'red', 'linestyle': '-'}
     params2 = {'color': 'blue', 'linestyle': '--'}
+    entry = ['_out', '_in']
 
     if file_path.find('cipher') != -1:
         params1['label'] = 'encryption'
@@ -34,12 +35,9 @@ def make_plot(ylabel, file_path, stats):
         params1['label'] = 'digest'
         params2['label'] = 'verify'
 
-    ax1 = utils.multiple_custom_plots(stats['data_size'], stats['mean_out'], stats['mean_in'],
-                                    ax=ax1, title='Mean', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax2 = utils.multiple_custom_plots(stats['data_size'], stats['median_out'], stats['median_in'],
-                                    ax=ax2, title='Median', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
-    ax3 = utils.multiple_custom_plots(stats['data_size'], stats['mode_out'], stats['mode_in'],
-                                    ax=ax3, title='Mode', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+    for ax, tp in zip(axes, types):
+        ax = utils.multiple_custom_plots(stats['keys'], stats[tp + '_' + ylabel + entry[0]], stats[tp + '_' + ylabel + entry[1]],
+                                    ax=ax, title=tp.capitalize(), ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_statistics.png')
 
@@ -68,35 +66,32 @@ def make_plot(ylabel, file_path, stats):
 
 #     save_fig(fig, file_path + ylabel + '_hist.png')
 
-def make_scatter(ylabel, file_path, data_out, data_in):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+def make_scatter(ylabel, file_path, data):
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     operations = []
-    x1 = []
-    x2 = []
-    y1 = []
-    y2 = []
-    xticks = [tick + 1 for tick in range(len(data_out))]
-    xtickslabels = list(data_out.keys())
+    x = {}
+    y = {}
+    xtickslabels = list(data.keys())
+    kwargs = [{'color': 'red'}, {'color': 'blue'}]
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
-    i = 0
-    for key in data_out:
-        x1 += [xticks[i] for j in range(len(data_out[key]))]
-        x2 += [xticks[i] for j in range(len(data_in[key]))]
-        y1 += data_out[key]
-        y2 += data_in[key]
-        i += 1
+    for op, sub in zip(operations, [ylabel + '_out', ylabel + '_in']):
+        x[op] = []
+        y[op] = []
 
-    ax1 = utils.custom_scatter(x1, y1, ax=ax1, title=operations[0], xticks=xticks,
-                            xtickslabels=xtickslabels, ylabel=ylabel, kwargs={'color': 'red'})
-    ax2 = utils.custom_scatter(x2, y2, ax=ax2, title=operations[1], xticks=xticks,
-                            xtickslabels=xtickslabels, ylabel=ylabel, kwargs={'color': 'blue'})
+        for key, i in zip(data, range(len(xtickslabels))):
+            x[op] += [i for j in range(len(data[key][sub]))]
+            y[op] += data[key][sub]
+        
+    for i in range(len(axes)):
+        axes[i] = utils.custom_scatter(x[operations[i]], y[operations[i]], ax=axes[i], title=operations[i],
+                                    xtickslabels=xtickslabels, ylabel=ylabel, kwargs=kwargs[i])
 
-    utils.save_fig(fig, file_path + ylabel + '_distribution.png')
+        utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
 def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
@@ -111,17 +106,18 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
         print('ok')
 
     stats_type = ['mean', 'stddev','median', 'mode']
+    print(spacing + f'Calculating statistics'.ljust(strlen, '.'), end=' ')
+    stats = utils.calc_statistics(data, stats_type)
+    print('ok')
+    print(spacing + f'Generating figures'.ljust(strlen, '.'), end=' ')
+    
     for hdr in headers:
-        print(spacing + f'[{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-        stats = utils.calc_alg_statistics(data, hdr, stats_type)
-        print('ok')
-
-        print(spacing + f'[{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
-        make_scatter(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
+        make_scatter(hdr, path, data)
         # make_hist(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
-        make_plot(hdr, path, stats)
-        make_errorbar(hdr, path, stats)
-        print('ok')
+        make_plot(hdr, path, stats, [stats_type[0]] + stats_type[2:])
+        make_errorbar(hdr, path, stats, stats_type[:2])
+    
+    print('ok')
 
 def main(argv):
     try:

@@ -25,22 +25,38 @@ def parse_algorithms(filename):
 
         return ciphersuites
 
+def parse_ke(ciphersuites):
+    ke = []
+
+    for suite in ciphersuites:
+        i = suite.find('-WITH')
+        tmp = suite[4:i]
+
+        if tmp not in ke:
+            ke.append(tmp)
+
+    return ke
+
 def parse_alg_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
         headers = csv_reader.fieldnames[3:]
         data = {}
-        data_keys = {}
+        sub_keys = []
 
         for hdr in headers:
             for ext in ['_out', '_in']:
-                entry = hdr + ext
-                data[entry] = {}
-                data_keys[entry] = [] 
+                sub_keys.append(hdr + ext)
 
         for row in csv_reader:
             data_size = row['data_size']
             operation = row['operation']
+
+            if data_size not in data.keys():
+                data[data_size] = {}
+                
+                for sub in sub_keys:
+                    data[data_size][sub] = []
 
             for hdr in headers:
                 val = int(row[hdr])
@@ -50,13 +66,9 @@ def parse_alg_data(filename):
                         hdr += '_out'
                     elif operation == 'decrypt' or operation == 'verify':
                         hdr += '_in'
+                        
+                    data[data_size][hdr].append(val)
 
-                    if data_size not in data_keys[hdr]:
-                        data_keys[hdr].append(data_size)
-                        data[hdr][data_size] = []
-
-                    data[hdr][data_size].append(val)
-        
         return data, headers
 
 def parse_session_data(filename):
@@ -65,11 +77,11 @@ def parse_session_data(filename):
         headers = csv_reader.fieldnames[3:]
         data = {}
 
-        for hdr in headers:
-            data[hdr] = {}
-            
-            for endpoint in ['server', 'client']:
-                data[hdr][endpoint] = []
+        for endpoint in ['server', 'client']:
+            data[endpoint] = {}
+
+            for hdr in headers:
+                data[endpoint][hdr] = []
 
         for row in csv_reader:
             endpoint = row['endpoint']
@@ -78,7 +90,7 @@ def parse_session_data(filename):
                 val = int(row[hdr])
 
                 if val != 0:
-                    data[hdr][endpoint].append(val)
+                    data[endpoint][hdr].append(val)
         
         return data, headers
 
@@ -123,9 +135,26 @@ def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size',
     ax.set_xticks(x_list)
     ax.set_xticklabels(xtickslabels, rotation=60, ha='right', va='top')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    # ax.legend()
 
     return(ax)
+
+# def custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+#     if ax is None:
+#         ax = plt.gca()
+# 
+#     x = np.arange(len(xtickslabels))
+#     x *= (len(y_list)//2 + 1)
+# 
+#     for i in range(len(y_list)):
+#         x1 = x + (i + (1 - len(y_list))/2)*width
+#         ax.bar(x1, y_list[i], label=labels[i], alpha=0.7, align='center', yerr=yerr[i], capsize=6*width)
+# 
+#     ax.set_xticks(x)
+#     ax.set_xticklabels(xtickslabels)
+#     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+#     ax.legend()
+# 
+#     return(ax)
 
 def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
     if ax is None:
@@ -145,12 +174,12 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
 
     return(ax)
 
-def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xticks=None, xtickslabels=None, ylabel=None, kwargs={}):
+def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xtickslabels=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
 
     ax.scatter(x, y, marker='.', **kwargs)
-    ax.set_xticks(xticks)
+    ax.set_xticks(np.arange(len(xtickslabels)))
     ax.set_xticklabels(xtickslabels)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
 
@@ -158,17 +187,15 @@ def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xticks=None, x
 
 ########## DATA ANALYSIS UTILS ##########
 def filter_z_score(data, weight=2):
-    keys = data.keys()
-
-    for entry in keys:
-        op_dict = data[entry]
+    for key in data:
+        sub_dict = data[key]
         
-        for key in op_dict:
+        for sub in sub_dict:
             tmp = []
-            mean = np.mean(op_dict[key])
-            stdev = np.std(op_dict[key])
+            mean = np.mean(sub_dict[sub])
+            stdev = np.std(sub_dict[sub])
 
-            for val in op_dict[key]:
+            for val in sub_dict[sub]:
                 stdw = weight * stdev
 
                 if val > (mean + stdw):
@@ -178,23 +205,21 @@ def filter_z_score(data, weight=2):
                 else:
                     tmp.append(val)
             
-            data[entry][key] = tmp
+            data[key][sub] = tmp
 
     return data
 
 def filter_iqr(data, weight=1.5):
-    keys = data.keys()
+    for key in data:
+        sub_dict = data[key]
 
-    for entry in keys:
-        op_dict = data[entry]
-
-        for key in op_dict:
+        for sub in sub_dict:
             tmp = []
-            q1 = np.quantile(op_dict[key], 0.25)
-            q3 = np.quantile(op_dict[key], 0.75)
+            q1 = np.quantile(sub_dict[sub], 0.25)
+            q3 = np.quantile(sub_dict[sub], 0.75)
             iqr = q3 - q1
 
-            for val in op_dict[key]:
+            for val in sub_dict[sub]:
                 iqrw = weight * iqr
 
                 if val > (q3 + iqrw):
@@ -204,68 +229,31 @@ def filter_iqr(data, weight=1.5):
                 else:
                     tmp.append(val)
             
-            data[entry][key] = tmp
+            data[key][sub] = tmp
 
     return data
 
-def calc_alg_statistics(data, hdr, stats_type):
-    stats = {'data_size': []}
+def calc_statistics(data, stats_type):
+    stats = {'keys': list(data.keys())}
+    ops = {
+        'mean': np.mean,
+        'stddev': np.std,
+        'median':np.median,
+        'mode': statistics.mode
+    }
 
-    for stat in stats_type:
-        stats[stat + '_out'] = []
-        stats[stat + '_in'] = []
-
-    for key in data[hdr + '_out']:
-        stats['data_size'].append(key)
-
+    for sub in data[stats['keys'][0]]:
         for stat in stats_type:
-            if stat == 'mean':
-                stats['mean_out'].append(np.mean(data[hdr + '_out'][key]))
-                stats['mean_in'].append(np.mean(data[hdr + '_in'][key]))
+            stats[stat + '_' + sub] = []
 
-            elif stat == 'stddev':
-                stats['stddev_out'].append(np.std(data[hdr + '_out'][key]))
-                stats['stddev_in'].append(np.std(data[hdr + '_in'][key]))
-
-            elif stat == 'median':
-                stats['median_out'].append(np.median(data[hdr + '_out'][key]))
-                stats['median_in'].append(np.median(data[hdr + '_in'][key]))
-
-            elif stat == 'mode':
-                stats['mode_out'].append(statistics.mode(data[hdr + '_out'][key]))
-                stats['mode_in'].append(statistics.mode(data[hdr + '_in'][key]))
-
-            else:
-                print(f' {stat} is not an allowed type of statistic')
-                return None
-
-    return stats
-
-def calc_session_statistics(data, hdr, stats_type):
-    stats = {'keys': []}
-
-    for stat in stats_type:
-        stats[stat] = {}
-
-    for key in data[hdr]:
-        stats['keys'].append(key)
-
-        for stat in stats_type:
-            if stat == 'mean':
-                stats['mean'][key] = np.mean(data[hdr][key])
-
-            elif stat == 'stddev':
-                stats['stddev'][key] = np.std(data[hdr][key])
-
-            elif stat == 'median':
-                stats['median'][key] = np.median(data[hdr][key])
-
-            elif stat == 'mode':
-                stats['mode'][key] = statistics.mode(data[hdr][key])
-
-            else:
-                print(f' {stat} is not an allowed type of statistic')
-                return None
+    for key in data:
+        for sub in data[key]:
+            for stat in stats_type:
+                try:
+                    stats[stat + '_' + sub].append(ops[stat](data[key][sub]))
+                except:
+                    print(f' {stat} is not an allowed type of statistic')
+                    return None
 
     return stats
 

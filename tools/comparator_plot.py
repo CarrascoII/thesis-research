@@ -5,22 +5,23 @@ import utils
 
 
 def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2, hdrs):
+    params1 = {'color': 'red', 'label': label1}
+    params2 = {'color': 'blue', 'label': label2}
+    op = []
+    ext = ['_out', '_in']
+
+    if alg == 'cipher':
+        op = ['cipher', 'decipher']
+    elif alg == 'md':
+        op = ['hash', 'verify']
+
     for hdr in hdrs:
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-        params1 = {'color': 'red', 'label': label1}
-        params2 = {'color': 'blue', 'label': label2}
-        op = []
-        ext = ['_out', '_in']
-
-        if alg == 'cipher':
-            op = ['cipher', 'decipher']
-        elif alg == 'md':
-            op = ['hash', 'verify']
 
         for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_plots(
-                            stats1['data_size'], stats1[hdr + ext[i]], stats2[hdr + ext[i]], ax=axes[i],
-                            title=op[i] + ' (' + hdr + ')', ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+            axes[i] = utils.multiple_custom_plots(stats1['keys'], stats1[hdr + '_' + ylabel + ext[i]],
+                                                stats2[hdr + '_' + ylabel + ext[i]], ax=axes[i], title=op[i] + ' (' + hdr + ')',
+                                                ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
         utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '_statistics.png')
 
@@ -50,18 +51,20 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
 
         stats_type = ['mean', 'median']
 
+        print(spacing + f'  Calculating statistics'.ljust(strlen, '.'), end=' ')
+        stats1 = utils.calc_statistics(data1, stats_type)
+        stats2 = utils.calc_statistics(data2, stats_type)
+
+        if stats1 == None or stats2 == None:
+            sys.exit(2)
+
+        print('ok')
+        print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
+
         for hdr in headers1:
-            print(spacing + f'  [{hdr}] Calculating statistics'.ljust(strlen, '.'), end=' ')
-            stats1 = utils.calc_alg_statistics(data1, hdr, stats_type)
-            stats2 = utils.calc_alg_statistics(data2, hdr, stats_type)
-
-            if stats1 == None or stats2 == None:
-                sys.exit(2)
-
-            print('ok')
-            print(spacing + f'  [{hdr}] Generating figures'.ljust(strlen, '.'), end=' ')
             make_cmp_plot(alg, hdr, stats1, ciphersuite1, stats2, ciphersuite2, stats_type)
-            print('ok')
+        
+        print('ok')
 
 def main(argv):
     try:
