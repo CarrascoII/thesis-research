@@ -160,10 +160,39 @@ def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size',
 # 
 #     return(ax)
 
-def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0, xlabel='data_size', xtickslabels=None, ylabel=None):
     if ax is None:
         ax = plt.gca()
 
+    x_list = [0]
+
+    for i in range(len(y_list)):
+        x_list.append(x_list[-1] + (len(y_list[i]) + len(y_list[i+1]))/2)
+
+        if len(x_list) == len(y_list):
+            break
+
+    # print(f'\n{x_list}')
+
+    for x, y, err, label in zip(x_list, y_list, yerr, labels):
+        x1 = [x + (i + (1 - len(y))/2) for i in range(len(y))]
+        # print(f'\n{x1} ({len(x1)})')
+        ax.bar(x1, y, yerr=err, capsize=2)
+
+        for i, j1, j2, s in zip(x1, y, err, label):
+            ax.text(i - 0.35, j1 + j2 + label_lim/100, s, rotation=90)
+
+    ax.set_xticks(x_list)
+    ax.set_xticklabels(xtickslabels)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+
+
+    return(ax)
+
+def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+    if ax is None:
+        ax = plt.gca()
+    
     x = np.arange(len(xtickslabels))
     x *= (len(y_list)//2 + 1)
 

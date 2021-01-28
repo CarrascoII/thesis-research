@@ -4,9 +4,48 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
+def make_session_cmp_bar_by_ke(name, ylabel, stats, labels, stats_type):
     endpoints = stats[labels[0]]['keys']
     ke = utils.parse_ke(labels)
+
+    for stype in stats_type:
+        for i in range(len(endpoints)):
+            fig, ax = plt.subplots(1, 1, figsize=(20, 15))
+            y = []
+            y_tmp = {}
+            yerr = []
+            yerr_tmp = {}
+            lab = []
+            labels_tmp = {}
+            m = 0
+
+            for key in ke:
+                for suite in stats:
+                    if suite.find('TLS-' + key + '-WITH') != -1:
+                        if key not in y_tmp.keys():
+                            y_tmp[key] = []
+                            yerr_tmp[key] = []
+                            labels_tmp[key] = []
+
+                        y_tmp[key].append(stats[suite][stype + '_' + ylabel][i])
+                        yerr_tmp[key].append(stats[suite]['stddev_' + ylabel][i])
+                        labels_tmp[key].append(suite)
+
+            for key in ke:
+                n = max(y_tmp[key])
+                y.append(y_tmp[key])
+                yerr.append(yerr_tmp[key])
+                lab.append(labels_tmp[key])
+
+                if n > m:
+                    m = n
+
+            ax = utils.grouped_custom_bar(y, yerr, ax=ax, labels=lab, label_lim=m,
+                                        xlabel='ciphersuites', xtickslabels=ke, ylabel=ylabel)
+            utils.save_fig(fig, '../docs/' + endpoints[i] + '_' + name + '_' + stype + '_' + ylabel + '.png')
+
+def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
+    endpoints = stats[labels[0]]['keys']
 
     for stype in stats_type:
         for i in range(len(endpoints)):
@@ -40,6 +79,10 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
             for suite in stats:
                 y.append(stats[suite][stype + '_' + ylabel + ext])
                 yerr.append(stats[suite]['stddev_' + ylabel + ext])
+                
+            # print(f'\nlen(y) = {len(y)}')
+            # for i in range(len(y)):
+            #     print(f'len(y[{i}]) = {len(y[i])}')
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
@@ -101,7 +144,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         if alg != 'session':
             make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
         else:
-            make_session_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
+            make_session_cmp_bar_by_ke(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
 
         print('ok')
 
