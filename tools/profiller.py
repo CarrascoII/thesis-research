@@ -111,6 +111,8 @@ def exec_tls(filename, target, timeout, min_size, n_tests, weight):
     comparator_bar.make_cmp_figs(success_ciphersuites, 'cipher', weight=weight, strlen=strlen, spacing='\t')
     print('\n    MAC algorithm:')
     comparator_bar.make_cmp_figs(success_ciphersuites, 'md', weight=weight, strlen=strlen, spacing='\t')
+    
+    utils.write_ciphersuites('ciphersuites.txt', success_ciphersuites)
 
     #Step 8: Report final status
     print('\n--- FINAL STATUS ---')

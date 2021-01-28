@@ -56,7 +56,9 @@
 
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
+#define MBEDTLS_CIPHER_NULL_CIPHER
 
+#define MBEDTLS_ARC4_C
 #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
 // #define MBEDTLS_AES_ALT
@@ -67,12 +69,13 @@
 #define MBEDTLS_ARIA_C
 #define MBEDTLS_CAMELLIA_C
 
-/* Cipher mode */
+/* Cipher modes */
 #define MBEDTLS_CIPHER_MODE_CBC
 
 /* Message authentication algorithms */
 #define MBEDTLS_MD_C
 
+#define MBEDTLS_MD5_C
 #define MBEDTLS_SHA1_C
 #define MBEDTLS_SHA256_C
 // #define MBEDTLS_SHA256_PROCESS_ALT
@@ -106,21 +109,26 @@
  *  Options to reduce footprint
  */
 // #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
-#define MBEDTLS_PSK_MAX_LEN         16      /* 128-bits keys are generally enough */
-#define MBEDTLS_ENTROPY_MAX_SOURCES 2       /* Minimum is 2 for the entropy test suite */
+#define MBEDTLS_PSK_MAX_LEN         32      /* 128-bits keys are generally enough */
+// #define MBEDTLS_ENTROPY_MAX_SOURCES 2       /* Minimum is 2 for the entropy test suite */
 // #define MBEDTLS_SSL_MAX_CONTENT_LEN MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records */
 
 /**
  * mbed TLS ciphersuites
  * 
- * \note Supported/Total := 36/66
+ * \note Supported/Total := 52/82
  */
-//  #define MBEDTLS_SSL_CIPHERSUITES
+#define MBEDTLS_ENABLE_WEAK_CIPHERSUITES
+// #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
+// #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
-            /* Regular PSK ciphersuites - 9 */
+// #define MBEDTLS_SSL_CIPHERSUITES
+
+            /* Regular PSK ciphersuites - 10 */
+            // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
             // MBEDTLS_TLS_PSK_WITH_3DES_EDE_CBC_SHA,          
             // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA,           
-            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_AES_128_CBC_SHA256,
             // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA,           
             // MBEDTLS_TLS_PSK_WITH_AES_256_CBC_SHA384,        
             // MBEDTLS_TLS_PSK_WITH_ARIA_128_CBC_SHA256,       
@@ -131,7 +139,7 @@
             /* AEAD PSK ciphersuites - 11 */
             // MBEDTLS_TLS_PSK_WITH_AES_128_CCM,
             // MBEDTLS_TLS_PSK_WITH_AES_128_CCM_8,             
-            // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256        
+            // MBEDTLS_TLS_PSK_WITH_AES_128_GCM_SHA256,
             // MBEDTLS_TLS_PSK_WITH_AES_256_CCM,               
             // MBEDTLS_TLS_PSK_WITH_AES_256_CCM_8,             
             // MBEDTLS_TLS_PSK_WITH_AES_256_GCM_SHA384,        
@@ -141,7 +149,13 @@
             // MBEDTLS_TLS_PSK_WITH_CAMELLIA_256_GCM_SHA384,   
             // MBEDTLS_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256,
 
-            /* Regular RSA_PSK ciphersuites - 9 */
+            /* NULL cipher PSK ciphersuites - 3 */
+            // MBEDTLS_TLS_PSK_WITH_NULL_SHA,
+            // MBEDTLS_TLS_PSK_WITH_NULL_SHA256,
+            // MBEDTLS_TLS_PSK_WITH_NULL_SHA384,
+
+            /* Regular RSA_PSK ciphersuites - 10 */
+            // MBEDTLS_TLS_RSA_PSK_WITH_RC4_128_SHA,
             // MBEDTLS_TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA,
             // MBEDTLS_TLS_RSA_PSK_WITH_AES_128_CBC_SHA,
             // MBEDTLS_TLS_RSA_PSK_WITH_AES_128_CBC_SHA256,
@@ -161,7 +175,13 @@
             // MBEDTLS_TLS_RSA_PSK_WITH_CAMELLIA_256_GCM_SHA384,
             // MBEDTLS_TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256,
 
-            /* Regular DHE_PSK ciphersuites - 9 */
+            /* NULL cipher RSA_PSK ciphersuites - 3 */
+            // MBEDTLS_TLS_RSA_PSK_WITH_NULL_SHA,
+            // MBEDTLS_TLS_RSA_PSK_WITH_NULL_SHA256,
+            // MBEDTLS_TLS_RSA_PSK_WITH_NULL_SHA384,
+
+            /* Regular DHE_PSK ciphersuites - 10 */
+            // MBEDTLS_TLS_DHE_PSK_WITH_RC4_128_SHA,
             // MBEDTLS_TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA,
             // MBEDTLS_TLS_DHE_PSK_WITH_AES_128_CBC_SHA,
             // MBEDTLS_TLS_DHE_PSK_WITH_AES_256_CBC_SHA,
@@ -183,9 +203,15 @@
             // MBEDTLS_TLS_DHE_PSK_WITH_AES_256_CCM,
             // MBEDTLS_TLS_DHE_PSK_WITH_AES_128_CCM_8,
             // MBEDTLS_TLS_DHE_PSK_WITH_AES_256_CCM_8,
-            // MBEDTLS_TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256
+            // MBEDTLS_TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256,
 
-            /* Regular ECDHE_PSK ciphersuites - 9 */
+            /* NULL cipher DHE_PSK ciphersuites - 3 */
+            // MBEDTLS_TLS_DHE_PSK_WITH_NULL_SHA,
+            // MBEDTLS_TLS_DHE_PSK_WITH_NULL_SHA256,
+            // MBEDTLS_TLS_DHE_PSK_WITH_NULL_SHA384,
+
+            /* Regular ECDHE_PSK ciphersuites - 10 */
+            // MBEDTLS_TLS_ECDHE_PSK_WITH_RC4_128_SHA,
             // MBEDTLS_TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA,
             // MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA,
             // MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
@@ -198,6 +224,11 @@
 
             /* AEAD ECDHE_PSK ciphersuites - 1 */
             // MBEDTLS_TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256,
+
+            /* NULL cipher ECDHE_PSK ciphersuites - 3 */
+            // MBEDTLS_TLS_ECDHE_PSK_WITH_NULL_SHA,
+            // MBEDTLS_TLS_ECDHE_PSK_WITH_NULL_SHA256,
+            // MBEDTLS_TLS_ECDHE_PSK_WITH_NULL_SHA384,
 
 #include "mbedtls/check_config.h"
 
@@ -255,8 +286,8 @@ char *ke_fname;
 /**
  * New alternative implementation flags
  */
-#define NEW_CIPHER_ALG_ALT
-#define NEW_MD_HMAC_ALT
+// #define NEW_CIPHER_ALG_ALT
+// #define NEW_MD_HMAC_ALT
 
 #if defined(NEW_CIPHER_ALG_ALT) && defined(MBEDTLS_AES_ENCRYPT_ALT)
 #define NEW_AES_ENCRYPT_ALT
