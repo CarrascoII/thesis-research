@@ -70,8 +70,8 @@
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CIPHER_NULL_CIPHER
 
-#define MBEDTLS_DES_C
 #define MBEDTLS_ARC4_C
+#define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
 // #define MBEDTLS_AES_ENCRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_ENC_ALT
@@ -80,6 +80,7 @@
 #define MBEDTLS_ARIA_C
 #define MBEDTLS_CAMELLIA_C
 
+/* Cipher modes */
 #define MBEDTLS_CIPHER_MODE_CBC
 
 /* Message authentication algorithms */

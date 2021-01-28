@@ -93,6 +93,8 @@ def exec_tls(filename, target, timeout, n_tests, weight):
     print(f'\nCreating comparison graphs from all ciphersuites:')
     comparator_bar.make_cmp_figs(success_ciphersuites, 'session', weight=weight, strlen=strlen, spacing='\t')
 
+    utils.write_ciphersuites('session_ciphersuites.txt', success_ciphersuites)
+
     #Step 7: Report final status
     print('\n--- FINAL STATUS ---')
 
@@ -112,11 +114,11 @@ def exec_tls(filename, target, timeout, n_tests, weight):
         for suite in not_ciphersuites:
             print(f'\t\t{suite}')
 
-    print('\nPlots generation:')
-    print(f'\t-Number of ciphersuites: {n_success}')
+    print('\nPlot generation:')
+    print(f'\t-Number of used ciphersuites: {n_success}')
 
     print('\nData aquisition and analysis has ended.')
-    print('You can check all the csv data and png figure files in the docs directory and its subdirectories.')
+    print('You can check all the csv data and png figure files in the docs/ directory and its subdirectories.')
 
 def main(argv):
     try:

@@ -9,6 +9,10 @@ def parse_ciphersuites(filename):
     with open(filename, 'r') as fl:
         return [line.strip() for line in fl.readlines()]
 
+def write_ciphersuites(filename, ciphersuites):
+    with open(filename, 'w') as fl:
+        fl.writelines([f'{suite}\n' for suite in ciphersuites])
+
 def parse_algorithms(filename):
     with open(filename, 'r') as fl:
         algs = {'CIPHER': [], 'MD': [], 'KE': []}
