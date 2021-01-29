@@ -19,19 +19,22 @@ CIPHER_MAKE = $(MAKE) -C cipher
 TLS_SESSION_MAKE = $(MAKE) -C tls_session
 TLS_PSK_MAKE = $(MAKE) -C tls_psk
 TLS_RSA_MAKE = $(MAKE) -C tls_rsa
+TLS_EC_MAKE = $(MAKE) -C tls_ec
 
 PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement lib_measurement_papi alt_session alt_psk alt_rsa alt_cipher \
-		lib_mbedtls lib_session lib_session_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_cipher progs \
+.PHONY: lib_measurement lib_measurement_papi alt_session alt_psk alt_rsa alt_ec alt_cipher \
+		lib_mbedtls lib_session lib_session_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_ec lib_ec_papi lib_cipher progs \
 		session_server run_session_server session_client run_session_client session \
 		session_server_papi run_session_server_papi session_client_papi run_session_client_papi session_papi \		
 		psk_server run_psk_server psk_client run_psk_client psk \
 		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi psk_papi \
 		rsa_server run_rsa_server rsa_client run_rsa_client rsa \
 		rsa_server_papi run_rsa_server_papi rsa_client_papi run_rsa_client_papi rsa_papi \
+		ec_server run_ec_server ec_client run_ec_client ec \
+		ec_server_papi run_ec_server_papi ec_client_papi run_ec_client_papi ec_papi \
 		cipher run_cipher \
 		clean_local clean
 
@@ -51,6 +54,9 @@ alt_psk:
 
 alt_rsa:
 	$(TLS_RSA_MAKE) alt_lib
+
+alt_ec:
+	$(TLS_EC_MAKE) alt_lib
 
 alt_cipher:
 	$(CIPHER_MAKE) alt_lib
@@ -78,6 +84,12 @@ lib_rsa:
 
 lib_rsa_papi:
 	$(TLS_RSA_MAKE) lib_papi
+
+lib_ec:
+	$(TLS_EC_MAKE) lib
+
+lib_ec_papi:
+	$(TLS_EC_MAKE) lib_papi
 
 lib_cipher:
 	$(CIPHER_MAKE) lib
@@ -182,6 +194,38 @@ run_rsa_client_papi: rsa_client_papi
 rsa_papi:
 	$(TLS_RSA_MAKE) local_papi
 
+### MAKE TLS EC ###
+ec_server:
+	$(TLS_EC_MAKE) server
+
+run_ec_server: ec_server
+	./tls_ec/server.out
+
+ec_client:
+	$(TLS_EC_MAKE) client
+
+run_ec_client: ec_client
+	./tls_ec/client.out
+
+ec:
+	$(TLS_EC_MAKE) local
+
+### MAKE TLS EC PAPI ###
+ec_server_papi:
+	$(TLS_EC_MAKE) server_papi
+
+run_ec_server_papi: ec_server_papi
+	./tls_ec/server.out
+
+ec_client_papi:
+	$(TLS_EC_MAKE) client_papi
+
+run_ec_client_papi: ec_client_papi
+	./tls_ec/client.out
+
+ec_papi:
+	$(TLS_EC_MAKE) local_papi
+
 ### MAKE TEST CIPHER ###
 cipher:
 	$(CIPHER_MAKE) local
@@ -195,6 +239,7 @@ clean_local:
 	$(TLS_SESSION_MAKE) clean_local
 	$(TLS_PSK_MAKE) clean_local
 	$(TLS_RSA_MAKE) clean_local
+	$(TLS_EC_MAKE) clean_local
 	
 clean: clean_local
 	$(MEASUREMENT_LIB_MAKE) clean

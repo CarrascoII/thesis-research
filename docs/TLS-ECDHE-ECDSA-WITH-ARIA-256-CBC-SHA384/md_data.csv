@@ -1,0 +1,13 @@
+endpoint,operation,data_size,time
+client,digest,4096,39
+server,verify,4096,43
+server,digest,4096,41
+client,verify,4096,44
+client,digest,8192,70
+server,verify,8192,77
+server,digest,8192,140
+client,verify,8192,77
+client,digest,16384,138
+server,verify,16384,152
+server,digest,16384,137
+client,verify,16384,176
