@@ -51,13 +51,21 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
     fprintf((FILE *) ctx, "%s:%04d: |%d| %s", basename, line, level, str);
     fflush((FILE *) ctx);
 }
-#endif
+#endif /* MBEDTLS_DEBUG_C */
 
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server;
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt ca_cert;
+#endif
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+    mbedtls_x509_crt rsa_cert;
+    mbedtls_pk_context rsa_key;
+#endif
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+    mbedtls_x509_crt ec_cert;
+    mbedtls_pk_context ec_key;
 #endif
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
     mbedtls_entropy_context entropy;
@@ -89,6 +97,7 @@ int main(int argc, char **argv) {
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
+
         if((q = strchr(p, '=')) == NULL) {
 #if defined(MBEDTLS_DEBUG_C)
             printf("To assign own variables, run with <variable>=X\n");
@@ -99,6 +108,7 @@ int main(int argc, char **argv) {
         *q++ = '\0';
         if(strcmp(p, "n_tests") == 0) {
             n_tests = atoi(q);
+
             if(n_tests < 1 || n_tests > 1000) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Number of tests must be between 1 and 1000\n");
@@ -108,6 +118,7 @@ int main(int argc, char **argv) {
 		}
         else if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
+
             if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
@@ -118,6 +129,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
+            
             if(debug < 0 || debug > 5) {
                 printf("Debug level must be int between 0 and 5\n");
                 return(1);
@@ -143,6 +155,14 @@ int main(int argc, char **argv) {
     mbedtls_net_init(&server);
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_init(&ca_cert);
+#endif
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+    mbedtls_x509_crt_init(&rsa_cert);
+    mbedtls_pk_init(&rsa_key);
+#endif
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+    mbedtls_x509_crt_init(&ec_cert);
+    mbedtls_pk_init(&ec_key);
 #endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
     mbedtls_entropy_init(&entropy);
@@ -173,6 +193,72 @@ int main(int argc, char **argv) {
     printf(" ok");
 #endif
 #endif
+
+    // Load client RSA certificate and key
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the client rsa certificate........");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_x509_crt_parse(&rsa_cert, (const unsigned char *) mbedtls_test_cli_crt_rsa, mbedtls_test_cli_crt_rsa_len)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+
+    printf("\nLoading the client rsa key................");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_pk_parse_key(&rsa_key, (const unsigned char *) mbedtls_test_cli_key_rsa, mbedtls_test_cli_key_rsa_len, NULL, 0)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif /* MBEDTLS_RSA_C && MUTUAL_AUTH */
+
+    // Load client EC certificate and key
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the client ec certificate.........");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_x509_crt_parse(&ec_cert, (const unsigned char *) mbedtls_test_cli_crt_ec, mbedtls_test_cli_crt_ec_len)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+
+    printf("\nLoading the client ec key.................");
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_pk_parse_key(&ec_key, (const unsigned char *) mbedtls_test_cli_key_ec, mbedtls_test_cli_key_ec_len, NULL, 0)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif /* MBEDTLS_ECDSA_C && MUTUAL_AUTH */
 
     // Seed the RNG
 #if defined(MBEDTLS_DEBUG_C)
@@ -223,6 +309,24 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
+#endif
+
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+    if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+#endif
+
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+    if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
 #endif
 
     if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
@@ -407,6 +511,14 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+    mbedtls_pk_free(&ec_key);
+    mbedtls_x509_crt_free(&ec_cert);
+#endif
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+    mbedtls_pk_free(&rsa_key);
+    mbedtls_x509_crt_free(&rsa_cert);
+#endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_free(&ca_cert);
 #endif

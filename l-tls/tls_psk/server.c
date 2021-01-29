@@ -151,6 +151,9 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_server generates response";
     char *p, *q;
+#if defined(MUTUAL_AUTH)
+    uint32_t flags;
+#endif
     const unsigned char test_psk[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -160,8 +163,21 @@ int main(int argc, char **argv) {
 #endif
     };
 
+    int ret,
+        i, n_tests = N_TESTS,
+        input_size = MIN_INPUT_SIZE,
+#if defined(MBEDTLS_DEBUG_C)
+        debug = DEBUG_LEVEL,
+#endif
+        suite_id = 0;
+    unsigned char *request, *response;
+    const char *pers = "tls_client generate request";
+    char *p, *q;
+    uint32_t flags;
+
     for(i = 1; i < argc; i++) {
         p = argv[i];
+
         if((q = strchr(p, '=')) == NULL) {
 #if defined(MBEDTLS_DEBUG_C)
             printf("To assign own variables, run with <variable>=X\n");
@@ -172,6 +188,7 @@ int main(int argc, char **argv) {
         *q++ = '\0';
         if(strcmp(p, "n_tests") == 0) {
             n_tests = atoi(q);
+
             if(n_tests < 1 || n_tests > 1000) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Number of tests must be between 1 and 1000\n");
@@ -181,10 +198,10 @@ int main(int argc, char **argv) {
 		}
         else if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
+
             if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Input size must be multiple of %d, between %d and %d \n",
-                        MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif
                 return(1);
             }
@@ -192,6 +209,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
+            
             if(debug < 0 || debug > 5) {
                 printf("Debug level must be int between 0 and 5\n");
                 return(1);
@@ -205,13 +223,13 @@ int main(int argc, char **argv) {
 #endif
                 return(1);
             }
-		}
+        }
         else {
 #if defined(MBEDTLS_DEBUG_C)
-			printf("Available options are input_size, n_tests, debug_level and ciphersuite\n");
+            printf("Available options are input_size, n_tests, debug_level and ciphersuite\n");
 #endif
-			return(1);
-		}
+            return(1);
+        }
 	}
 
     mbedtls_net_init(&server);
@@ -273,10 +291,10 @@ int main(int argc, char **argv) {
 #endif
 #endif
 
-    // Load RSA certificate and key
+    // Load server RSA certificate and key
 #if defined(MBEDTLS_RSA_C)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the rsa server certificate........");
+    printf("\nLoading the server rsa certificate........");
     fflush(stdout);
 #endif
 
@@ -290,7 +308,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the rsa server key................");
+    printf("\nLoading the server rsa key................");
     fflush(stdout);
 #endif
 
@@ -309,7 +327,7 @@ int main(int argc, char **argv) {
     // Load EC certificate and key
 #if defined(MBEDTLS_ECP_C)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the ec server certificate.........");
+    printf("\nLoading the server ec certificate.........");
     fflush(stdout);
 #endif
 
@@ -323,7 +341,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the ec server key.................");
+    printf("\nLoading the server ec key.................");
     fflush(stdout);
 #endif
 
@@ -382,6 +400,9 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+#if defined(MUTUAL_AUTH)
+    mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+#endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
@@ -453,6 +474,26 @@ int main(int argc, char **argv) {
             goto exit;
         }
     }
+
+    // Verify client certificate
+#if defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_DEBUG_C)
+        printf("\nVerifying client certificate..............");
+#endif
+
+        if((flags = mbedtls_ssl_get_verify_result(&tls)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            char vrfy_buf[512];
+            mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "", flags);
+            printf(" failed! mbedtls_ssl_get_verify_result returned %s\n", vrfy_buf);
+#endif
+            goto exit;
+        }
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" ok");
+#endif
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
@@ -545,7 +586,16 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
+
+#if defined(MUTUAL_AUTH)
+    if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
+        char crt_buf[512];
+        mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
+        printf("\n  -Client certificate:\n%s", crt_buf);
+    }
 #endif
+#endif
+
     printf("\n");
 
 exit:

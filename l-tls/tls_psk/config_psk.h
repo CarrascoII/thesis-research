@@ -249,6 +249,9 @@
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+// #define MUTUAL_AUTH
+#endif
 
 /**
  * Profiling program flags

@@ -8,8 +8,8 @@ import comparator_bar, plotter, utils
 
 strlen = 40
 
-def run_cli(min_size, n_tests, ciphersuite):
-    args = ['./../l-tls/tls_psk/client.out', 'input_size=' + min_size,
+def run_cli(target, min_size, n_tests, ciphersuite):
+    args = ['./../l-tls/tls_' + target + '/client.out', 'input_size=' + min_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -18,8 +18,8 @@ def run_cli(min_size, n_tests, ciphersuite):
 
     return utils.check_endpoint_ret(ret, 'client', ciphersuite, stdout, stderr, strlen)
     
-def run_srv(min_size, n_tests, ciphersuite):
-    args = ['./../l-tls/tls_psk/server.out', 'input_size=' + min_size,
+def run_srv(target, min_size, n_tests, ciphersuite):
+    args = ['./../l-tls/tls_' + target + '/server.out', 'input_size=' + min_size,
             'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -65,14 +65,14 @@ def exec_tls(filename, target, timeout, min_size, n_tests, weight):
 
     #Step 3: Start server in thread 1
         print('\tStarting server'.ljust(strlen, '.'), end=' ')
-        async_result_srv = pool.apply_async(run_srv, (min_size, n_tests, suite))
+        async_result_srv = pool.apply_async(run_srv, (target, min_size, n_tests, suite))
         print('ok')
 
         time.sleep(timeout)
 
     #Step 4: Start client in thread 2
         print('\tStarting client'.ljust(strlen, '.'), end=' ')
-        async_result_cli = pool.apply_async(run_cli, (min_size, n_tests, suite))
+        async_result_cli = pool.apply_async(run_cli, (target, min_size, n_tests, suite))
         print('ok')
 
     #Step 5: Verify result from server and client
@@ -112,7 +112,7 @@ def exec_tls(filename, target, timeout, min_size, n_tests, weight):
     print('\n    MAC algorithm:')
     comparator_bar.make_cmp_figs(success_ciphersuites, 'md', weight=weight, strlen=strlen, spacing='\t')
     
-    utils.write_ciphersuites('ciphersuites.txt', success_ciphersuites)
+    utils.write_ciphersuites(target + '_suites.txt', success_ciphersuites)
 
     #Step 8: Report final status
     print('\n--- FINAL STATUS ---')

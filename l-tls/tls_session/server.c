@@ -304,10 +304,10 @@ int main(int argc, char **argv) {
 #endif
 #endif
 
-    // Load RSA certificate and key
+    // Load server RSA certificate and key
 #if defined(MBEDTLS_RSA_C)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the rsa server certificate........");
+    printf("\nLoading the server rsa certificate........");
     fflush(stdout);
 #endif
 
@@ -321,7 +321,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the rsa server key................");
+    printf("\nLoading the server rsa key................");
     fflush(stdout);
 #endif
 
@@ -337,10 +337,10 @@ int main(int argc, char **argv) {
 #endif
 #endif /* MBEDTLS_RSA_C */
 
-    // Load EC certificate and key
+    // Load server EC certificate and key
 #if defined(MBEDTLS_ECDSA_C)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the ec server certificate.........");
+    printf("\nLoading the server ec certificate.........");
     fflush(stdout);
 #endif
 
@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the ec server key.................");
+    printf("\nLoading the server ec key.................");
     fflush(stdout);
 #endif
 

@@ -209,10 +209,10 @@ int main(int argc, char **argv) {
 #endif
 #endif
 
-    // Load RSA certificate and key
+    // Load client RSA certificate and key
 #if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the rsa client certificate........");
+    printf("\nLoading the client rsa certificate........");
     fflush(stdout);
 #endif
 
@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the rsa client key................");
+    printf("\nLoading the client rsa key................");
     fflush(stdout);
 #endif
 
@@ -242,10 +242,10 @@ int main(int argc, char **argv) {
 #endif
 #endif /* MBEDTLS_RSA_C && MUTUAL_AUTH */
 
-    // Load EC certificate and key
+    // Load client EC certificate and key
 #if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the ec client certificate.........");
+    printf("\nLoading the client ec certificate.........");
     fflush(stdout);
 #endif
 
@@ -259,7 +259,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the ec client key.................");
+    printf("\nLoading the client ec key.................");
     fflush(stdout);
 #endif
 

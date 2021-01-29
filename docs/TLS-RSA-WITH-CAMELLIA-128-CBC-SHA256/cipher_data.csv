@@ -1,0 +1,13 @@
+endpoint,operation,data_size,time
+client,encrypt,4144,129
+server,decrypt,4144,109
+server,encrypt,4144,124
+client,decrypt,4144,150
+client,encrypt,8240,225
+server,decrypt,8240,214
+server,encrypt,8240,239
+client,decrypt,8240,368
+client,encrypt,16432,615
+server,decrypt,16432,588
+server,encrypt,16432,444
+client,decrypt,16432,570
