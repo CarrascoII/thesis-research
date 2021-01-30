@@ -163,18 +163,6 @@ int main(int argc, char **argv) {
 #endif
     };
 
-    int ret,
-        i, n_tests = N_TESTS,
-        input_size = MIN_INPUT_SIZE,
-#if defined(MBEDTLS_DEBUG_C)
-        debug = DEBUG_LEVEL,
-#endif
-        suite_id = 0;
-    unsigned char *request, *response;
-    const char *pers = "tls_client generate request";
-    char *p, *q;
-    uint32_t flags;
-
     for(i = 1; i < argc; i++) {
         p = argv[i];
 
