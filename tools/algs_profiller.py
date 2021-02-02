@@ -164,7 +164,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hc:t:m:n:f:', ['help', 'compile=', 'timeout=', 'min_size=', 'n_tests=', 'filter='])
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "profiller.py -h" for help')
+        print('One of the options does not exit.\nUse: "algs_profiller.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -183,8 +183,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('profiller.py [-c <compilation_target>] [-t <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
-            print('profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--min_size=<min_input_size>] ' +
+            print('algs_profiller.py [-c <compilation_target>] [-t <timeout>] [-m <min_input_size>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
+            print('algs_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--min_size=<min_input_size>] ' +
                   '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
         if opt in ('-c', '--compile'):
