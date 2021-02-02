@@ -79,14 +79,9 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
             for suite in stats:
                 y.append(stats[suite][stype + '_' + ylabel + ext])
                 yerr.append(stats[suite]['stddev_' + ylabel + ext])
-                
-            # print(f'\nlen(y) = {len(y)}')
-            # for i in range(len(y)):
-            #     print(f'len(y[{i}]) = {len(y[i])}')
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-
             utils.save_fig(fig, '../docs/' + alg + '_alg_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):

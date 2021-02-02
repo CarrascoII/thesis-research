@@ -6,7 +6,7 @@ import time
 import comparator_bar, plotter, utils
 
 
-strlen = 40
+strlen = 50
 
 def run_cli(target, min_size, n_tests, ciphersuite):
     args = ['./../l-tls/tls_' + target + '/client.out', 'input_size=' + min_size,
@@ -28,27 +28,12 @@ def run_srv(target, min_size, n_tests, ciphersuite):
 
     return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
 
-def exec_tls(filename, target, timeout, min_size, n_tests, weight):
-    #Step 1: Parse ciphersuite list
-    print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
-    print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
-    
-    total_ciphersuites = utils.parse_algorithms(filename)
-    n_total = len(total_ciphersuites)
-    success_ciphersuites = []
-    n_success = 0
-    not_ciphersuites = []
-    n_not = 0
-    error_ciphersuites = []
-    n_error = 0
-    current = 1
-    
-    print(f'ok\nGot {n_total} ciphersuites')
-    print('\nRunning with options:')
-    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Starting input size: {min_size} bytes')
+def exec_target(target, ciphersuites, timeout, min_size, n_tests, n_total, current):
+    successful = []
+    non_existent = []
+    error = []
 
     #Step 2: Compile libs and programs
-    print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
     thread = ThreadPool(processes=1)
     async_result_make = thread.apply_async(utils.make_progs, (target,))
@@ -59,7 +44,7 @@ def exec_tls(filename, target, timeout, min_size, n_tests, weight):
 
     pool = ThreadPool(processes=2)
 
-    for suite in total_ciphersuites:
+    for suite in ciphersuites:
         print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
         current += 1
 
@@ -80,15 +65,50 @@ def exec_tls(filename, target, timeout, min_size, n_tests, weight):
         cli_ret = async_result_cli.get()
 
         if srv_ret == 1 and cli_ret == 1:
-            not_ciphersuites.append(suite)
-            n_not += 1
+            non_existent.append(suite)
         elif srv_ret != 0 or cli_ret != 0:
-            error_ciphersuites.append(suite)
-            n_error += 1
+            error.append(suite)
         else:
             print('\n\tData successfully obtained!!!')
-            success_ciphersuites.append(suite)
-            n_success += 1
+            successful.append(suite)
+
+    return successful, error, non_existent, current
+
+def exec_tls(suites_file, target_file, timeout, min_size, n_tests, weight):
+    #Step 1: Parse ciphersuite list
+    print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
+    print(f'\nParsing ciphersuites from {suites_file}'.ljust(strlen, '.'), end=' ')    
+    
+    total_ciphersuites = utils.parse_algorithms(suites_file)
+    n_total = len(total_ciphersuites)
+    success_ciphersuites = []
+    not_ciphersuites = []
+    error_ciphersuites = []
+    current = 1
+    
+    print(f'ok\nGot {n_total} ciphersuites')
+
+    print(f'\nParsing compilation targets from {target_file}'.ljust(strlen, '.'), end=' ')    
+    exec_dict = utils.assign_target(total_ciphersuites, target_file)
+    print(f'ok')
+
+    print('\nRunning with options:')
+    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Starting input size: {min_size} bytes')
+
+    print('\n--- STARTING DATA ACQUISITION PROCESS ---')
+    
+    for key in exec_dict:
+        successful, error, non_existent, end = exec_target(key, exec_dict[key], timeout, min_size, n_tests, n_total, current)
+
+        exec_dict[key] = successful
+        success_ciphersuites += successful
+        error_ciphersuites += error
+        not_ciphersuites += non_existent
+        current = end
+
+    n_success = len(success_ciphersuites)
+    n_error = len(error_ciphersuites)
+    n_not = len(not_ciphersuites)
 
     #Step 6: Analyse data and create individual plots for ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
@@ -111,8 +131,9 @@ def exec_tls(filename, target, timeout, min_size, n_tests, weight):
     comparator_bar.make_cmp_figs(success_ciphersuites, 'cipher', weight=weight, strlen=strlen, spacing='\t')
     print('\n    MAC algorithm:')
     comparator_bar.make_cmp_figs(success_ciphersuites, 'md', weight=weight, strlen=strlen, spacing='\t')
-    
-    utils.write_ciphersuites(target + '_suites.txt', success_ciphersuites)
+
+    for key in exec_dict:
+        utils.write_ciphersuites(key + '_suites.txt', exec_dict[key])
 
     #Step 8: Report final status
     print('\n--- FINAL STATUS ---')
@@ -154,7 +175,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    target = 'psk'
+    target_file = 'all_targets.txt'
     timeout = 2
     min_size = '32'
     n_tests = '500'
@@ -167,7 +188,7 @@ def main(argv):
                   '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
         if opt in ('-c', '--compile'):
-            target = arg
+            target_file = arg
         if opt in ('-t', '--timeout'):
             timeout = int(arg)
         if opt in ('-m', '--min_size'):
@@ -178,7 +199,7 @@ def main(argv):
             weight = float(arg)
 
     os.system('clear')
-    exec_tls(args[0], target, timeout, min_size, n_tests, weight)
+    exec_tls(args[0], target_file, timeout, min_size, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

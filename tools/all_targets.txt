@@ -1,0 +1,10 @@
+psk, PSK
+psk, RSA-PSK
+psk, DHE-PSK
+psk, ECDHE-PSK
+rsa, RSA
+rsa, DHE-RSA
+rsa, ECDHE-RSA
+ec, ECDH-RSA
+ec, ECDH-ECDSA
+ec, ECDHE-ECDSA

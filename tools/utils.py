@@ -98,6 +98,28 @@ def parse_session_data(filename):
         
         return data, headers
 
+def assign_target(ciphersuites, filename):
+    with open(filename, 'r') as fl:
+        exec_dict = {}
+
+        for line in fl.readlines():
+            line = line.split(',')
+            target = line[0].strip()
+            tls = 'TLS-' + line[1].strip() + '-WITH'
+            tmp = ciphersuites.copy()
+
+            if target not in exec_dict.keys():
+                exec_dict[target] = []
+
+            for suite in ciphersuites:
+                if suite.find(tls) != -1:
+                    exec_dict[target].append(suite)
+                    tmp.remove(suite)
+
+            ciphersuites = tmp.copy()
+        
+        return exec_dict
+
 ########## PLOTTING UTILS ##########
 def save_fig(fig, fname):
     fig.tight_layout()
@@ -142,24 +164,6 @@ def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size',
 
     return(ax)
 
-# def custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
-#     if ax is None:
-#         ax = plt.gca()
-# 
-#     x = np.arange(len(xtickslabels))
-#     x *= (len(y_list)//2 + 1)
-# 
-#     for i in range(len(y_list)):
-#         x1 = x + (i + (1 - len(y_list))/2)*width
-#         ax.bar(x1, y_list[i], label=labels[i], alpha=0.7, align='center', yerr=yerr[i], capsize=6*width)
-# 
-#     ax.set_xticks(x)
-#     ax.set_xticklabels(xtickslabels)
-#     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-#     ax.legend()
-# 
-#     return(ax)
-
 def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0, xlabel='data_size', xtickslabels=None, ylabel=None):
     if ax is None:
         ax = plt.gca()
@@ -172,11 +176,8 @@ def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0
         if len(x_list) == len(y_list):
             break
 
-    # print(f'\n{x_list}')
-
     for x, y, err, label in zip(x_list, y_list, yerr, labels):
         x1 = [x + (i + (1 - len(y))/2) for i in range(len(y))]
-        # print(f'\n{x1} ({len(x1)})')
         ax.bar(x1, y, yerr=err, capsize=2)
 
         for i, j1, j2, s in zip(x1, y, err, label):

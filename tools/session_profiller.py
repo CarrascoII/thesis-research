@@ -6,7 +6,7 @@ import time
 import comparator_bar, plotter, utils
 
 
-strlen = 40
+strlen = 50
 
 def run_cli(n_tests, ciphersuite):
     args = ['./../l-tls/tls_session/client.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
@@ -27,7 +27,7 @@ def run_srv(n_tests, ciphersuite):
     return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
 
 def exec_tls(filename, target, timeout, n_tests, weight):
-    #Step 1: Parse ciphersuite list
+    # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
     
@@ -45,7 +45,7 @@ def exec_tls(filename, target, timeout, n_tests, weight):
     print('\nRunning with options:')
     print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}')
 
-    #Step 2: Compile libs and programs
+    # Step 2: Compile libs and programs
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
     pool = ThreadPool(processes=1)
@@ -61,19 +61,19 @@ def exec_tls(filename, target, timeout, n_tests, weight):
         print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
         current += 1
 
-    #Step 3: Start server in thread 1
+    # Step 3: Start server in thread 1
         print('\tStarting server'.ljust(strlen, '.'), end=' ')
         async_result_srv = pool.apply_async(run_srv, (n_tests, suite))
         print('ok')
 
         time.sleep(timeout)
 
-    #Step 4: Start client in thread 2
+    # Step 4: Start client in thread 2
         print('\tStarting client'.ljust(strlen, '.'), end=' ')
         async_result_cli = pool.apply_async(run_cli, (n_tests, suite))
         print('ok')
 
-    #Step 5: Verify result from server and client
+    # Step 5: Verify result from server and client
         srv_ret = async_result_srv.get()
         cli_ret = async_result_cli.get()
 
@@ -88,14 +88,14 @@ def exec_tls(filename, target, timeout, n_tests, weight):
             success_ciphersuites.append(suite)
             n_success += 1
 
-    #Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
+    # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     print(f'\nCreating comparison graphs from all ciphersuites:')
     comparator_bar.make_cmp_figs(success_ciphersuites, 'session', weight=weight, strlen=strlen, spacing='\t')
 
     utils.write_ciphersuites('session_ciphersuites.txt', success_ciphersuites)
 
-    #Step 7: Report final status
+    # Step 7: Report final status
     print('\n--- FINAL STATUS ---')
 
     print('\nData generation:')
