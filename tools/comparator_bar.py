@@ -85,9 +85,9 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
             utils.save_fig(fig, '../docs/' + alg + '_alg_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
+    print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
     all_data = {}
     all_headers = []
-    print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
 
     for suite in ciphersuites:
         path = '../docs/' + suite + '/' + alg + '_data.csv'
@@ -120,9 +120,9 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         
         print('ok')
 
+    print(spacing + f'  Calculating statistics'.ljust(strlen, '.'), end=' ')
     all_stats = {}
     stats_type = ['mean', 'stddev']
-    print(spacing + f'  Calculating statistics'.ljust(strlen, '.'), end=' ')
 
     for suite in ciphersuites:
         stats = utils.calc_statistics(all_data[suite], stats_type)
@@ -133,15 +133,26 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         all_stats[suite] = stats
 
     print('ok')
-    print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
+    print(spacing + f'  Saving statistics'.ljust(strlen, '.'), end=' ')
 
+    if alg != 'session':
+        path = '../docs/' + alg + '_alg_'
+        utils.write_alg_cmp_csv(path, all_stats)
+    else:
+        path = '../docs/'
+        utils.write_session_cmp_csv(path, all_stats)
+
+
+    print('ok')
+    print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
+    
     for hdr in all_headers[0]:
         if alg != 'session':
             make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
         else:
             make_session_cmp_bar_by_ke(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
 
-        print('ok')
+    print('ok')
 
 def main(argv):
     try:
@@ -163,8 +174,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('comparator.py [-f <weight>] [-c] [-m] [-s] <ciphersuite_list>')
-            print('comparator.py [--filter=<weight>] [--cipher] [--md] [--session] <ciphersuite_list>')
+            print('comparator_bar.py [-f <weight>] [-c] [-m] [-s] <ciphersuite_list>')
+            print('comparator_bar.py [--filter=<weight>] [--cipher] [--md] [--session] <ciphersuite_list>')
             sys.exit(0)
 
         if opt in ('-f', '--filter'):

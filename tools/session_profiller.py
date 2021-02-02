@@ -142,8 +142,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_profiller.py [-c <compilation_target>] [-t <timeout>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
-            print('algs_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
+            print('session_profiller.py [-c <compilation_target>] [-t <timeout>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
+            print('session_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] ' +
+                    '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
         if opt in ('-c', '--compile'):
             target = arg

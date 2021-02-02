@@ -11,7 +11,7 @@ def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2, hdrs):
     ext = ['_out', '_in']
 
     if alg == 'cipher':
-        op = ['cipher', 'decipher']
+        op = ['encrypt', 'decrypt']
     elif alg == 'md':
         op = ['hash', 'verify']
 
@@ -23,7 +23,7 @@ def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2, hdrs):
                                                 stats2[hdr + '_' + ylabel + ext[i]], ax=axes[i], title=op[i] + ' (' + hdr + ')',
                                                 ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
-        utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '_statistics.png')
+        utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
 def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
     print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
@@ -59,6 +59,12 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
             sys.exit(2)
 
         print('ok')
+        print(spacing + f'  Saving statistics'.ljust(strlen, '.'), end=' ')
+
+        path = '../docs/cmp_' + alg + '_alg_'
+        utils.write_alg_cmp_csv(path, {ciphersuite1: stats1, ciphersuite2: stats2})
+
+        print('ok')
         print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
 
         for hdr in headers1:
@@ -86,8 +92,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('comparator.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
-            print('comparator.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
+            print('comparator_plot.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
+            print('comparator_plot.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
             sys.exit(0)
         if opt in ('-f', '--filter'):
             weight = float(arg)

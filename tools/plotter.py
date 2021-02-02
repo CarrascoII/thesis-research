@@ -63,7 +63,6 @@ def make_plot(ylabel, file_path, stats, types):
 
 #     ax1 = utils.custom_hist(x1, ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
 #     ax2 = utils.custom_hist(x2, ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
-
 #     save_fig(fig, file_path + ylabel + '_hist.png')
 
 def make_scatter(ylabel, file_path, data):
@@ -90,7 +89,6 @@ def make_scatter(ylabel, file_path, data):
     for i in range(len(axes)):
         axes[i] = utils.custom_scatter(x[operations[i]], y[operations[i]], ax=axes[i], title=operations[i],
                                     xtickslabels=xtickslabels, ylabel=ylabel, kwargs=kwargs[i])
-
         utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
 def make_figs(filename, weight=1.5, strlen=40, spacing=''):
@@ -105,18 +103,21 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
         data = utils.filter_iqr(data, weight=weight)
         print('ok')
 
-    stats_type = ['mean', 'stddev','median', 'mode']
     print(spacing + f'Calculating statistics'.ljust(strlen, '.'), end=' ')
+    stats_type = ['mean', 'stddev','median', 'mode']
     stats = utils.calc_statistics(data, stats_type)
     print('ok')
-    print(spacing + f'Generating figures'.ljust(strlen, '.'), end=' ')
     
+    print(spacing + f'Saving statistics'.ljust(strlen, '.'), end=' ')
+    utils.write_alg_csv(path + 'statistics.csv', stats)
+    print('ok')
+
+    print(spacing + f'Generating figures'.ljust(strlen, '.'), end=' ')
     for hdr in headers:
         make_scatter(hdr, path, data)
         # make_hist(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
         make_plot(hdr, path, stats, [stats_type[0]] + stats_type[2:])
-        make_errorbar(hdr, path, stats, stats_type[:2])
-    
+        make_errorbar(hdr, path, stats, stats_type[:2])    
     print('ok')
 
 def main(argv):

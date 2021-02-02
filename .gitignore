@@ -198,3 +198,5 @@ aux-files
 papi
 *.png
 *.pcapng
+docs/*_statistics.csv
+docs/*/*_statistics.csv

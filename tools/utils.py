@@ -98,6 +98,101 @@ def parse_session_data(filename):
         
         return data, headers
 
+def write_alg_csv(filename, stats):
+    hdrs = list(stats.keys())
+    keys = stats['keys']
+    lines = []
+    line = ''
+
+    for hdr in hdrs:
+        line += hdr + ','
+
+    line = line.replace('keys', 'data_size')
+
+    if filename.find('cipher') != -1:
+        line = line.replace('out', 'encrypt')
+        line = line.replace('in', 'decrypt')
+
+    elif filename.find('md') != -1:
+        line = line.replace('out', 'hash')
+        line = line.replace('in', 'verify')
+
+    lines.append(line[:-1] + '\n')
+
+    for i in range(len(keys)):
+        line = ''
+
+        for hdr in hdrs:
+            line += str(stats[hdr][i]) + ','
+
+        lines.append(line[:-1] + '\n')
+
+    with open(filename, 'w') as fl:
+        fl.writelines(lines)
+
+def write_alg_cmp_csv(path, all_stats):
+    lines = {'out': [], 'in': []}
+    keys = []
+    line = 'ciphersuite,data_size,'
+    operation = []
+
+    for suite in all_stats:
+        for key in all_stats[suite]:
+            if key.find('out') != -1:
+                keys.append(key[:-4])
+                line += key[:-4] + ','
+        break
+
+    for end in lines:
+        lines[end].append(line[:-1] + '\n')
+
+    for suite in all_stats:
+        for end in lines:
+            line = suite + ','
+
+            for i in range(len(all_stats[suite]['keys'])):
+                sub = line + str(all_stats[suite]['keys'][i]) + ','
+
+                for key in keys:
+                    sub += str(all_stats[suite][key + '_' + end][i]) + ','
+
+                lines[end].append(sub[:-1] + '\n')
+
+    if path.find('cipher') != -1:
+        operation = ['encrypt', 'decrypt']
+    elif path.find('md') != -1:
+        operation = ['hash', 'verify']
+
+    for end, op in zip(lines, operation):
+        with open(path + op + '_statistics.csv', 'w') as fl:
+            fl.writelines(lines[end])
+
+def write_session_cmp_csv(path, all_stats):
+    lines = {'server': [], 'client': []}
+    line = ''
+
+    for suite in all_stats:
+        for key in all_stats[suite]:
+            line += key + ','
+        break
+
+    line = line.replace('keys', 'ciphersuite')
+    for end in lines:
+        lines[end].append(line[:-1] + '\n')
+
+    for suite in all_stats:
+        for i, end in zip(range(len(lines.keys())), lines):
+            line = suite + ','
+
+            for key in list(all_stats[suite].keys())[1:]:
+                line += str(all_stats[suite][key][i]) + ','
+
+            lines[end].append(line[:-1] + '\n')
+
+    for end in lines:
+        with open(path + end + '_session_statistics.csv', 'w') as fl:
+            fl.writelines(lines[end])
+
 def assign_target(ciphersuites, filename):
     with open(filename, 'r') as fl:
         exec_dict = {}
