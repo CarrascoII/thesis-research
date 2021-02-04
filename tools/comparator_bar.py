@@ -44,21 +44,21 @@ def make_session_cmp_bar_by_ke(name, ylabel, stats, labels, stats_type):
                                         xlabel='ciphersuites', xtickslabels=ke, ylabel=ylabel)
             utils.save_fig(fig, '../docs/' + endpoints[i] + '_' + name + '_' + stype + '_' + ylabel + '.png')
 
-def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
-    endpoints = stats[labels[0]]['keys']
+# def make_session_cmp_bar(name, ylabel, stats, labels, stats_type):
+#     endpoints = stats[labels[0]]['keys']
 
-    for stype in stats_type:
-        for i in range(len(endpoints)):
-            fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-            y = []
-            yerr = []
+#     for stype in stats_type:
+#         for i in range(len(endpoints)):
+#             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+#             y = []
+#             yerr = []
 
-            for suite in stats:
-                y.append([stats[suite][stype + '_' + ylabel][i]])
-                yerr.append([stats[suite]['stddev_' + ylabel][i]])
+#             for suite in stats:
+#                 y.append([stats[suite][stype + '_' + ylabel][i]])
+#                 yerr.append([stats[suite]['stddev_' + ylabel][i]])
 
-            ax = utils.custom_bar(y, yerr, ax=ax, xlabel='ciphersuites', xtickslabels=labels, title=endpoints[i], ylabel=ylabel)
-            utils.save_fig(fig, '../docs/' + endpoints[i] + '_' + name + '_' + stype + '_' + ylabel + '.png')
+#             ax = utils.custom_bar(y, yerr, ax=ax, xlabel='ciphersuites', xtickslabels=labels, title=endpoints[i], ylabel=ylabel)
+#             utils.save_fig(fig, '../docs/' + endpoints[i] + '_' + name + '_' + stype + '_' + ylabel + '.png')
 
 def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
     xtickslabels = stats[labels[0]]['keys']
@@ -67,6 +67,7 @@ def make_alg_cmp_bar(alg, ylabel, stats, labels, stats_type):
 
     if alg == 'cipher':
         operations = ['encrypt', 'decrypt']
+
     elif alg == 'md':
         operations = ['hash', 'verify']
 
@@ -96,6 +97,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
 
         if alg != 'session':
             data, hdr = utils.parse_alg_data(path)
+
         else:
             data, hdr = utils.parse_session_data(path)
 
@@ -121,6 +123,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
         print('ok')
 
     print(spacing + f'  Calculating statistics'.ljust(strlen, '.'), end=' ')
+
     all_stats = {}
     stats_type = ['mean', 'stddev']
 
@@ -138,6 +141,7 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     if alg != 'session':
         path = '../docs/' + alg + '_alg_'
         utils.write_alg_cmp_csv(path, all_stats)
+
     else:
         path = '../docs/'
         utils.write_session_cmp_csv(path, all_stats)
@@ -149,14 +153,17 @@ def make_cmp_figs(ciphersuites, alg, weight=1.5, strlen=40, spacing=''):
     for hdr in all_headers[0]:
         if alg != 'session':
             make_alg_cmp_bar(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
+
         else:
             make_session_cmp_bar_by_ke(alg, hdr, all_stats, ciphersuites, stats_type[:-1])
+            # make_session_cmp_bar(name, ylabel, stats, labels, stats_type[:-1])
 
     print('ok')
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cms', ['help', 'filter=', 'cipher', 'md', 'session'])
+
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
         sys.exit(2)
@@ -178,14 +185,18 @@ def main(argv):
             print('comparator_bar.py [--filter=<weight>] [--cipher] [--md] [--session] <ciphersuite_list>')
             sys.exit(0)
 
-        if opt in ('-f', '--filter'):
+        elif opt in ('-f', '--filter'):
             weight = float(arg)
+
         elif opt in ('-c', '--cipher'):
             algs.append('cipher')
+
         elif opt in ('-m', '--md'):
             algs.append('md')
+
         elif opt in ('-s', '--session'):
             algs.append('session')
+
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)

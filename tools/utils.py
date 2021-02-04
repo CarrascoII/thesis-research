@@ -22,6 +22,7 @@ def parse_algorithms(filename):
             algs[line[0].strip()] += [line[1].strip()]
 
         ciphersuites = []
+
         for ke in algs['KE']:
             for cipher in algs['CIPHER']:
                 for md in algs['MD']:
@@ -68,6 +69,7 @@ def parse_alg_data(filename):
                 if val != 0:
                     if operation == 'encrypt' or operation == 'digest':
                         hdr += '_out'
+
                     elif operation == 'decrypt' or operation == 'verify':
                         hdr += '_in'
                         
@@ -141,6 +143,7 @@ def write_alg_cmp_csv(path, all_stats):
             if key.find('out') != -1:
                 keys.append(key[:-4])
                 line += key[:-4] + ','
+
         break
 
     for end in lines:
@@ -160,6 +163,7 @@ def write_alg_cmp_csv(path, all_stats):
 
     if path.find('cipher') != -1:
         operation = ['encrypt', 'decrypt']
+
     elif path.find('md') != -1:
         operation = ['hash', 'verify']
 
@@ -228,7 +232,6 @@ def custom_errorbar(x, y, e, ax=None, title=None, xlabel='data_size', ylabel=Non
 
     ax.errorbar(x, y, yerr=e, fmt='.', capsize=5, barsabove=True, **kwargs)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-
     return(ax)
 
 def multiple_custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs1={}, kwargs2={}):
@@ -239,7 +242,6 @@ def multiple_custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', yl
     ax.plot(x, y2, **kwargs2)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
-
     return(ax)
 
 def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
@@ -256,14 +258,13 @@ def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size',
     ax.set_xticks(x_list)
     ax.set_xticklabels(xtickslabels, rotation=60, ha='right', va='top')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-
     return(ax)
 
 def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0, xlabel='data_size', xtickslabels=None, ylabel=None):
+    x_list = [0]
+
     if ax is None:
         ax = plt.gca()
-
-    x_list = [0]
 
     for i in range(len(y_list)):
         x_list.append(x_list[-1] + (len(y_list[i]) + len(y_list[i+1]))/2)
@@ -281,16 +282,14 @@ def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0
     ax.set_xticks(x_list)
     ax.set_xticklabels(xtickslabels)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-
-
     return(ax)
 
 def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
-    if ax is None:
-        ax = plt.gca()
-    
     x = np.arange(len(xtickslabels))
     x *= (len(y_list)//2 + 1)
+
+    if ax is None:
+        ax = plt.gca()
 
     for i in range(len(y_list)):
         x1 = x + (i + (1 - len(y_list))/2)*width
@@ -300,7 +299,6 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
     ax.set_xticklabels(xtickslabels)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
-
     return(ax)
 
 def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xtickslabels=None, ylabel=None, kwargs={}):
@@ -311,7 +309,6 @@ def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xtickslabels=N
     ax.set_xticks(np.arange(len(xtickslabels)))
     ax.set_xticklabels(xtickslabels)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-
     return(ax)
 
 ########## DATA ANALYSIS UTILS ##########
@@ -329,8 +326,10 @@ def filter_z_score(data, weight=2):
 
                 if val > (mean + stdw):
                     continue
+
                 elif val < (mean - stdw):
                     continue
+
                 else:
                     tmp.append(val)
             
@@ -353,8 +352,10 @@ def filter_iqr(data, weight=1.5):
 
                 if val > (q3 + iqrw):
                     continue
+
                 elif val < (q1 - iqrw):
                     continue
+
                 else:
                     tmp.append(val)
             
@@ -380,6 +381,7 @@ def calc_statistics(data, stats_type):
             for stat in stats_type:
                 try:
                     stats[stat + '_' + sub].append(ops[stat](data[key][sub]))
+
                 except:
                     print(f' {stat} is not an allowed type of statistic')
                     return None
@@ -400,13 +402,11 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ')
 
     if return_code != 0:
-        print('error\n\tGot an unexpected return code!!!' + 
-             f'\n\tDetails: {return_code}')
+        print(f'error\n\tGot an unexpected return code!!!\n\tDetails: {return_code}')
         return return_code
 
     if last_err[0] != '':
-        print('error\n\tAn unexpected error occured!!!' +
-             f'\n\tDetails:\n\t\t{last_err}')
+        print(f'error\n\tAn unexpected error occured!!!\n\tDetails:\n\t\t{last_err}')
         return -1
 
     for i in range(0, len(last_msg)):
@@ -424,13 +424,11 @@ def check_make_ret(return_code, stdout, stderr):
     last_err = strerr.split('\n')
 
     if return_code != 0:
-        print('error\n\tCompilation failed!!!' + 
-             f'\n\tDetails: {return_code}')
+        print(f'error\n\tCompilation failed!!!\n\tDetails: {return_code}')
         return return_code
 
     if last_err[0] != '':
-        print('error\n\tAn unexpected error occured!!!' +
-             f'\n\tDetails:\n\t\t{last_err}')
+        print(f'error\n\tAn unexpected error occured!!!\n\tDetails:\n\t\t{last_err}')
         return -1
 
     print('ok')
@@ -438,7 +436,6 @@ def check_make_ret(return_code, stdout, stderr):
 
 def make_progs(target):
     args = ['make', '-C', '../l-tls', target]
-
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode

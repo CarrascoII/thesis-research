@@ -12,6 +12,7 @@ def make_errorbar(ylabel, file_path, stats, types):
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
+
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
@@ -31,6 +32,7 @@ def make_plot(ylabel, file_path, stats, types):
     if file_path.find('cipher') != -1:
         params1['label'] = 'encryption'
         params2['label'] = 'decryption'
+
     elif file_path.find('md') != -1:
         params1['label'] = 'digest'
         params2['label'] = 'verify'
@@ -75,6 +77,7 @@ def make_scatter(ylabel, file_path, data):
 
     if file_path.find('cipher') != -1:
         operations = ['cipher', 'decipher']
+
     elif file_path.find('md') != -1:
         operations = ['hash', 'verify']
 
@@ -113,16 +116,19 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     print('ok')
 
     print(spacing + f'Generating figures'.ljust(strlen, '.'), end=' ')
+
     for hdr in headers:
         make_scatter(hdr, path, data)
         # make_hist(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
         make_plot(hdr, path, stats, [stats_type[0]] + stats_type[2:])
         make_errorbar(hdr, path, stats, stats_type[:2])    
+    
     print('ok')
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
+    
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "plotter.py -h" for help')
         sys.exit(2)
@@ -143,12 +149,16 @@ def main(argv):
             print('plotter.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
             print('plotter.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
             sys.exit(0)
-        if opt in ('-f', '--nfilter'):
+
+        elif opt in ('-f', '--nfilter'):
             weight = float(arg)
+        
         elif opt in ('-c', '--cipher'):
             algs.append('cipher')
+        
         elif opt in ('-m', '--md'):
             algs.append('md')
+        
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
@@ -162,9 +172,9 @@ def main(argv):
         current +=1
         
         for alg in algs:
-            print('\n' + alg.upper() + ' algorithm:')
             fname = '../docs/' + suite + '/' + alg + '_data.csv'
 
+            print('\n' + alg.upper() + ' algorithm:')
             make_figs(fname, weight=weight, spacing='  ')
 
 if __name__ == '__main__':

@@ -26,9 +26,10 @@ def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2, hdrs):
         utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
 def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
-    print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
     path1 = '../docs/' + ciphersuite1 + '/'
     path2 = '../docs/' + ciphersuite2 + '/'
+
+    print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
 
     for alg in algs:
         print('\n' + spacing + f'{alg.upper()} algorithm:')
@@ -39,7 +40,7 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
         if headers1 != headers2:
             print('error')
             print(spacing + 'Data has different headers. Cannot be compared!!!\n')
-            break
+            continue
 
         print('ok')
 
@@ -59,12 +60,12 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
             sys.exit(2)
 
         print('ok')
-        print(spacing + f'  Saving statistics'.ljust(strlen, '.'), end=' ')
 
+        print(spacing + f'  Saving statistics'.ljust(strlen, '.'), end=' ')
         path = '../docs/cmp_' + alg + '_alg_'
         utils.write_alg_cmp_csv(path, {ciphersuite1: stats1, ciphersuite2: stats2})
-
         print('ok')
+
         print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
 
         for hdr in headers1:
@@ -75,6 +76,7 @@ def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spaci
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
+
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
         sys.exit(2)
@@ -95,12 +97,16 @@ def main(argv):
             print('comparator_plot.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
             print('comparator_plot.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
             sys.exit(0)
+
         if opt in ('-f', '--filter'):
             weight = float(arg)
+
         elif opt in ('-c', '--cipher'):
             algs.append('cipher')
+
         elif opt in ('-m', '--md'):
             algs.append('md')
+            
         else:
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
