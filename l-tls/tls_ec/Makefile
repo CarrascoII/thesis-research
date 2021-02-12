@@ -77,7 +77,7 @@ local_papi: clean server_papi client_papi
 
 ### MAKE CLEAN ###
 clean_local:
-	echo -n "Cleaning tls_ec......... "
+	echo -n "Cleaning tls_ec.......... "
 	rm -f *.out
 	echo "ok"
 

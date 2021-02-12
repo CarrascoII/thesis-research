@@ -6,6 +6,7 @@
  */
 /* Protocol version */
 #define MBEDTLS_SSL_PROTO_TLS1_2
+#define MBEDTLS_SSL_ENCRYPT_THEN_MAC
 
 /* Key exchange algorithms */
 #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
@@ -411,8 +412,7 @@
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
-#define MIN_INPUT_SIZE                  32
-#define MAX_INPUT_SIZE                  8192
+#define MAX_INPUT_SIZE                  2*1024*1024
 #define N_TESTS                         500
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

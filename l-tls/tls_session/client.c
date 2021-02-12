@@ -86,7 +86,6 @@ int main(int argc, char **argv) {
 
     int ret,
         i, n_tests = N_TESTS,
-        init_size = MIN_INPUT_SIZE,
         input_size = MAX_INPUT_SIZE,
 #if defined(MBEDTLS_DEBUG_C)
         debug = DEBUG_LEVEL,
@@ -130,10 +129,10 @@ int main(int argc, char **argv) {
             }
         }
         else if(strcmp(p, "input_size") == 0) {
-            init_size = atoi(q);
-            if(init_size < MIN_INPUT_SIZE || init_size > MAX_INPUT_SIZE || init_size % MIN_INPUT_SIZE != 0) {
+            input_size = atoi(q);
+            if(input_size < 0 || input_size > MAX_INPUT_SIZE) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Input size must be multiple of %d, between %d and %d\n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                printf("Input size must be between 0 and %d\n", MAX_INPUT_SIZE);
 #endif
                 return(1);
             }
@@ -187,6 +186,9 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
 #endif
+
+    request = (unsigned char *) malloc(input_size * sizeof(unsigned char));
+    response = (unsigned char *) malloc(input_size * sizeof(unsigned char));
 
     // Load CA certificate(s)
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
@@ -377,6 +379,14 @@ int main(int argc, char **argv) {
     printf(" ok");
 #endif
 
+    // Generate the request
+    if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, request, input_size)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+#endif
+        goto exit;
+    }
+
     for(i = 0; i < n_tests; i++) {
         // Reset the connection
 #if defined(MBEDTLS_DEBUG_C)
@@ -437,7 +447,7 @@ int main(int argc, char **argv) {
             mkdir(path, 0777);
             strcat(path, SESSION_EXTENSION);
 
-            if((ret = measure_starts(&measure, path, "endpoint,min_input,max_input")) != 0) {
+            if((ret = measure_starts(&measure, path, "endpoint,data_size")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
@@ -472,67 +482,46 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nPerforming TLS record:");
+
+        // Send request
+        printf("\n  < Write to server:");
+        fflush(stdout);
 #endif
 
-        for(input_size = init_size; input_size <= MAX_INPUT_SIZE; input_size *= 2) {
-            request = (unsigned char *) malloc(input_size * sizeof(unsigned char));
-            response = (unsigned char *) malloc(input_size * sizeof(unsigned char));
-
-            // Generate the request
-            memset(request, 0, input_size);
-
-            if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, request, input_size)) != 0) {
+        if((ret = mbedtls_ssl_write(&tls, request, input_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+            printf(" mbedtls_ssl_write returned -0x%04x\n", -ret);
 #endif
-                goto exit;
-            }
-
-            // Send request
-#if defined(MBEDTLS_DEBUG_C)
-            printf("\n  < Write to server:");
-            fflush(stdout);
-#endif
-
-            if((ret = mbedtls_ssl_write(&tls, request, input_size)) < 0) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf(" mbedtls_ssl_write returned -0x%04x\n", -ret);
-#endif
-                goto exit;
-            }
-
-#if defined(MBEDTLS_DEBUG_C)
-            printf(" %d bytes\n", ret);
-#if defined(PRINT_MSG_HEX)
-            print_hex(request, input_size);
-#endif
-            fflush(stdout);
-
-            // Receive response
-            printf("\n  > Read from server:");
-            fflush(stdout);
-#endif
-
-            memset(response, 0, input_size);
-
-            if((ret = mbedtls_ssl_read(&tls, response, input_size)) < 0) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf(" mbedtls_ssl_read returned -0x%04x\n", -ret);
-#endif
-                goto exit;
-            }
-
-#if defined(MBEDTLS_DEBUG_C)
-            printf(" %d bytes\n", ret);
-#if defined(PRINT_MSG_HEX)
-            print_hex(response, input_size);
-#endif
-            fflush(stdout);
-#endif
-
-            free(request);
-            free(response);
+            goto exit;
         }
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" %d bytes\n", ret);
+#if defined(PRINT_MSG_HEX)
+        print_hex(request, input_size);
+#endif
+        fflush(stdout);
+
+        // Receive response
+        printf("\n  > Read from server:");
+        fflush(stdout);
+#endif
+        memset(response, 0, input_size);
+
+        if((ret = mbedtls_ssl_read(&tls, response, input_size)) < 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" mbedtls_ssl_read returned -0x%04x\n", -ret);
+#endif
+            goto exit;
+        }
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" %d bytes\n", ret);
+#if defined(PRINT_MSG_HEX)
+        print_hex(response, input_size);
+#endif
+        fflush(stdout);
+#endif
 
         // Close connection
 #if defined(MBEDTLS_DEBUG_C)
@@ -554,7 +543,7 @@ int main(int argc, char **argv) {
             goto exit;
         }
 
-        sprintf(buffer, "\nclient,%d,%d", init_size, input_size / 2);
+        sprintf(buffer, "\nclient,%d", input_size / 2);
 
         if((ret = measure_finish(&measure, path, buffer)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -592,6 +581,9 @@ int main(int argc, char **argv) {
     printf("\n");
 
 exit:
+    free(request);
+    free(response);
+
 #if defined(MEASURE_SESSION)
     measure_free(&measure);
 #endif

@@ -80,7 +80,7 @@ def parse_alg_data(filename):
 def parse_session_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[3:]
+        headers = csv_reader.fieldnames[2:]
         data = {}
 
         for endpoint in ['server', 'client']:

@@ -8,23 +8,23 @@ import comparator_bar, plotter, utils
 
 strlen = 50
 
-def run_cli(n_tests, ciphersuite):
-    args = ['./../l-tls/tls_session/client.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]    
+def run_cli(input_size, n_tests, ciphersuite):
+    args = ['./../l-tls/tls_session/client.out', 'input_size=' + input_size, 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]    
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode
 
     return utils.check_endpoint_ret(ret, 'client', ciphersuite, stdout, stderr, strlen)
 
-def run_srv(n_tests, ciphersuite):
-    args = ['./../l-tls/tls_session/server.out', 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+def run_srv(input_size, n_tests, ciphersuite):
+    args = ['./../l-tls/tls_session/server.out', 'input_size=' + input_size, 'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode
 
     return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
 
-def exec_tls(filename, target, timeout, n_tests, weight):
+def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
@@ -41,7 +41,7 @@ def exec_tls(filename, target, timeout, n_tests, weight):
     
     print(f'ok\nGot {n_total} ciphersuites')
     print('\nRunning with options:')
-    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}')
+    print(f'\t-Timeout: {timeout} sec\n\t-Data size: {input_size}\n\t-Number of tests: {n_tests}')
 
     # Step 2: Compile libs and programs
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
@@ -62,13 +62,13 @@ def exec_tls(filename, target, timeout, n_tests, weight):
 
         # Step 3: Start server in thread 1
         print('\tStarting server'.ljust(strlen, '.'), end=' ')
-        async_result_srv = pool.apply_async(run_srv, (n_tests, suite))
+        async_result_srv = pool.apply_async(run_srv, (input_size, n_tests, suite))
         print('ok')
         time.sleep(timeout)
 
         # Step 4: Start client in thread 2
         print('\tStarting client'.ljust(strlen, '.'), end=' ')
-        async_result_cli = pool.apply_async(run_cli, (n_tests, suite))
+        async_result_cli = pool.apply_async(run_cli, (input_size, n_tests, suite))
         print('ok')
 
         # Step 5: Verify result from server and client
@@ -94,7 +94,7 @@ def exec_tls(filename, target, timeout, n_tests, weight):
     comparator_bar.make_cmp_figs(success_ciphersuites, 'session', weight=weight, strlen=strlen, spacing='\t')
     
     # Step 7: Save successful ciphersuites in a file
-    utils.write_ciphersuites('session_ciphersuites.txt', success_ciphersuites)
+    utils.write_ciphersuites('session_suites.txt', success_ciphersuites)
 
     # Step 8: Report final status
     print('\n--- FINAL STATUS ---')
@@ -123,7 +123,7 @@ def exec_tls(filename, target, timeout, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hc:t:n:f:', ['help', 'compile=', 'timeout=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'hc:t:i:n:f:', ['help', 'compile=', 'timeout=', 'input_size=', 'n_tests=', 'filter='])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "session_profiller.py -h" for help')
@@ -140,13 +140,15 @@ def main(argv):
     target = 'session'
     timeout = 2
     n_tests = '500'
+    input_size = str(1024*1024)
     weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('session_profiller.py [-c <compilation_target>] [-t <timeout>] [-n <n_tests>] [-f <weight>] <algorithms_list>')
+            print('session_profiller.py [-c <compilation_target>] [-t <timeout>] [-i <data_size>] ' +
+                '[-n <n_tests>] [-f <weight>] <algorithms_list>')
             print('session_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] ' +
-                '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
+                '[--input_size=<data_size>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
 
         elif opt in ('-c', '--compile'):
@@ -155,6 +157,9 @@ def main(argv):
         elif opt in ('-t', '--timeout'):
             timeout = int(arg)
 
+        elif opt in ('-i', '--input_size'):
+            input_size = arg
+
         elif opt in ('-n', '--n_tests'):
             n_tests = arg
 
@@ -162,7 +167,7 @@ def main(argv):
             weight = float(arg)
 
     os.system('clear')
-    exec_tls(args[0], target, timeout, n_tests, weight)
+    exec_tls(args[0], target, timeout, input_size, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
