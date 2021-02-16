@@ -543,7 +543,7 @@ int main(int argc, char **argv) {
             goto exit;
         }
 
-        sprintf(buffer, "\nclient,%d", input_size / 2);
+        sprintf(buffer, "\nclient,%d", input_size);
 
         if((ret = measure_finish(&measure, path, buffer)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)

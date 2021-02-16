@@ -636,7 +636,7 @@ int main(int argc, char **argv) {
             goto exit;
         }
 
-        sprintf(buffer, "\nserver,%d", input_size / 2);
+        sprintf(buffer, "\nserver,%d", input_size);
 
         if((ret = measure_finish(&measure, path, buffer)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)

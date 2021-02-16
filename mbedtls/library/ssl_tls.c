@@ -1305,9 +1305,33 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
         size_t len;
 
         /* Write length only when we know the actual value */
+#if !defined(MEASURE_KE)
         if( ( ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
                                       p + 2, end - ( p + 2 ), &len,
                                       ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+#else
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret = mbedtls_dhm_calc_secret(&ssl->handshake->dhm_ctx, p + 2, end - ( p + 2 ), &len, ssl->conf->f_rng, ssl->conf->p_rng);
+ 
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,dhm_calc_secret")) != 0) {
+                return(ret);
+            }
+        } else {
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,dhm_calc_secret")) != 0) {
+                return(ret);
+            }
+        }
+
+        if(ret != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_dhm_calc_secret", ret );
             return( ret );
@@ -1326,9 +1350,34 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
         int ret;
         size_t zlen;
 
+#if !defined(MEASURE_KE)
         if( ( ret = mbedtls_ecdh_calc_secret( &ssl->handshake->ecdh_ctx, &zlen,
                                        p + 2, end - ( p + 2 ),
                                        ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+#else
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret = mbedtls_ecdh_calc_secret(&ssl->handshake->ecdh_ctx, &zlen, p + 2,
+                                    end - ( p + 2 ), ssl->conf->f_rng, ssl->conf->p_rng);
+         
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,ecdh_calc_secret")) != 0) {
+                return(ret);
+            }
+        } else {
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ecdh_calc_secret")) != 0) {
+                return(ret);
+            }
+        }
+
+        if(ret != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_calc_secret", ret );
             return( ret );
@@ -5599,6 +5648,12 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
         return( 0 );
     }
 
+#if defined(MEASURE_KE)
+    if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+        return(ret);
+    }
+#endif
+
 #if defined(MBEDTLS_SSL_CLI_C)
     if( ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT )
     {
@@ -5678,6 +5733,22 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
     ssl->out_msglen  = i;
     ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
     ssl->out_msg[0]  = MBEDTLS_SSL_HS_CERTIFICATE;
+
+#if defined(MEASURE_KE)
+    if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+        return(ret);
+    }
+
+    if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,write_certificate")) != 0) {
+            return(ret);
+        }
+    } else {
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,write_certificate")) != 0) {
+            return(ret);
+        }
+    }
+#endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) && defined(MBEDTLS_SSL_CLI_C)
 write_msg:
@@ -5975,6 +6046,12 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
         return( ret );
     }
 
+#if defined(MEASURE_KE)
+    if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+        return(ret);
+    }
+#endif
+
 #if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
     if( ssl->handshake->ecrs_enabled)
         ssl->handshake->ecrs_state = ssl_ecrs_crt_verify;
@@ -6105,6 +6182,22 @@ crt_verify:
             mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                             alert );
         }
+
+#if defined(MEASURE_KE)
+    if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+        return(ret);
+    }
+
+    if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,parse_certificate")) != 0) {
+            return(ret);
+        }
+    } else {
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_certificate")) != 0) {
+            return(ret);
+        }
+    }
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
         if( ssl->session_negotiate->verify_result != 0 )
@@ -7161,7 +7254,7 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
     if( ( ret = ssl_handshake_init( ssl ) ) != 0 )
         goto error;
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     ssl->msr_ctx = calloc(1, sizeof(measure_context_t));
 
     if(ssl->msr_ctx == NULL) {
@@ -7180,7 +7273,7 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
     return( 0 );
 
 error:
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     measure_free(ssl->msr_ctx);
     ssl->msr_ctx = NULL;
 #endif
@@ -8359,9 +8452,6 @@ int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl )
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
-#if defined(MEASURE_KE)
-    FILE *csv;
-#endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     const mbedtls_ssl_ciphersuite_t *suite_info;
     char path[50] = FILE_PATH;
@@ -8386,27 +8476,29 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcat(path, suite_info->name);
             mkdir(path, 0777);
 
+            ke_fname = (char *) malloc((strlen(path) + KE_FNAME_SIZE)*sizeof(char));
+
             strcpy(ke_fname, path);
             strcat(ke_fname, KE_EXTENSION);
 
-            csv = fopen(ke_fname, "w");
-            fprintf(csv, "endpoint,operation,cycles");
-#if defined(MEASURE_TIME)
-            fprintf(csv, ",time");
-#endif
-            fclose(csv);
+            if((ret = measure_starts(ssl->msr_ctx, ke_fname, "endpoint,operation")) != 0) {
+                return(ret);
+            }
+            
+            printf("\nfinish");
         }
 #endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
-            
+
             strcat(path, suite_info->name);
             mkdir(path, 0777);
 
 #if defined(MEASURE_CIPHER)
             cipher_fname = (char *) malloc((strlen(path) + CIPHER_FNAME_SIZE)*sizeof(char));
+
             strcpy(cipher_fname, path);
             strcat(cipher_fname, CIPHER_EXTENSION);
 
@@ -8417,6 +8509,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             md_fname = (char *) malloc((strlen(path) + MD_FNAME_SIZE)*sizeof(char));
+
             strcpy(md_fname, path);
             strcat(md_fname, MD_EXTENSION);
 
@@ -9333,7 +9426,7 @@ void mbedtls_ssl_free( mbedtls_ssl_context *ssl )
     mbedtls_free( ssl->cli_id );
 #endif
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
     measure_free(ssl->msr_ctx);
 #endif
 

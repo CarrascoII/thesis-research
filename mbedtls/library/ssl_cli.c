@@ -55,10 +55,6 @@
 #include <stdio.h>
 #endif
 
-#if defined(MEASURE_KE)
-#include "papi.h"
-#endif
-
 #if defined(MBEDTLS_SSL_SERVER_NAME_INDICATION)
 static void ssl_write_hostname_ext( mbedtls_ssl_context *ssl,
                                     unsigned char *buf,
@@ -1994,24 +1990,7 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
                                        unsigned char *end )
 {
     int ret = MBEDTLS_ERR_SSL_FEATURE_UNAVAILABLE;
-#if defined(MEASURE_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_time_cpu, end_time_cpu,
-              cycles_cpu, time_cpu;
-    FILE *csv;
 
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-#endif
     /*
      * Ephemeral DH parameters:
      *
@@ -2021,29 +2000,7 @@ static int ssl_parse_server_dh_params( mbedtls_ssl_context *ssl, unsigned char *
      *     opaque dh_Ys<1..2^16-1>;
      * } ServerDHParams;
      */
-#if !defined(MEASURE_KE)
     if( ( ret = mbedtls_dhm_read_params( &ssl->handshake->dhm_ctx, p, end ) ) != 0 )
-#else
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_time_cpu = PAPI_get_virt_usec();
-
-    ret = mbedtls_dhm_read_params( &ssl->handshake->dhm_ctx, p, end );
-
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_time_cpu = PAPI_get_virt_usec();
-
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    time_cpu = end_time_cpu - start_time_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,read_params,%lld,%lld\n", cycles_cpu, time_cpu);
-    fclose(csv);
-
-    printf("\nKE: read_params, %lld, %lld", cycles_cpu, time_cpu);
-    PAPI_shutdown();
-
-    if(ret != 0)
-#endif
     {
         MBEDTLS_SSL_DEBUG_RET( 2, ( "mbedtls_dhm_read_params" ), ret );
         return( ret );
@@ -2379,24 +2336,6 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->transform_negotiate->ciphersuite_info;
     unsigned char *p = NULL, *end = NULL;
-#if defined(MEASURE_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_time_cpu, end_time_cpu,
-              cycles_cpu, time_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse server key exchange" ) );
 
@@ -2416,7 +2355,25 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_RSA ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA )
     {
+#if !defined(MEASURE_KE)
         if( ( ret = ssl_get_ecdh_params_from_cert( ssl ) ) != 0 )
+#else
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret = ssl_get_ecdh_params_from_cert(ssl);
+
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,get_ecdh_params_from_cert")) != 0) {
+            return(ret);
+        }
+        
+        if(ret != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "ssl_get_ecdh_params_from_cert", ret );
             mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
@@ -2494,7 +2451,26 @@ start_processing:
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
     {
+#if !defined(MEASURE_KE)
         if( ssl_parse_server_psk_hint( ssl, &p, end ) != 0 )
+#else
+        int ret2;
+        if((ret2 = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret2 = ssl_parse_server_psk_hint(ssl, &p, end);
+
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,parse_server_psk_hint")) != 0) {
+            return(ret);
+        }
+        
+        if(ret2 != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message" ) );
             mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
@@ -2517,7 +2493,26 @@ start_processing:
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_RSA ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
     {
+#if !defined(MEASURE_KE)
         if( ssl_parse_server_dh_params( ssl, &p, end ) != 0 )
+#else
+        int ret2;
+        if((ret2 = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret2 = ssl_parse_server_dh_params(ssl, &p, end);
+
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,parse_server_dh_params")) != 0) {
+            return(ret);
+        }
+        
+        if(ret2 != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message" ) );
             mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
@@ -2535,7 +2530,26 @@ start_processing:
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA )
     {
+#if !defined(MEASURE_KE)
         if( ssl_parse_server_ecdh_params( ssl, &p, end ) != 0 )
+#else
+        int ret2;
+        if((ret2 = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret2 = ssl_parse_server_ecdh_params(ssl, &p, end);
+
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,parse_server_ecdh_params")) != 0) {
+            return(ret);
+        }
+        
+        if(ret2 != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_MSG( 1, ( "bad server key exchange message" ) );
             mbedtls_ssl_send_alert_message( ssl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
@@ -2578,6 +2592,11 @@ start_processing:
         size_t params_len = p - params;
         void *rs_ctx = NULL;
 
+#if defined(MEASURE_KE)
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
         /*
          * Handle the digitally-signed structure
          */
@@ -2664,27 +2683,9 @@ start_processing:
     defined(MBEDTLS_SSL_PROTO_TLS1_2)
         if( md_alg != MBEDTLS_MD_NONE )
         {
-#if defined(MEASURE_KE)
-            start_cycles_cpu = PAPI_get_virt_cyc();
-            start_time_cpu = PAPI_get_virt_usec();
-#endif
             ret = mbedtls_ssl_get_key_exchange_md_tls1_2( ssl, hash, &hashlen,
                                                           params, params_len,
                                                           md_alg );
-#if defined(MEASURE_KE)
-            end_cycles_cpu = PAPI_get_virt_cyc();
-            end_time_cpu = PAPI_get_virt_usec();
-
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            time_cpu = end_time_cpu - start_time_cpu;
-
-            csv = fopen(ke_fname, "a+");
-            fprintf(csv, "client,digest,%lld,%lld\n", cycles_cpu, time_cpu);
-            fclose(csv);
-
-            printf("\nKE: digest, %lld, %lld", cycles_cpu, time_cpu);
-#endif
-
             if( ret != 0 )
                 return( ret );
         }
@@ -2722,33 +2723,9 @@ start_processing:
             rs_ctx = &ssl->handshake->ecrs_ctx.pk;
 #endif
 
-#if !defined(MEASURE_KE)
         if( ( ret = mbedtls_pk_verify_restartable(
                         &ssl->session_negotiate->peer_cert->pk,
                         md_alg, hash, hashlen, p, sig_len, rs_ctx ) ) != 0 )
-#else
-        start_cycles_cpu = PAPI_get_virt_cyc();
-        start_time_cpu = PAPI_get_virt_usec();
-
-        ret = mbedtls_pk_verify_restartable(
-                    &ssl->session_negotiate->peer_cert->pk,
-                    md_alg, hash, hashlen, p, sig_len, rs_ctx );
-
-        end_cycles_cpu = PAPI_get_virt_cyc();
-        end_time_cpu = PAPI_get_virt_usec();
-
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        time_cpu = end_time_cpu - start_time_cpu;
-
-        csv = fopen(ke_fname, "a+");
-        fprintf(csv, "client,verify,%lld,%lld\n", cycles_cpu, time_cpu);
-        fclose(csv);
-
-        printf("\nKE: verify, %lld, %lld", cycles_cpu, time_cpu);
-        PAPI_shutdown();
-
-        if(ret != 0)
-#endif
         {
 #if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
             if( ret != MBEDTLS_ERR_ECP_IN_PROGRESS )
@@ -2762,6 +2739,16 @@ start_processing:
 #endif
             return( ret );
         }
+
+#if defined(MEASURE_KE)            
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,ciphersuite_uses_server_signature")) != 0) {
+            return(ret);
+        }
+#endif
     }
 #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
 
@@ -2836,6 +2823,12 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
         ssl->keep_current_message = 1;
         goto exit;
     }
+
+#if defined(MEASURE_KE)
+    if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+        return(ret);
+    }
+#endif
 
     /*
      *  struct {
@@ -2949,6 +2942,16 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
         return( MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE_REQUEST );
     }
 
+#if defined(MEASURE_KE)            
+    if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+        return(ret);
+    }
+
+    if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,parse_certificate_request")) != 0) {
+        return(ret);
+    }
+#endif
+
 exit:
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "<= parse certificate request" ) );
 
@@ -3001,24 +3004,6 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
     size_t i, n;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
         ssl->transform_negotiate->ciphersuite_info;
-#if defined(MEASURE_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_time_cpu, end_time_cpu,
-              cycles_cpu, time_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write client key exchange" ) );
 
@@ -3035,8 +3020,9 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         i = 6;
 
 #if defined(MEASURE_KE)
-        start_cycles_cpu = PAPI_get_virt_cyc();
-        start_time_cpu = PAPI_get_virt_usec();
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
 #endif
 
         ret = mbedtls_dhm_make_public( &ssl->handshake->dhm_ctx,
@@ -3045,17 +3031,13 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
                                 ssl->conf->f_rng, ssl->conf->p_rng );
 
 #if defined(MEASURE_KE)
-        end_cycles_cpu = PAPI_get_virt_cyc();
-        end_time_cpu = PAPI_get_virt_usec();
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
 
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        time_cpu = end_time_cpu - start_time_cpu;
-
-        csv = fopen(ke_fname, "a+");
-        fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, time_cpu);
-        fclose(csv);
-
-        printf("\nKE: make_public, %lld, %lld", cycles_cpu, time_cpu);
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,dhm_make_public")) != 0) {
+            return(ret);
+        }
 #endif
 
         if( ret != 0 )
@@ -3074,27 +3056,21 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
                                      &ssl->handshake->pmslen,
                                       ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
 #else
-        start_cycles_cpu = PAPI_get_virt_cyc();
-        start_time_cpu = PAPI_get_virt_usec();
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
 
-        ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
-                                    ssl->handshake->premaster,
-                                    MBEDTLS_PREMASTER_SIZE,
-                                    &ssl->handshake->pmslen,
+        ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx, ssl->handshake->premaster,
+                                    MBEDTLS_PREMASTER_SIZE, &ssl->handshake->pmslen,
                                     ssl->conf->f_rng, ssl->conf->p_rng );
 
-        end_cycles_cpu = PAPI_get_virt_cyc();
-        end_time_cpu = PAPI_get_virt_usec();
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
 
-        cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-        time_cpu = end_time_cpu - start_time_cpu;
-
-        csv = fopen(ke_fname, "a+");
-        fprintf(csv, "client,calc_secret,%lld,%lld\n", cycles_cpu, time_cpu);
-        fclose(csv);
-
-        printf("\nKE: calc_secret, %lld, %lld", cycles_cpu, time_cpu);
-        PAPI_shutdown();
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,dhm_calc_secret")) != 0) {
+            return(ret);
+        }
 
         if(ret != 0)
 #endif
@@ -3131,10 +3107,27 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 #endif
 
+#if defined(MEASURE_KE)
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
+
         ret = mbedtls_ecdh_make_public( &ssl->handshake->ecdh_ctx,
                                 &n,
                                 &ssl->out_msg[i], 1000,
                                 ssl->conf->f_rng, ssl->conf->p_rng );
+
+#if defined(MEASURE_KE)
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,ecdh_make_public")) != 0) {
+            return(ret);
+        }
+#endif
+
         if( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_make_public", ret );
@@ -3159,11 +3152,32 @@ ecdh_calc_secret:
         if( ssl->handshake->ecrs_enabled )
             n = ssl->handshake->ecrs_n;
 #endif
+
+#if !defined(MEASURE_KE)
         if( ( ret = mbedtls_ecdh_calc_secret( &ssl->handshake->ecdh_ctx,
                                       &ssl->handshake->pmslen,
                                        ssl->handshake->premaster,
                                        MBEDTLS_MPI_MAX_SIZE,
                                        ssl->conf->f_rng, ssl->conf->p_rng ) ) != 0 )
+#else
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret = mbedtls_ecdh_calc_secret(&ssl->handshake->ecdh_ctx, &ssl->handshake->pmslen,
+                                        ssl->handshake->premaster, MBEDTLS_MPI_MAX_SIZE,
+                                        ssl->conf->f_rng, ssl->conf->p_rng);
+
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,ecdh_calc_secret")) != 0) {
+            return(ret);
+        }
+
+        if(ret != 0)
+#endif
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_calc_secret", ret );
 #if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
@@ -3219,7 +3233,25 @@ ecdh_calc_secret:
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED)
         if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK )
         {
+#if !defined(MEASURE_KE)
             if( ( ret = ssl_write_encrypted_pms( ssl, i, &n, 2 ) ) != 0 )
+#else
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
+
+            ret = ssl_write_encrypted_pms(ssl, i, &n, 2);
+            
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
+
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,write_encrypted_pms")) != 0) {
+                return(ret);
+            }
+
+            if(ret != 0)
+#endif
                 return( ret );
         }
         else
@@ -3243,8 +3275,9 @@ ecdh_calc_secret:
             ssl->out_msg[i++] = (unsigned char)( n      );
 
 #if defined(MEASURE_KE)
-            start_cycles_cpu = PAPI_get_virt_cyc();
-            start_time_cpu = PAPI_get_virt_usec();
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
 #endif
 
             ret = mbedtls_dhm_make_public( &ssl->handshake->dhm_ctx,
@@ -3253,18 +3286,13 @@ ecdh_calc_secret:
                     ssl->conf->f_rng, ssl->conf->p_rng );
 
 #if defined(MEASURE_KE)
-            end_cycles_cpu = PAPI_get_virt_cyc();
-            end_time_cpu = PAPI_get_virt_usec();
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
 
-            cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-            time_cpu = end_time_cpu - start_time_cpu;
-
-            csv = fopen(ke_fname, "a+");
-            fprintf(csv, "client,make_public,%lld,%lld\n", cycles_cpu, time_cpu);
-            fclose(csv);
-
-            printf("\nKE: make_public, %lld, %lld", cycles_cpu, time_cpu);
-            PAPI_shutdown();
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,dhm_make_public")) != 0) {
+                return(ret);
+            }
 #endif
 
             if( ret != 0 )
@@ -3278,12 +3306,29 @@ ecdh_calc_secret:
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
         if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
         {
+#if defined(MEASURE_KE)
+            if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+                return(ret);
+            }
+#endif
+
             /*
              * ClientECDiffieHellmanPublic public;
              */
             ret = mbedtls_ecdh_make_public( &ssl->handshake->ecdh_ctx, &n,
                     &ssl->out_msg[i], MBEDTLS_SSL_OUT_CONTENT_LEN - i,
                     ssl->conf->f_rng, ssl->conf->p_rng );
+
+#if defined(MEASURE_KE)
+            if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+                return(ret);
+            }
+
+            if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,ecdh_make_public")) != 0) {
+                return(ret);
+            }
+#endif
+
             if( ret != 0 )
             {
                 MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_make_public", ret );
@@ -3313,7 +3358,25 @@ ecdh_calc_secret:
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA )
     {
         i = 4;
+#if !defined(MEASURE_KE)
         if( ( ret = ssl_write_encrypted_pms( ssl, i, &n, 0 ) ) != 0 )
+#else
+        if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+
+        ret = ssl_write_encrypted_pms(ssl, i, &n, 0);
+        
+        if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+            return(ret);
+        }
+
+        if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,write_encrypted_pms")) != 0) {
+            return(ret);
+        }
+
+        if(ret != 0)
+#endif
             return( ret );
     }
     else
@@ -3342,7 +3405,7 @@ ecdh_calc_secret:
         }
     }
     else
-#endif /* MBEDTLS_KEY_EXCHANGE_RSA_ENABLED */
+#endif /* MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED */
     {
         ((void) ciphersuite_info);
         MBEDTLS_SSL_DEBUG_MSG( 1, ( "should never happen" ) );
@@ -3412,24 +3475,6 @@ static int ssl_write_certificate_verify( mbedtls_ssl_context *ssl )
     mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
     unsigned int hashlen;
     void *rs_ctx = NULL;
-#if defined(MEASURE_KE)
-    long long start_cycles_cpu, end_cycles_cpu,
-              start_time_cpu, end_time_cpu,
-              cycles_cpu, time_cpu;
-    FILE *csv;
-
-    ret = PAPI_library_init(PAPI_VER_CURRENT);
-
-    if(ret != PAPI_VER_CURRENT && ret > PAPI_OK) {
-        printf("PAPI library version mismatch 0x%08x\n", ret);
-        return ret;
-    }
-
-    if(ret < PAPI_OK) {
-        printf("PAPI_library_init returned -0x%04x\n", -ret);
-        return ret;
-    }
-#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write certificate verify" ) );
 
@@ -3482,24 +3527,21 @@ sign:
 #endif
 
 #if defined(MEASURE_KE)
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_time_cpu = PAPI_get_virt_usec();
+    if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+        return(ret);
+    }
 #endif
 
     ssl->handshake->calc_verify( ssl, hash );
 
 #if defined(MEASURE_KE)
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_time_cpu = PAPI_get_virt_usec();
+    if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+        return(ret);
+    }
 
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    time_cpu = end_time_cpu - start_time_cpu;
-
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,digest,%lld,%lld\n", cycles_cpu, time_cpu);
-    fclose(csv);
-
-    printf("\nKE: digest, %lld, %lld", cycles_cpu, time_cpu);
+    if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,hash_cert_verify")) != 0) {
+        return(ret);
+    }
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
@@ -3587,27 +3629,23 @@ sign:
                          ssl->out_msg + 6 + offset, &n,
                          ssl->conf->f_rng, ssl->conf->p_rng, rs_ctx ) ) != 0 )
 #else
-    start_cycles_cpu = PAPI_get_virt_cyc();
-    start_time_cpu = PAPI_get_virt_usec();
+    if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
+        return(ret);
+    }
 
     ret = mbedtls_pk_sign_restartable( mbedtls_ssl_own_key( ssl ),
                         md_alg, hash_start, hashlen,
                         ssl->out_msg + 6 + offset, &n,
                         ssl->conf->f_rng, ssl->conf->p_rng, rs_ctx );
 
-    end_cycles_cpu = PAPI_get_virt_cyc();
-    end_time_cpu = PAPI_get_virt_usec();
+    if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
+        return(ret);
+    }
 
-    cycles_cpu = end_cycles_cpu - start_cycles_cpu;
-    time_cpu = end_time_cpu - start_time_cpu;
+    if((measure_finish(ssl->msr_ctx, ke_fname, "\nclient,sign_cert_verify")) != 0) {
+        return(ret);
+    }
 
-    csv = fopen(ke_fname, "a+");
-    fprintf(csv, "client,sign,%lld,%lld\n", cycles_cpu, time_cpu);
-    fclose(csv);
-
-    printf("\nKE: sign, %lld, %lld", cycles_cpu, time_cpu);
-    PAPI_shutdown();
-    
     if(ret != 0)
 #endif
     {

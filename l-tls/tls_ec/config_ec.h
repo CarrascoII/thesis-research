@@ -197,7 +197,7 @@
 #if MAX_INPUT_SIZE > 1024
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
-// #define MUTUAL_AUTH
+#define MUTUAL_AUTH
 
 /**
  * Profiling program flags
@@ -205,9 +205,9 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-#define MEASURE_CIPHER
-#define MEASURE_MD
-// #define MEASURE_KE
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
+#define MEASURE_KE
 #endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)

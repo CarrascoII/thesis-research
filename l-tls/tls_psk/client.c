@@ -536,5 +536,11 @@ exit:
     }
 #endif
 
+#if defined(MEASURE_KE)
+    if(ke_fname != NULL) {
+        free(ke_fname);
+    }
+#endif
+
     return(ret);
 }

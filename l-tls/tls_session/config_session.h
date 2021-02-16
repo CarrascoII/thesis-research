@@ -6,7 +6,6 @@
  */
 /* Protocol version */
 #define MBEDTLS_SSL_PROTO_TLS1_2
-#define MBEDTLS_SSL_ENCRYPT_THEN_MAC
 
 /* Key exchange algorithms */
 #define MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
