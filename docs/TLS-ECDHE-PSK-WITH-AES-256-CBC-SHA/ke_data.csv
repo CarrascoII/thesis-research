@@ -1,0 +1,10 @@
+endpoint,operation,time
+server,ecdh_setup,2
+server,ecdh_make_params,27217
+client,parse_server_psk_hint,10
+client,parse_server_ecdh_params,5
+client,ecdh_make_public,27855
+client,ecdh_calc_secret,26361
+server,parse_client_psk_identity,2
+server,ecdh_read_public,3
+server,ecdh_calc_secret,27254

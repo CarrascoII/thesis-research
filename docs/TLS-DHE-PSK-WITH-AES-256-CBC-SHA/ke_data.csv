@@ -1,0 +1,10 @@
+endpoint,operation,time
+server,dhm_set_group,3
+server,dhm_make_params,44888
+client,parse_server_psk_hint,1
+client,parse_server_dh_params,9
+client,dhm_make_public,45457
+client,dhm_calc_secret,45264
+server,parse_client_psk_identity,2
+server,parse_client_dh_public,4
+server,dhm_calc_secret,47639

@@ -1,0 +1,17 @@
+endpoint,operation,time
+server,write_certificate,1
+server,get_ecdh_params_from_cert,5
+server,write_certificate_request,2
+client,parse_certificate,54514
+client,get_ecdh_params_from_cert,5
+client,parse_certificate_request,1
+client,write_certificate,1
+client,ecdh_make_public,10834
+client,ecdh_calc_secret,11892
+client,hash_cert_verify,3
+client,sign_cert_verify,16744
+server,parse_certificate,67660
+server,ecdh_read_public,5
+server,ecdh_calc_secret,13335
+server,hash_cert_verify,3
+server,verify_cert_verify,21715

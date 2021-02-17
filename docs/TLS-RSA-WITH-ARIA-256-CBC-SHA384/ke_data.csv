@@ -1,0 +1,13 @@
+endpoint,operation,time
+server,write_certificate,1
+server,write_certificate_request,1
+client,parse_certificate,569
+client,parse_certificate_request,1
+client,write_certificate,2
+server,parse_certificate,565
+client,write_encrypted_pms,815
+client,hash_cert_verify,3
+server,parse_encrypted_pms,31705
+client,sign_cert_verify,31846
+server,hash_cert_verify,5
+server,verify_cert_verify,753

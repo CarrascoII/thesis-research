@@ -1,0 +1,6 @@
+endpoint,operation,time
+server,write_certificate,2
+client,parse_certificate,791
+client,write_encrypted_pms,837
+server,parse_client_psk_identity,3
+server,parse_encrypted_pms,26542
