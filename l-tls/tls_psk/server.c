@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#if defined(MEASURE_KE)
+#include <sys/stat.h>
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
 #if defined(PRINT_MSG_HEX)
@@ -141,9 +144,15 @@ int main(int argc, char **argv) {
     mbedtls_ssl_context tls;
     psk_entry *psk_info = NULL;
 
-    int ret,
-        i, n_tests = N_TESTS,
+#if defined(MEASURE_KE)
+    char ke_fname[100] = FILE_PATH;
+#endif
+
+    int ret, i,
         input_size = MIN_INPUT_SIZE,
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+        n_tests = N_TESTS,
+#endif
 #if defined(MBEDTLS_DEBUG_C)
         debug = DEBUG_LEVEL,
 #endif
@@ -151,9 +160,6 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_server generates response";
     char *p, *q;
-#if defined(MUTUAL_AUTH)
-    uint32_t flags;
-#endif
     const unsigned char test_psk[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -162,6 +168,9 @@ int main(int argc, char **argv) {
         ,0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
 #endif
     };
+#if defined(MUTUAL_AUTH)
+    uint32_t flags;
+#endif
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
@@ -174,26 +183,28 @@ int main(int argc, char **argv) {
         }
 
         *q++ = '\0';
-        if(strcmp(p, "n_tests") == 0) {
-            n_tests = atoi(q);
-
-            if(n_tests < 1 || n_tests > 1000) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf("Number of tests must be between 1 and 1000\n");
-#endif
-                return(1);
-            }
-		}
-        else if(strcmp(p, "input_size") == 0) {
+        if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
 
             if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                printf("Input size must be between %d and %d \n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif
                 return(1);
             }
         }
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+        else if(strcmp(p, "n_tests") == 0) {
+            n_tests = atoi(q);
+
+            if(n_tests < 1 || n_tests > N_TESTS) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf("Number of tests must be between 1 and %d\n", N_TESTS);
+#endif
+                return(1);
+            }
+		}
+#endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
 #if defined(MBEDTLS_DEBUG_C)
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
@@ -214,8 +225,12 @@ int main(int argc, char **argv) {
         }
         else {
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Available options are input_size, n_tests, debug_level and ciphersuite\n");
+            printf("Available options are input_size, ");
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+            printf("n_tests, ");
 #endif
+            printf("debug_level and ciphersuite\n");
+#endif /* MBEDTLS_DEBUG_C */
             return(1);
         }
 	}
@@ -410,14 +425,18 @@ int main(int argc, char **argv) {
 
 #if defined(MBEDTLS_RSA_C)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
         goto exit;
     }
 #endif
 
 #if defined(MBEDTLS_ECP_C)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
         goto exit;
     }
 #endif
@@ -429,41 +448,66 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-#if defined(MBEDTLS_DEBUG_C)
-    printf(" ok");
-
-    // Listen and accept client
-    printf("\nWaiting for client to connect.............");
-    fflush(stdout);
-#endif
-
-    if((ret = mbedtls_net_accept(&server, &client, NULL, 0, NULL)) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-        printf(" failed! mbedtls_net_accept returned -0x%04x\n", -ret);
-#endif
-        goto exit; 
-    }
-
     mbedtls_ssl_set_bio(&tls, &client, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
-
-    // Handshake
-    printf("\nPerforming TLS handshake..................");
-    fflush(stdout);
 #endif
 
-    while((ret = mbedtls_ssl_handshake(&tls)) != 0) {
-        if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+#if defined(MEASURE_KE)
+    for(i = 0; i < n_tests; i++) {
+        // Reset the connection
 #if defined(MBEDTLS_DEBUG_C)
-            printf(" failed! mbedtls_ssl_handshake returned -0x%04x\n", -ret);
+        printf("\nResetting the connection..................");
+#endif
+
+        if((ret = mbedtls_ssl_session_reset(&tls)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_ssl_session_reset returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
-    }
 
-    // Verify client certificate
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" ok");
+#endif
+#endif  /* MEASURE_KE */
+
+        // Listen and accept client
+#if defined(MBEDTLS_DEBUG_C)
+        printf("\nWaiting for client to connect.............");
+        fflush(stdout);
+#endif
+
+        if((ret = mbedtls_net_accept(&server, &client, NULL, 0, NULL)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_net_accept returned -0x%04x\n", -ret);
+#endif
+            goto exit; 
+        }
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" ok");
+
+        // Handshake
+        printf("\nPerforming TLS handshake..................");
+        fflush(stdout);
+#endif
+
+        while((ret = mbedtls_ssl_handshake(&tls)) != 0) {
+            if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf(" failed! mbedtls_ssl_handshake returned -0x%04x\n", -ret);
+#endif
+                goto exit;
+            }
+        }
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" ok");
+#endif
+
+        // Verify client certificate
 #if defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nVerifying client certificate..............");
@@ -481,10 +525,29 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
+#endif /* MUTUAL_AUTH */
+
+#if defined(MEASURE_KE)
+        if(i == 0) {
+            strcat(ke_fname, mbedtls_ssl_get_ciphersuite(&tls));
+            mkdir(ke_fname, 0777);
+            strcat(ke_fname, KE_EXTENSION);
+
+            if((ret = measure_starts(tls.msr_ctx, ke_fname, "endpoint")) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
+                goto exit;
+            }
+        }
+
+        if((ret = measure_finish(tls.msr_ctx, ke_fname, "\nserver")) != 0) {
+            return(ret);
+        }
+    }
+#endif /* MEASURE_KE */
 
 #if defined(MBEDTLS_DEBUG_C)
-    printf(" ok");
     printf("\nPerforming TLS record:");
 #endif
 
@@ -502,7 +565,9 @@ int main(int argc, char **argv) {
             goto exit;
         }
 
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         for(i = 0; i < n_tests; i++) {
+#endif
             // Receive request
 #if defined(MBEDTLS_DEBUG_C)
             printf("\n  > Read from client:");
@@ -527,7 +592,7 @@ int main(int argc, char **argv) {
             // Send response
             printf("\n  < Write to client:");
             fflush(stdout);
-#endif
+#endif /* MBEDTLS_DEBUG_C */
 
             if((ret = mbedtls_ssl_write(&tls, response, input_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -542,8 +607,10 @@ int main(int argc, char **argv) {
             print_hex(response, input_size);
 #endif
             fflush(stdout);
-#endif
+#endif /* MBEDTLS_DEBUG_C */
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         }
+#endif
 
         free(request);
         free(response);
@@ -582,7 +649,7 @@ int main(int argc, char **argv) {
         printf("\n  -Client certificate:\n%s", crt_buf);
     }
 #endif
-#endif
+#endif /* MBEDTLS_DEBUG_C */
 
     printf("\n");
 
@@ -618,9 +685,9 @@ exit:
     }
 #endif
 
-#if defined(MEASURE_KE)
-    if(ke_fname != NULL) {
-        free(ke_fname);
+#if defined(MEASURE_KE_ROUTINES)
+    if(ke_routines_fname != NULL) {
+        free(ke_routines_fname);
     }
 #endif
 

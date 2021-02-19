@@ -109,10 +109,11 @@
 /**
  *  Options to reduce footprint
  */
+#define MBEDTLS_PSK_MAX_LEN             32  /* 128-bits keys are generally enough */
 // #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
-#define MBEDTLS_PSK_MAX_LEN         32      /* 128-bits keys are generally enough */
-// #define MBEDTLS_ENTROPY_MAX_SOURCES 2       /* Minimum is 2 for the entropy test suite */
-// #define MBEDTLS_SSL_MAX_CONTENT_LEN MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records */
+// #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
+#define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
+// #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
 
 /**
  * mbed TLS ciphersuites
@@ -236,22 +237,19 @@
 /**
  * Server and client program flags
  */
+#define CLI_ID                          "Client_identity"
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
-#define CLI_ID                          "Client_identity"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  16384
 #define N_TESTS                         500
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+// #define MUTUAL_AUTH
+#endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
 // #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MSG_HEX
-#endif
-#if MAX_INPUT_SIZE > 1024
-#define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
-#endif
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-#define MUTUAL_AUTH
 #endif
 
 /**
@@ -263,28 +261,34 @@
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
 #define MEASURE_KE
+// #define MEASURE_KE_ROUTINES
 #endif
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
-#define FILE_PATH           "../docs/"
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
+    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#define FILE_PATH               "../docs/"
 #endif
 
 #if defined(MEASURE_CIPHER)
-#define CIPHER_EXTENSION    "/cipher_data.csv"
-#define CIPHER_FNAME_SIZE   17 /* = len(CIPHER_EXTENSION) + len("\0") */
+#define CIPHER_EXTENSION        "/cipher_data.csv"
+#define CIPHER_FNAME_SIZE       17 /* = len(CIPHER_EXTENSION) + len("\0") */
 char *cipher_fname;
 #endif
 
 #if defined(MEASURE_MD)
-#define MD_EXTENSION        "/md_data.csv"
-#define MD_FNAME_SIZE       13 /* = len(MD_EXTENSION) + len("\0") */
+#define MD_EXTENSION            "/md_data.csv"
+#define MD_FNAME_SIZE           13 /* = len(MD_EXTENSION) + len("\0") */
 char *md_fname;
 #endif
 
 #if defined(MEASURE_KE)
-#define KE_EXTENSION        "/ke_data.csv"
-#define KE_FNAME_SIZE       13 /* = len(KE_EXTENSION) + len("\0") */
-char *ke_fname;
+#define KE_EXTENSION            "/ke_data.csv"
+#endif
+
+#if defined(MEASURE_KE_ROUTINES)
+#define KE_ROUTINES_EXTENTION   "/ke_routines.csv"
+#define KE_ROUTINES_FNAME_SIZE  17 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
+char *ke_routines_fname;
 #endif
 
 /**

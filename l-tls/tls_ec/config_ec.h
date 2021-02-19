@@ -227,8 +227,6 @@ char *md_fname;
 
 #if defined(MEASURE_KE)
 #define KE_EXTENSION            "/ke_data.csv"
-#define KE_FNAME_SIZE           13 /* = len(KE_EXTENSION) + len("\0") */
-char *ke_fname;
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)

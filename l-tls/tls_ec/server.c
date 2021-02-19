@@ -11,15 +11,14 @@
 #endif
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
-#if defined(MEASURE_KE)
-#include "measurement/measure.h"
 
-#include <sys/stat.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#if defined(MEASURE_KE)
+#include <sys/stat.h>
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
 #if defined(PRINT_MSG_HEX)
@@ -66,8 +65,7 @@ int main(int argc, char **argv) {
     mbedtls_ssl_context tls;
 
 #if defined(MEASURE_KE)
-    measure_context_t measure;
-    char path[80] = FILE_PATH;
+    char ke_fname[100] = FILE_PATH;
 #endif
 
     int ret, i,
@@ -102,7 +100,7 @@ int main(int argc, char **argv) {
 
             if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Input size must be multiple of %d, between %d and %d \n", MIN_INPUT_SIZE, MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                printf("Input size must be between %d and %d \n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif
                 return(1);
             }
@@ -111,9 +109,9 @@ int main(int argc, char **argv) {
         else if(strcmp(p, "n_tests") == 0) {
             n_tests = atoi(q);
 
-            if(n_tests < 1 || n_tests > 1000) {
+            if(n_tests < 1 || n_tests > N_TESTS) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Number of tests must be between 1 and 1000\n");
+                printf("Number of tests must be between 1 and %d\n", N_TESTS);
 #endif
                 return(1);
             }
@@ -158,10 +156,6 @@ int main(int argc, char **argv) {
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
     mbedtls_ssl_init(&tls);
-
-#if defined(MEASURE_KE)
-    measure_init(&measure);
-#endif
 
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
@@ -287,15 +281,6 @@ int main(int argc, char **argv) {
 
     mbedtls_ssl_set_bio(&tls, &client, mbedtls_net_send, mbedtls_net_recv, NULL);
 
-#if defined(MEASURE_KE)
-    if((ret = measurement_measure_config(&measure)) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-        printf(" failed! measurement_measure_config returned -0x%04x\n", -ret);
-#endif
-        goto exit;
-    }
-#endif /* MEASURE_KE */
-
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
@@ -375,12 +360,8 @@ int main(int argc, char **argv) {
 
 #if defined(MEASURE_KE)
         if(i == 0) {
-            strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
-            mkdir(path, 0777);
-
-            ke_fname = (char *) malloc((strlen(path) + KE_FNAME_SIZE)*sizeof(char));
-
-            strcpy(ke_fname, path);
+            strcat(ke_fname, mbedtls_ssl_get_ciphersuite(&tls));
+            mkdir(ke_fname, 0777);
             strcat(ke_fname, KE_EXTENSION);
 
             if((ret = measure_starts(tls.msr_ctx, ke_fname, "endpoint")) != 0) {
@@ -504,10 +485,6 @@ int main(int argc, char **argv) {
     printf("\n");
 
 exit:
-#if defined(MEASURE_KE)
-    measure_free(&measure);
-#endif
-
     mbedtls_ssl_free(&tls);
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
@@ -527,12 +504,6 @@ exit:
 #if defined(MEASURE_MD)
     if(md_fname != NULL) {
         free(md_fname);
-    }
-#endif
-
-#if defined(MEASURE_KE)
-    if(ke_fname != NULL) {
-        free(ke_fname);
     }
 #endif
 
