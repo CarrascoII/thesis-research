@@ -308,7 +308,7 @@ int main(int argc, char **argv) {
         printf("\nConnecting client to tcp/%s/%s...", SERVER_IP, SERVER_PORT);
         fflush(stdout);
 #endif
-    
+
         if((ret = mbedtls_net_connect(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_net_connect returned -0x%04x\n", -ret);
