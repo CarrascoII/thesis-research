@@ -65,7 +65,8 @@
 #include "platform_time.h"
 #endif
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
+    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #include "measurement/measure.h"
 #endif
 
@@ -1181,7 +1182,8 @@ struct mbedtls_ssl_context
     char peer_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
+    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
     measure_context_t *msr_ctx;
 #endif
 };

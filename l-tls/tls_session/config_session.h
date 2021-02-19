@@ -121,9 +121,10 @@
  *  Options to reduce footprint
  */
 // #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
-#define MBEDTLS_PSK_MAX_LEN         32      /* 128-bits keys are generally enough */
-// #define MBEDTLS_ENTROPY_MAX_SOURCES 2       /* Minimum is 2 for the entropy test suite */
-// #define MBEDTLS_SSL_MAX_CONTENT_LEN MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
+#define MBEDTLS_PSK_MAX_LEN             32  /* 128-bits keys are generally enough */
+// #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
+#define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
+// #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
 
 /**
  * mbed TLS ciphersuites
@@ -412,21 +413,18 @@
 #define SERVER_PORT                     "8080"
 #define CLI_ID                          "Client_identity"
 #define MAX_INPUT_SIZE                  2*1024*1024
-#define N_TESTS                         500
+#define N_TESTS                         10000
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+// #define MUTUAL_AUTH
+#endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
 // #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MSG_HEX
 #endif
-#if MAX_INPUT_SIZE > 1024
-#define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
-#endif
 #if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) || \
     defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
 #define USE_PSK_C
-#endif
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-// #define MUTUAL_AUTH
 #endif
 
 /**

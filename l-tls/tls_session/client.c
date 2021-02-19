@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
         *q++ = '\0';
         if(strcmp(p, "n_tests") == 0) {
             n_tests = atoi(q);
-            if(n_tests < 1 || n_tests > 1000) {
+            if(n_tests < 1 || n_tests > N_TESTS) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Number of tests must be between 1 and 1000\n");
 #endif
@@ -375,10 +375,6 @@ int main(int argc, char **argv) {
 
     mbedtls_ssl_set_bio(&tls, &server, mbedtls_net_send, mbedtls_net_recv, NULL);
 
-#if defined(MBEDTLS_DEBUG_C)
-    printf(" ok");
-#endif
-
     // Generate the request
     if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, request, input_size)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -386,6 +382,10 @@ int main(int argc, char **argv) {
 #endif
         goto exit;
     }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
 
     for(i = 0; i < n_tests; i++) {
         // Reset the connection
@@ -440,21 +440,6 @@ int main(int argc, char **argv) {
                 goto exit;
             }
         }
-
-#if defined(MEASURE_SESSION)
-        if(i == 0) {
-            strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
-            mkdir(path, 0777);
-            strcat(path, SESSION_EXTENSION);
-
-            if((ret = measure_starts(&measure, path, "endpoint,data_size")) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf(" failed! measure_starts returned -0x%04x\n", -ret);
-#endif
-                goto exit;
-            }
-        }
-#endif
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -541,6 +526,19 @@ int main(int argc, char **argv) {
             printf(" failed! measure_get_vals returned -0x%04x\n", -ret);
 #endif
             goto exit;
+        }
+
+        if(i == 0) {
+            strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
+            mkdir(path, 0777);
+            strcat(path, SESSION_EXTENSION);
+
+            if((ret = measure_starts(&measure, path, "endpoint,data_size")) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf(" failed! measure_starts returned -0x%04x\n", -ret);
+#endif
+                goto exit;
+            }
         }
 
         sprintf(buffer, "\nclient,%d", input_size);

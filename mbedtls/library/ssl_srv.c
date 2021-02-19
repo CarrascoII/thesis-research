@@ -2706,7 +2706,7 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
         return( 0 );
     }
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_ROUTINES)
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
             return(ret);
         }
@@ -2838,12 +2838,12 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
     ssl->out_msg[4 + ct_len + sa_len] = (unsigned char)( total_dn_size  >> 8 );
     ssl->out_msg[5 + ct_len + sa_len] = (unsigned char)( total_dn_size       );
 
-#if defined(MEASURE_KE)            
+#if defined(MEASURE_KE_ROUTINES)            
         if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,write_certificate_request")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,write_certificate_request")) != 0) {
             return(ret);
         }
 #endif
@@ -3002,7 +3002,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
          *     opaque dh_Ys<1..2^16-1>;
          * } ServerDHParams;
          */
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_dhm_set_group( &ssl->handshake->dhm_ctx,
                                            &ssl->conf->dhm_P,
                                            &ssl->conf->dhm_G ) ) != 0 )
@@ -3017,7 +3017,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,dhm_set_group")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,dhm_set_group")) != 0) {
             return(ret);
         }
 
@@ -3028,7 +3028,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return( ret );
         }
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_dhm_make_params(
                   &ssl->handshake->dhm_ctx,
                   (int) mbedtls_mpi_size( &ssl->handshake->dhm_ctx.P ),
@@ -3047,7 +3047,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,dhm_make_params")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,dhm_make_params")) != 0) {
             return(ret);
         }
 
@@ -3105,7 +3105,7 @@ curve_matching_done:
 
         MBEDTLS_SSL_DEBUG_MSG( 2, ( "ECDHE curve: %s", (*curve)->name ) );
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_ecdh_setup( &ssl->handshake->ecdh_ctx,
                                         (*curve)->grp_id ) ) != 0 )
 #else
@@ -3119,7 +3119,7 @@ curve_matching_done:
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ecdh_setup")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,ecdh_setup")) != 0) {
             return(ret);
         }
 
@@ -3130,7 +3130,7 @@ curve_matching_done:
             return( ret );
         }
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_ecdh_make_params(
                   &ssl->handshake->ecdh_ctx, &len,
                   ssl->out_msg + ssl->out_msglen,
@@ -3148,7 +3148,7 @@ curve_matching_done:
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ecdh_make_params")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,ecdh_make_params")) != 0) {
             return(ret);
         }
 
@@ -3184,7 +3184,7 @@ curve_matching_done:
         unsigned char hash[MBEDTLS_MD_MAX_SIZE];
         int ret;
 
-#if !defined(MEASURE_KE)
+#if defined(MEASURE_KE_ROUTINES)
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
             return(ret);
         }
@@ -3350,12 +3350,12 @@ curve_matching_done:
             return( ret );
         }
 
-#if defined(MEASURE_KE)            
+#if defined(MEASURE_KE_ROUTINES)            
         if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ciphersuite_uses_server_signature")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,ciphersuite_uses_server_signature")) != 0) {
             return(ret);
         }
 #endif
@@ -3390,7 +3390,7 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_KEY_EXCHANGE__SOME__ECDH_ENABLED)
         if( mbedtls_ssl_ciphersuite_uses_ecdh( ciphersuite_info ) )
         {
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_ROUTINES)
             if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
                 return(ret);
             }
@@ -3398,12 +3398,12 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
 
             ssl_get_ecdh_params_from_cert( ssl );
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_ROUTINES)
             if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
                 return(ret);
             }
 
-            if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,get_ecdh_params_from_cert")) != 0) {
+            if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,get_ecdh_params_from_cert")) != 0) {
                 return(ret);
             }
 #endif
@@ -3879,7 +3879,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED)
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_RSA )
     {
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_client_dh_public( ssl, &p, end ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -3892,7 +3892,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_client_dh_public")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_client_dh_public")) != 0) {
             return(ret);
         }
 
@@ -3909,7 +3909,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return( MBEDTLS_ERR_SSL_BAD_HS_CLIENT_KEY_EXCHANGE );
         }
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_dhm_calc_secret( &ssl->handshake->dhm_ctx,
                                       ssl->handshake->premaster,
                                       MBEDTLS_PREMASTER_SIZE,
@@ -3928,7 +3928,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,dhm_calc_secret")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,dhm_calc_secret")) != 0) {
             return(ret);
         }
 
@@ -3952,7 +3952,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_RSA ||
         ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA )
     {
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
                                       p, end - p) ) != 0 )
 #else
@@ -3966,7 +3966,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ecdh_read_public")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,ecdh_read_public")) != 0) {
             return(ret);
         }
 
@@ -3980,7 +3980,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         MBEDTLS_SSL_DEBUG_ECDH( 3, &ssl->handshake->ecdh_ctx,
                                 MBEDTLS_DEBUG_ECDH_QP );
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_ecdh_calc_secret( &ssl->handshake->ecdh_ctx,
                                       &ssl->handshake->pmslen,
                                        ssl->handshake->premaster,
@@ -3998,7 +3998,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ecdh_calc_secret")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,ecdh_calc_secret")) != 0) {
             return(ret);
         }
 
@@ -4020,7 +4020,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED)
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_PSK )
     {
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_client_psk_identity( ssl, &p, end ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4033,7 +4033,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_client_psk_identity")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_client_psk_identity")) != 0) {
             return(ret);
         }
         
@@ -4075,7 +4075,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
         else
 #endif /* MBEDTLS_SSL_ASYNC_PRIVATE */
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_client_psk_identity( ssl, &p, end ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4088,7 +4088,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_client_psk_identity")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_client_psk_identity")) != 0) {
             return(ret);
         }
         
@@ -4099,7 +4099,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return( ret );
         }
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_encrypted_pms( ssl, p, end, 2 ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4112,7 +4112,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_encrypted_pms")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_encrypted_pms")) != 0) {
             return(ret);
         }
         
@@ -4135,7 +4135,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED)
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_DHE_PSK )
     {
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_client_psk_identity( ssl, &p, end ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4148,7 +4148,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_client_psk_identity")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_client_psk_identity")) != 0) {
             return(ret);
         }
         
@@ -4159,7 +4159,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return( ret );
         }
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_client_dh_public( ssl, &p, end ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4172,7 +4172,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_client_dh_public")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_client_dh_public")) != 0) {
             return(ret);
         }
         
@@ -4201,7 +4201,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_ECDHE_PSK )
     {
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_client_psk_identity( ssl, &p, end ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4214,7 +4214,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_client_psk_identity")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_client_psk_identity")) != 0) {
             return(ret);
         }
         
@@ -4225,7 +4225,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return( ret );
         }
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = mbedtls_ecdh_read_public( &ssl->handshake->ecdh_ctx,
                                        p, end - p ) ) != 0 )
 #else
@@ -4239,7 +4239,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,ecdh_read_public")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,ecdh_read_public")) != 0) {
             return(ret);
         }
         
@@ -4265,7 +4265,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
     if( ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA )
     {
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
         if( ( ret = ssl_parse_encrypted_pms( ssl, p, end, 0 ) ) != 0 )
 #else
         if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
@@ -4278,7 +4278,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,parse_encrypted_pms")) != 0) {
+        if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,parse_encrypted_pms")) != 0) {
             return(ret);
         }
         
@@ -4507,7 +4507,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
         return( MBEDTLS_ERR_SSL_BAD_HS_CERTIFICATE_VERIFY );
     }
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_ROUTINES)
     if((ret = measure_get_vals(ssl->msr_ctx, MEASURE_START)) != 0) {
         return(ret);
     }
@@ -4516,17 +4516,17 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     /* Calculate hash and verify signature */
     ssl->handshake->calc_verify( ssl, hash );
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_ROUTINES)
     if((measure_get_vals(ssl->msr_ctx, MEASURE_END)) != 0) {
         return(ret);
     }
 
-    if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,hash_cert_verify")) != 0) {
+    if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,hash_cert_verify")) != 0) {
         return(ret);
     }
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE_ROUTINES)
     if( ( ret = mbedtls_pk_verify( &ssl->session_negotiate->peer_cert->pk,
                            md_alg, hash_start, hashlen,
                            ssl->in_msg + i, sig_len ) ) != 0 )
@@ -4543,7 +4543,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
         return(ret);
     }
 
-    if((measure_finish(ssl->msr_ctx, ke_fname, "\nserver,verify_cert_verify")) != 0) {
+    if((measure_finish(ssl->msr_ctx, ke_routines_fname, "\nserver,verify_cert_verify")) != 0) {
         return(ret);
     }
 
