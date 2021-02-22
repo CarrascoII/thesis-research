@@ -188,7 +188,7 @@
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  16384
-#define N_TESTS                         500
+#define N_TESTS                         10000
 // #define MUTUAL_AUTH
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

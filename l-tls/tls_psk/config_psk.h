@@ -242,7 +242,7 @@
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  16384
-#define N_TESTS                         500
+#define N_TESTS                         10000
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
 // #define MUTUAL_AUTH
 #endif
