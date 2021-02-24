@@ -30,6 +30,38 @@ def parse_algorithms(filename):
 
         return ciphersuites
 
+def parse_algorithms_grouped(filename, alg_set, ciphersuites):
+    alg_dict = {}
+    algs = {}
+
+    for alg in alg_set:
+        alg_dict[alg] = {}
+        algs[alg.upper()] = []
+         
+    with open(filename, 'r') as fl:
+        for line in fl.readlines():
+            line = line.split(',')
+            if line[0].strip() in list(algs.keys()):
+                alg_dict[line[0].strip().lower()][line[1].strip()] = []
+                algs[line[0].strip()] += [line[1].strip()]
+
+        for suite in ciphersuites:
+            for key in algs:
+                for alg in algs[key]:
+                    if key == 'CIPHER' and suite.find(alg) != -1:
+                        alg_dict['cipher'][alg].append(suite)
+                        break
+                    
+                    elif key == 'MD' and suite.find(alg, len(suite) - len(alg)) != -1:
+                        alg_dict['md'][alg].append(suite)
+                        break
+
+                    elif key == 'KE' and suite.find('TLS-' + alg + '-WITH') != -1:
+                        alg_dict['ke'][alg].append(suite)
+                        break
+
+        return alg_dict
+
 def parse_ke(ciphersuites):
     ke = []
 
@@ -42,7 +74,7 @@ def parse_ke(ciphersuites):
 
     return ke
 
-def parse_alg_data(filename):
+def parse_record_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
         headers = csv_reader.fieldnames[3:]
@@ -77,10 +109,10 @@ def parse_alg_data(filename):
 
         return data, headers
 
-def parse_session_data(filename):
+def parse_handshake_data(filename, index=1):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[2:]
+        headers = csv_reader.fieldnames[index:]
         data = {}
 
         for endpoint in ['server', 'client']:
@@ -132,7 +164,7 @@ def write_alg_csv(filename, stats):
     with open(filename, 'w') as fl:
         fl.writelines(lines)
 
-def write_alg_cmp_csv(path, all_stats):
+def write_record_cmp_csv(path, all_stats):
     lines = {'out': [], 'in': []}
     keys = []
     line = 'ciphersuite,data_size,'
@@ -171,7 +203,7 @@ def write_alg_cmp_csv(path, all_stats):
         with open(path + op + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
-def write_session_cmp_csv(path, all_stats):
+def write_handshake_cmp_csv(path, all_stats):
     lines = {'server': [], 'client': []}
     line = ''
 
@@ -194,12 +226,13 @@ def write_session_cmp_csv(path, all_stats):
             lines[end].append(line[:-1] + '\n')
 
     for end in lines:
-        with open(path + end + '_session_statistics.csv', 'w') as fl:
+        with open(path + end + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
 def assign_target(ciphersuites, filename):
     with open(filename, 'r') as fl:
         exec_dict = {}
+        rem_lst = []        
 
         for line in fl.readlines():
             line = line.split(',')
@@ -216,7 +249,14 @@ def assign_target(ciphersuites, filename):
                     tmp.remove(suite)
 
             ciphersuites = tmp.copy()
-        
+
+        for key in exec_dict:
+            if len(exec_dict[key]) == 0:
+                rem_lst.append(key)
+
+        for key in rem_lst:
+            exec_dict.pop(key)
+
         return exec_dict
 
 ########## PLOTTING UTILS ##########
@@ -234,12 +274,23 @@ def custom_errorbar(x, y, e, ax=None, title=None, xlabel='data_size', ylabel=Non
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     return(ax)
 
-def multiple_custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs1={}, kwargs2={}):
+def custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs1={}, kwargs2={}):
     if ax is None:
         ax = plt.gca()
 
     ax.plot(x, y1, **kwargs1)
     ax.plot(x, y2, **kwargs2)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+    ax.legend()
+    return(ax)
+
+def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs_lst=None):
+    if ax is None:
+        ax = plt.gca()
+
+    for y, kwargs in zip(y_lst, kwargs_lst):
+        ax.plot(x, y, **kwargs)
+
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
     return(ax)
@@ -399,7 +450,7 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     strerr = stderr.decode('utf-8').strip('\n')
     last_err = strerr.split('\n')
 
-    print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ')
+    print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ', flush=True)
 
     if return_code != 0:
         print(f'error\n\tGot an unexpected return code!!!\n\tDetails: {return_code}')

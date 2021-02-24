@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 #if defined(MEASURE_SESSION)
     measure_context_t measure;
 
-    char path[80] = FILE_PATH;
+    char path[PATH_SIZE] = FILE_PATH;
     char buffer[40];
 #endif
 

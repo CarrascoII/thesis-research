@@ -38,7 +38,7 @@ def make_plot(ylabel, file_path, stats, types):
         params2['label'] = 'verify'
 
     for ax, tp in zip(axes, types):
-        ax = utils.multiple_custom_plots(stats['keys'], stats[tp + '_' + ylabel + entry[0]], stats[tp + '_' + ylabel + entry[1]],
+        ax = utils.custom_plots(stats['keys'], stats[tp + '_' + ylabel + entry[0]], stats[tp + '_' + ylabel + entry[1]],
                                     ax=ax, title=tp.capitalize(), ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_statistics.png')
@@ -97,25 +97,25 @@ def make_scatter(ylabel, file_path, data):
 def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     path = filename.replace('data.csv', '')
 
-    print(spacing + 'Parsing obtained data'.ljust(strlen, '.'), end=' ')
-    data, headers = utils.parse_alg_data(filename)
+    print(f'{spacing}Parsing obtained data'.ljust(strlen, '.'), end=' ', flush=True)
+    data, headers = utils.parse_record_data(filename)
     print('ok')
 
     if weight != 0:
-        print(spacing + 'Removing outliers from data'.ljust(strlen, '.'), end=' ')
+        print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         data = utils.filter_iqr(data, weight=weight)
         print('ok')
 
-    print(spacing + f'Calculating statistics'.ljust(strlen, '.'), end=' ')
+    print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
     stats_type = ['mean', 'stddev','median', 'mode']
     stats = utils.calc_statistics(data, stats_type)
     print('ok')
     
-    print(spacing + f'Saving statistics'.ljust(strlen, '.'), end=' ')
+    print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     utils.write_alg_csv(path + 'statistics.csv', stats)
     print('ok')
 
-    print(spacing + f'Generating figures'.ljust(strlen, '.'), end=' ')
+    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
         make_scatter(hdr, path, data)

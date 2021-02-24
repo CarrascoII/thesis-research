@@ -68,7 +68,8 @@ int main(int argc, char **argv) {
     mbedtls_ssl_context tls;
 
 #if defined(MEASURE_KE)
-    char ke_fname[100] = FILE_PATH;
+    char path[PATH_SIZE] = FILE_PATH;
+    char *ke_fname;
 #endif
 
     int ret, i,
@@ -355,8 +356,11 @@ int main(int argc, char **argv) {
 
 #if defined(MEASURE_KE)
         if(i == 0) {
-            strcat(ke_fname, mbedtls_ssl_get_ciphersuite(&tls));
-            mkdir(ke_fname, 0777);
+            strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
+            mkdir(path, 0777);
+
+            ke_fname = (char *) malloc((strlen(path) + KE_FNAME_SIZE)*sizeof(char));
+            strcpy(ke_fname, path);
             strcat(ke_fname, KE_EXTENSION);
 
             if((ret = measure_starts(tls.msr_ctx, ke_fname, "endpoint")) != 0) {
@@ -498,6 +502,12 @@ exit:
 #if defined(MEASURE_MD)
     if(md_fname != NULL) {
         free(md_fname);
+    }
+#endif
+
+#if defined(MEASURE_KE)
+    if(ke_fname != NULL) {
+        free(ke_fname);
     }
 #endif
 

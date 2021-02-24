@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import comparator_bar, plotter, utils
+import session_comparator, plotter, utils
 
 
 strlen = 50
@@ -27,7 +27,7 @@ def run_srv(input_size, n_tests, ciphersuite):
 def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
-    print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ')    
+    print(f'\nParsing ciphersuites from {filename}'.ljust(strlen, '.'), end=' ', flush=True)    
     
     total_ciphersuites = utils.parse_algorithms(filename)
     n_total = len(total_ciphersuites)
@@ -45,7 +45,7 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
 
     # Step 2: Compile libs and programs
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
-    print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
+    print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ', flush=True)
 
     pool = ThreadPool(processes=1)
     async_result_make = pool.apply_async(utils.make_progs, (target,))
@@ -61,13 +61,13 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
         current += 1
 
         # Step 3: Start server in thread 1
-        print('\tStarting server'.ljust(strlen, '.'), end=' ')
+        print('\tStarting server'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_srv = pool.apply_async(run_srv, (input_size, n_tests, suite))
         print('ok')
         time.sleep(timeout)
 
         # Step 4: Start client in thread 2
-        print('\tStarting client'.ljust(strlen, '.'), end=' ')
+        print('\tStarting client'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_cli = pool.apply_async(run_cli, (input_size, n_tests, suite))
         print('ok')
 
@@ -91,7 +91,7 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     print(f'\nCreating comparison graphs from all ciphersuites:')
-    comparator_bar.make_cmp_figs(success_ciphersuites, 'session', weight=weight, strlen=strlen, spacing='\t')
+    session_comparator.make_figs(success_ciphersuites, weight=weight, strlen=strlen, spacing='\t')
     
     # Step 7: Save successful ciphersuites in a file
     utils.write_ciphersuites('session_suites.txt', success_ciphersuites)

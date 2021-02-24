@@ -258,8 +258,8 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
+#define MEASURE_CIPHER
+#define MEASURE_MD
 #define MEASURE_KE
 // #define MEASURE_KE_ROUTINES
 #endif
@@ -267,6 +267,7 @@
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
     defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #define FILE_PATH               "../docs/"
+#define PATH_SIZE               100
 #endif
 
 #if defined(MEASURE_CIPHER)
@@ -283,6 +284,7 @@ char *md_fname;
 
 #if defined(MEASURE_KE)
 #define KE_EXTENSION            "/ke_data.csv"
+#define KE_FNAME_SIZE           13 /* = len(KE_EXTENSION) + len("\0") */
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)

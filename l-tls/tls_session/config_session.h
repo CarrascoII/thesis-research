@@ -438,6 +438,7 @@
 
 #if defined(MEASURE_SESSION)
 #define FILE_PATH           "../docs/"
+#define PATH_SIZE           100
 #define SESSION_EXTENSION   "/session_data.csv"
 #endif
 

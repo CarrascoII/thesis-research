@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import comparator_bar, plotter, utils
+import algs_comparator, plotter, utils
 
 
 strlen = 50
@@ -32,7 +32,7 @@ def exec_target(target, ciphersuites, timeout, init_size, n_tests, n_total, curr
     error = []
 
     # Step 3: Compile libs and programs
-    print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ')
+    print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ', flush=True)
     thread = ThreadPool(processes=1)
     async_result_make = thread.apply_async(utils.make_progs, (target,))
     make_ret = async_result_make.get()
@@ -47,13 +47,13 @@ def exec_target(target, ciphersuites, timeout, init_size, n_tests, n_total, curr
         current += 1
 
     # Step 4: Start server in thread 1
-        print('\tStarting server'.ljust(strlen, '.'), end=' ')
+        print('\tStarting server'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_srv = pool.apply_async(run_srv, (target, init_size, n_tests, suite))
         print('ok')
         time.sleep(timeout)
 
     # Step 5: Start client in thread 2
-        print('\tStarting client'.ljust(strlen, '.'), end=' ')
+        print('\tStarting client'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_cli = pool.apply_async(run_cli, (target, init_size, n_tests, suite))
         print('ok')
 
@@ -76,7 +76,7 @@ def exec_target(target, ciphersuites, timeout, init_size, n_tests, n_total, curr
 def exec_tls(suites_file, targets, timeout, init_size, n_tests, weight):
     # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
-    print(f'\nParsing ciphersuites from {suites_file}'.ljust(strlen, '.'), end=' ')    
+    print(f'\nParsing ciphersuites from {suites_file}'.ljust(strlen, '.'), end=' ', flush=True)    
     
     total_ciphersuites = utils.parse_algorithms(suites_file)
     n_total = len(total_ciphersuites)
@@ -88,7 +88,7 @@ def exec_tls(suites_file, targets, timeout, init_size, n_tests, weight):
     print(f'ok\nGot {n_total} ciphersuites')
 
     # Step 2: Parse target list
-    print(f'\nParsing compilation targets from {targets}'.ljust(strlen, '.'), end=' ')    
+    print(f'\nParsing compilation targets from {targets}'.ljust(strlen, '.'), end=' ', flush=True)    
     exec_dict = utils.assign_target(total_ciphersuites, targets)
     print(f'ok')
 
@@ -122,10 +122,7 @@ def exec_tls(suites_file, targets, timeout, init_size, n_tests, weight):
 
     # Step 8: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print(f'\nCreating comparison graphs from all ciphersuites:')
-    print('\n    Cipher algorithm:')
-    comparator_bar.make_cmp_figs(success_ciphersuites, 'cipher', weight=weight, strlen=strlen, spacing='\t')
-    print('\n    MAC algorithm:')
-    comparator_bar.make_cmp_figs(success_ciphersuites, 'md', weight=weight, strlen=strlen, spacing='\t')
+    algs_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=strlen, spacing='\t')
 
     # Step 9: For each target, save successful ciphersuites in a file
     for key in exec_dict:
