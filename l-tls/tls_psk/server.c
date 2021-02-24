@@ -537,7 +537,7 @@ int main(int argc, char **argv) {
             strcpy(ke_fname, path);
             strcat(ke_fname, KE_EXTENSION);
 
-            if((ret = measure_starts(tls.msr_ctx, ke_fname, "endpoint")) != 0) {
+            if((ret = measure_starts(tls.ke_msr_ctx, ke_fname, "endpoint")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
@@ -545,7 +545,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        if((ret = measure_finish(tls.msr_ctx, ke_fname, "\nserver")) != 0) {
+        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, "\nserver")) != 0) {
             return(ret);
         }
     }

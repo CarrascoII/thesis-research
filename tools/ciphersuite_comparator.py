@@ -111,8 +111,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('comparator_plot.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
-            print('comparator_plot.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
             sys.exit(0)
 
         if opt in ('-f', '--filter'):

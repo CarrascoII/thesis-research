@@ -1182,9 +1182,17 @@ struct mbedtls_ssl_context
     char peer_verify_data[MBEDTLS_SSL_VERIFY_DATA_MAX_LEN]; /*!<  previous handshake verify data */
 #endif /* MBEDTLS_SSL_RENEGOTIATION */
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
-    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
-    measure_context_t *msr_ctx;
+#if defined(MEASURE_CIPHER)
+    measure_context_t *cipher_msr_ctx;
+#endif
+#if defined(MEASURE_MD)
+    measure_context_t *md_msr_ctx;
+#endif
+#if defined(MEASURE_KE)
+    measure_context_t *ke_msr_ctx;
+#endif
+#if defined(MEASURE_KE_ROUTINES)
+    measure_context_t *routines_msr_ctx;
 #endif
 };
 

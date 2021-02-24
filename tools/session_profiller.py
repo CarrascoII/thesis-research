@@ -41,7 +41,7 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     
     print(f'ok\nGot {n_total} ciphersuites')
     print('\nRunning with options:')
-    print(f'\t-Timeout: {timeout} sec\n\t-Data size: {input_size}\n\t-Number of tests: {n_tests}')
+    print(f'    -Timeout: {timeout} sec\n    -Data size: {input_size}\n    -Number of tests: {n_tests}')
 
     # Step 2: Compile libs and programs
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
@@ -61,13 +61,13 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
         current += 1
 
         # Step 3: Start server in thread 1
-        print('\tStarting server'.ljust(strlen, '.'), end=' ', flush=True)
+        print('    Starting server'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_srv = pool.apply_async(run_srv, (input_size, n_tests, suite))
         print('ok')
         time.sleep(timeout)
 
         # Step 4: Start client in thread 2
-        print('\tStarting client'.ljust(strlen, '.'), end=' ', flush=True)
+        print('    Starting client'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_cli = pool.apply_async(run_cli, (input_size, n_tests, suite))
         print('ok')
 
@@ -84,14 +84,14 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
             n_error += 1
 
         else:
-            print('\n\tData successfully obtained!!!')
+            print('\n    Data successfully obtained!!!')
             success_ciphersuites.append(suite)
             n_success += 1
 
     # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     print(f'\nCreating comparison graphs from all ciphersuites:')
-    session_comparator.make_figs(success_ciphersuites, weight=weight, strlen=strlen, spacing='\t')
+    session_comparator.make_figs(success_ciphersuites, weight=weight, strlen=strlen, spacing='    ')
     
     # Step 7: Save successful ciphersuites in a file
     utils.write_ciphersuites('session_suites.txt', success_ciphersuites)
@@ -99,25 +99,25 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     # Step 8: Report final status
     print('\n--- FINAL STATUS ---')
     print('\nData generation:')
-    print(f'\t-Number of ciphersuites: {n_total}')
-    print(f'\t-Number of successes: {n_success}')
-    print(f'\t-Number of errors: {n_error}')
-    print(f'\t-Number of n/a: {n_not}')
+    print(f'    -Number of ciphersuites: {n_total}')
+    print(f'    -Number of successes: {n_success}')
+    print(f'    -Number of errors: {n_error}')
+    print(f'    -Number of n/a: {n_not}')
 
     if n_error > 0:
-        print('\t-Error ciphersuites:')
+        print('    -Error ciphersuites:')
 
         for suite in error_ciphersuites:
-            print(f'\t\t{suite}')
+            print(f'        {suite}')
 
     if n_not > 0:
-        print('\t-N/A ciphersuites:')
+        print('    -N/A ciphersuites:')
 
         for suite in not_ciphersuites:
-            print(f'\t\t{suite}')
+            print(f'        {suite}')
 
     print('\nPlot generation:')
-    print(f'\t-Number of used ciphersuites: {n_success}')
+    print(f'    -Number of used ciphersuites: {n_success}')
     print('\nData aquisition and analysis has ended.')
     print('You can check all the csv data and png figure files in the docs/ directory and its subdirectories.')
 

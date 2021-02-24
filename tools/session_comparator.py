@@ -61,7 +61,7 @@ def make_session_cmp_bar_by_ke(ylabel, stats, labels, stats_type):
 #             utils.save_fig(fig, '../docs/' + endpoints[i] + '_session_' + stype + '_' + ylabel + '.png')
 
 def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
-    print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
     all_data = {}
     headers = []
 
@@ -70,23 +70,17 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         data, hdr = utils.parse_handshake_data(path, index=2)
         all_data[suite] = data
 
-        print(f'{list(data.keys())}')
-        print(f'{hdr}')
-
         if headers == []:
             headers = hdr
         
-        else:
-            if headers != hdr:
-                print('error')
-                print(f'{spacing}Data has different headers. Cannot be compared!!!\n')
-                    
-                return None
+        elif len(headers) != len(hdr):
+            print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
+            return None
 
     print('ok')
 
     if weight != 0:
-        print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
+        print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for suite in ciphersuites:
             data = utils.filter_iqr(all_data[suite], weight=weight)
@@ -94,9 +88,10 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         
         print('ok')
 
+    print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    
     all_stats = {}
     stats_type = ['mean', 'stddev']
-    print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     for suite in ciphersuites:
         stats = utils.calc_statistics(all_data[suite], stats_type)
@@ -107,15 +102,15 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         all_stats[suite] = stats
 
     print('ok')
-    print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     path = '../docs/session_'
     utils.write_handshake_cmp_csv(path, all_stats)
 
     print('ok')
-    print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
-    for hdr in headers[1:]:
+    for hdr in headers:
         make_session_cmp_bar_by_ke(hdr, all_stats, ciphersuites, stats_type[:-1])
         # make_session_cmp_bar(ylabel, stats, labels, stats_type[:-1])
 

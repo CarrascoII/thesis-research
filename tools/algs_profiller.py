@@ -47,13 +47,13 @@ def exec_target(target, ciphersuites, timeout, init_size, n_tests, n_total, curr
         current += 1
 
     # Step 4: Start server in thread 1
-        print('\tStarting server'.ljust(strlen, '.'), end=' ', flush=True)
+        print('    Starting server'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_srv = pool.apply_async(run_srv, (target, init_size, n_tests, suite))
         print('ok')
         time.sleep(timeout)
 
     # Step 5: Start client in thread 2
-        print('\tStarting client'.ljust(strlen, '.'), end=' ', flush=True)
+        print('    Starting client'.ljust(strlen, '.'), end=' ', flush=True)
         async_result_cli = pool.apply_async(run_cli, (target, init_size, n_tests, suite))
         print('ok')
 
@@ -68,7 +68,7 @@ def exec_target(target, ciphersuites, timeout, init_size, n_tests, n_total, curr
             error.append(suite)
 
         else:
-            print('\n\tData successfully obtained!!!')
+            print('\n    Data successfully obtained!!!')
             successful.append(suite)
 
     return successful, error, non_existent, current
@@ -93,7 +93,7 @@ def exec_tls(suites_file, targets, timeout, init_size, n_tests, weight):
     print(f'ok')
 
     print('\nRunning with options:')
-    print(f'\t-Timeout: {timeout} sec\n\t-Number of tests: {n_tests}\n\t-Starting input size: {init_size} bytes')
+    print(f'    -Timeout: {timeout} sec\n    -Number of tests: {n_tests}\n    -Starting input size: {init_size} bytes')
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     
     for key in exec_dict:
@@ -115,14 +115,14 @@ def exec_tls(suites_file, targets, timeout, init_size, n_tests, weight):
     for suite in success_ciphersuites:
         print(f'\nCreating graphs for: {suite} ({current}/{n_success})')
         print('\n    Cipher algorithm:')
-        plotter.make_figs('../docs/' + suite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='\t')
+        plotter.make_figs('../docs/' + suite + '/cipher_data.csv', weight=weight, strlen=strlen, spacing='    ')
         print('\n    MAC algorithm:')
-        plotter.make_figs('../docs/' + suite + '/md_data.csv', weight=weight, strlen=strlen, spacing='\t')
+        plotter.make_figs('../docs/' + suite + '/md_data.csv', weight=weight, strlen=strlen, spacing='    ')
         current +=1
 
     # Step 8: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print(f'\nCreating comparison graphs from all ciphersuites:')
-    algs_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=strlen, spacing='\t')
+    algs_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=strlen, spacing='    ')
 
     # Step 9: For each target, save successful ciphersuites in a file
     for key in exec_dict:
@@ -131,25 +131,25 @@ def exec_tls(suites_file, targets, timeout, init_size, n_tests, weight):
     # Step 10: Report final status
     print('\n--- FINAL STATUS ---')
     print('\nData generation:')
-    print(f'\t-Number of ciphersuites: {n_total}')
-    print(f'\t-Number of successes: {n_success}')
-    print(f'\t-Number of errors: {n_error}')
-    print(f'\t-Number of n/a: {n_not}')
+    print(f'    -Number of ciphersuites: {n_total}')
+    print(f'    -Number of successes: {n_success}')
+    print(f'    -Number of errors: {n_error}')
+    print(f'    -Number of n/a: {n_not}')
 
     if n_error > 0:
-        print('\t-Error ciphersuites:')
+        print('    -Error ciphersuites:')
 
         for suite in error_ciphersuites:
-            print(f'\t\t{suite}')
+            print(f'        {suite}')
 
     if n_not > 0:
-        print('\t-N/A ciphersuites:')
+        print('    -N/A ciphersuites:')
 
         for suite in not_ciphersuites:
-            print(f'\t\t{suite}')
+            print(f'        {suite}')
 
     print('\nPlots generation:')
-    print(f'\t-Number of ciphersuites: {n_success}')
+    print(f'    -Number of ciphersuites: {n_success}')
     print('\nData aquisition and analysis has ended.')
     print('You can check all the csv data and png figure files in the docs/<ciphersuite_name> directories.')
 

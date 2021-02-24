@@ -450,21 +450,21 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     strerr = stderr.decode('utf-8').strip('\n')
     last_err = strerr.split('\n')
 
-    print(f'\tChecking {endpoint} return code'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'    Checking {endpoint} return code'.ljust(strlen, '.'), end=' ', flush=True)
 
     if return_code != 0:
-        print(f'error\n\tGot an unexpected return code!!!\n\tDetails: {return_code}')
+        print(f'error\n    Got an unexpected return code!!!\n    Details: {return_code}')
         return return_code
 
     if last_err[0] != '':
-        print(f'error\n\tAn unexpected error occured!!!\n\tDetails:\n\t\t{last_err}')
+        print(f'error\n    An unexpected error occured!!!\n    Details:\n        {last_err}')
         return -1
 
     for i in range(0, len(last_msg)):
         if last_msg[i] != last_out[i]:
-            print('error\n\tLast message was not the expected one!!!' +
-                 f'\n\t\tExpected:\n\t\t{last_msg[0]}\n\t\t{last_msg[1]}' +
-                 f'\n\n\t\tObtained:\n\t\t{last_out[0]}\n\t\t{last_out[1]}')
+            print('error\n    Last message was not the expected one!!!' +
+                 f'\n        Expected:\n        {last_msg[0]}\n        {last_msg[1]}' +
+                 f'\n\n        Obtained:\n        {last_out[0]}\n        {last_out[1]}')
             return -1
 
     print('ok')
@@ -475,11 +475,11 @@ def check_make_ret(return_code, stdout, stderr):
     last_err = strerr.split('\n')
 
     if return_code != 0:
-        print(f'error\n\tCompilation failed!!!\n\tDetails: {return_code}')
+        print(f'error\n    Compilation failed!!!\n    Details: {return_code}')
         return return_code
 
     if last_err[0] != '':
-        print(f'error\n\tAn unexpected error occured!!!\n\tDetails:\n\t\t{last_err}')
+        print(f'error\n    An unexpected error occured!!!\n    Details:\n        {last_err}')
         return -1
 
     print('ok')

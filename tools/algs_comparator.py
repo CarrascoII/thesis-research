@@ -59,26 +59,20 @@ def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
 
         for suite in grouped_suites[key]:
             path = '../docs/' + suite + '/' + alg + '_data.csv'
-            data = {}
-            hdr = []
-
             data, hdr = data_ops[alg](path)
 
             if all_data[key] == {}:
                 all_data[key] = data
                 headers = hdr
             
+            elif len(headers) == len(hdr):
+                for key1, key2 in zip(list(all_data[key].keys()), list(data.keys())):
+                    for entry in data[key2]:
+                        all_data[key][key1][entry] += data[key2][entry]
+
             else:
-                if headers == hdr:
-                    for key1, key2 in zip(list(all_data[key].keys()), list(data.keys())):
-                        for entry in data[key2]:
-                            all_data[key][key1][entry] += data[key2][entry]
-
-                else:
-                    print('error')
-                    print(f'{spacing}Data has different headers. Cannot be compared!!!\n')
-
-                    return None
+                print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
+                return None
 
         if all_data[key] == {}:
             all_data.pop(key)
