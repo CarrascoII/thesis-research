@@ -4,72 +4,89 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_cmp_plot(alg, ylabel, stats1, label1, stats2, label2, hdrs):
-    params1 = {'color': 'red', 'label': label1}
-    params2 = {'color': 'blue', 'label': label2}
+def make_cmp_plot(alg, ylabel, all_stats, labels, hdrs):
     op = []
     ext = ['_out', '_in']
 
     if alg == 'cipher':
         op = ['encrypt', 'decrypt']
+
     elif alg == 'md':
         op = ['hash', 'verify']
 
     for hdr in hdrs:
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-
+        
         for i in range(len(axes)):
-            axes[i] = utils.multiple_custom_plots(stats1['keys'], stats1[hdr + '_' + ylabel + ext[i]],
-                                                stats2[hdr + '_' + ylabel + ext[i]], ax=axes[i], title=op[i] + ' (' + hdr + ')',
-                                                ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+            x = []
+            y_lst = []
+            kwargs_lst = []
+
+            for suite in all_stats:
+                x = all_stats[suite]['keys']
+                y_lst.append(all_stats[suite][hdr + '_' + ylabel + ext[i]])
+                kwargs_lst.append({'label': suite})
+
+            axes[i] = utils.multiple_custom_plots(x, y_lst, ax=axes[i], title=op[i] + ' (' + hdr + ')', ylabel=ylabel, kwargs_lst=kwargs_lst)
 
         utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
-def make_cmp_figs(ciphersuite1, ciphersuite2, algs, weight=1.5, strlen=40, spacing=''):
-    path1 = '../docs/' + ciphersuite1 + '/'
-    path2 = '../docs/' + ciphersuite2 + '/'
-
-    print(f'Comparing {ciphersuite1} VS {ciphersuite2}', end='')
+def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
+    all_data = {}
+    all_headers = []
 
     for alg in algs:
-        print('\n' + spacing + f'{alg.upper()} algorithm:')
-        print(spacing + '  Parsing data'.ljust(strlen, '.'), end=' ')
-        data1, headers1 = utils.parse_alg_data(path1 + alg + '_data.csv')
-        data2, headers2 = utils.parse_alg_data(path2 + alg + '_data.csv')
+        print('\n' + f'{spacing}{alg.upper()} algorithm:')
+        print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
+        
+        for suite in ciphersuites:
+            path = '../docs/' + suite + '/'            
+            data, hdr = utils.parse_record_data(path + alg + '_data.csv')
        
-        if headers1 != headers2:
-            print('error')
-            print(spacing + 'Data has different headers. Cannot be compared!!!\n')
-            continue
+            all_data[suite] = data
+            all_headers.append(hdr)
+
+        for hdr in all_headers[1:]:
+            if all_headers[0] != hdr:
+                print('error')
+                print(f'{spacing}Data has different headers. Cannot be compared!!!\n')
+                continue
 
         print('ok')
 
         if weight != 0:
-            print(spacing + '  Removing outliers from data'.ljust(strlen, '.'), end=' ')
-            data1 = utils.filter_iqr(data1, weight=weight)
-            data2 = utils.filter_iqr(data2, weight=weight)
+            print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
+            
+            for suite in ciphersuites:
+                data = utils.filter_iqr(all_data[suite], weight=weight)
+                all_data[suite] = data
+
             print('ok')
 
+        print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
+
+        all_stats = {}
         stats_type = ['mean', 'median']
 
-        print(spacing + f'  Calculating statistics'.ljust(strlen, '.'), end=' ')
-        stats1 = utils.calc_statistics(data1, stats_type)
-        stats2 = utils.calc_statistics(data2, stats_type)
+        for suite in ciphersuites:
+            stats = utils.calc_statistics(all_data[suite], stats_type)
 
-        if stats1 == None or stats2 == None:
-            sys.exit(2)
+            if stats == None:
+                return None
+
+            all_stats[suite] = stats
 
         print('ok')
-
-        print(spacing + f'  Saving statistics'.ljust(strlen, '.'), end=' ')
+        print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+        
         path = '../docs/cmp_' + alg + '_alg_'
-        utils.write_alg_cmp_csv(path, {ciphersuite1: stats1, ciphersuite2: stats2})
+        utils.write_record_cmp_csv(path, all_stats)
+        
         print('ok')
+        print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
-        print(spacing + f'  Generating figures'.ljust(strlen, '.'), end=' ')
-
-        for hdr in headers1:
-            make_cmp_plot(alg, hdr, stats1, ciphersuite1, stats2, ciphersuite2, stats_type)
+        for hdr in all_headers[0]:
+            make_cmp_plot(alg, hdr, all_stats, ciphersuites, stats_type)
         
         print('ok')
 
@@ -85,7 +102,7 @@ def main(argv):
         print('No ciphersuites where given')
         sys.exit(2)
 
-    if len(args) > 2:
+    if len(args) > 1:
         print('Too many arguments')
         sys.exit(2)
 
@@ -94,8 +111,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('comparator_plot.py [-f <weight>] [-c] [-m] <ciphersuite1> <ciphersuite2>')
-            print('comparator_plot.py [--filter=<weight>] [--cipher] [--md] <ciphersuite1> <ciphersuite2>')
+            print('comparator_plot.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
+            print('comparator_plot.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
             sys.exit(0)
 
         if opt in ('-f', '--filter'):
@@ -112,7 +129,8 @@ def main(argv):
             sys.exit(2)
 
     os.system('clear')
-    make_cmp_figs(args[0], args[1], algs, weight=weight)
+    ciphersuites = utils.parse_ciphersuites(args[0]) 
+    make_cmp_figs(ciphersuites, algs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
