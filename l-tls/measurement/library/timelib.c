@@ -67,7 +67,8 @@ int measure_timelib_starts(measure_timelib_context *ctx, const char *file_name, 
         return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
     }
 
-    fprintf(csv, "%s,time", file_output);
+    fprintf(csv, "%s,time\n", file_output);
+    fflush(csv);
     fclose(csv);
 
     return(0);
@@ -97,7 +98,8 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
         return(MEASURE_ERR_TIMELIB_FILE_NOT_FOUND);
     }
 
-    fprintf(csv, "%s,%ld", file_output, final_time);
+    fprintf(csv, "%s,%ld\n", file_output, final_time);
+    fflush(csv);
     fclose(csv);
 
     measure_timelib_reset(ctx);

@@ -92,7 +92,8 @@ int measure_papi_starts(measure_papi_context *ctx, const char *file_name, const 
         return(MEASURE_ERR_PAPI_FILE_NOT_FOUND);
     }
 
-    fprintf(csv, "%s,cycles,time", file_output);
+    fprintf(csv, "%s,cycles,time\n", file_output);
+    fflush(csv);
     fclose(csv);
 
     return(0);
@@ -122,7 +123,8 @@ int measure_papi_finish(measure_papi_context *ctx, const char *file_name, const 
         return(MEASURE_ERR_PAPI_FILE_NOT_FOUND);
     }
 
-    fprintf(csv, "%s,%lld,%lld", file_output, final_cycles, final_time);
+    fprintf(csv, "%s,%lld,%lld\n", file_output, final_cycles, final_time);
+    fflush(csv);
     fclose(csv);
 
     measure_papi_reset(ctx);

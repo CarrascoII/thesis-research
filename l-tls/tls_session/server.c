@@ -158,9 +158,11 @@ int main(int argc, char **argv) {
     char buffer[40];
 #endif
 
-    int ret,
-        i, n_tests = N_TESTS,
+    int ret, i,
         input_size = MAX_INPUT_SIZE,
+#if defined(MEASURE_SESSION)
+        n_tests = N_TESTS,
+#endif
 #if defined(MBEDTLS_DEBUG_C)
         debug = DEBUG_LEVEL,
 #endif
@@ -184,6 +186,7 @@ int main(int argc, char **argv) {
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
+
         if((q = strchr(p, '=')) == NULL) {
 #if defined(MBEDTLS_DEBUG_C)
             printf("To assign own variables, run with <variable>=X\n");
@@ -192,17 +195,9 @@ int main(int argc, char **argv) {
         }
 
         *q++ = '\0';
-        if(strcmp(p, "n_tests") == 0) {
-            n_tests = atoi(q);
-            if(n_tests < 1 || n_tests > N_TESTS) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf("Number of tests must be between 1 and 1000\n");
-#endif
-                return(1);
-            }
-        }
-        else if(strcmp(p, "input_size") == 0) {
+        if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
+
             if(input_size < 0 || input_size > MAX_INPUT_SIZE) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Input size must be between 0 and %d\n", MAX_INPUT_SIZE);
@@ -210,9 +205,22 @@ int main(int argc, char **argv) {
                 return(1);
             }
         }
+#if defined(MEASURE_SESSION)
+        else if(strcmp(p, "n_tests") == 0) {
+            n_tests = atoi(q);
+
+            if(n_tests < 1 || n_tests > N_TESTS) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf("Number of tests must be between 1 and %d\n", N_TESTS);
+#endif
+                return(1);
+            }
+		}
+#endif /* MEASURE_SESSION */
 #if defined(MBEDTLS_DEBUG_C)
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
+            
             if(debug < 0 || debug > 5) {
                 printf("Debug level must be int between 0 and 5\n");
                 return(1);
@@ -229,11 +237,15 @@ int main(int argc, char **argv) {
         }
         else {
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Available options are input_size, n_tests, debug_level and ciphersuite\n");
+            printf("Available options are input_size, ");
+#if defined(MEASURE_SESSION)
+            printf("n_tests, ");
 #endif
+            printf("debug_level and ciphersuite\n");
+#endif /* MBEDTLS_DEBUG_C */
             return(1);
         }
-    }
+	}
 
     mbedtls_net_init(&server);
     mbedtls_net_init(&client);
@@ -414,6 +426,9 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
+#if defined(MUTUAL_AUTH)
+    mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+#endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
@@ -429,23 +444,24 @@ int main(int argc, char **argv) {
 #if defined(USE_PSK_C)
     mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
 #endif
-#if defined(MUTUAL_AUTH)
-    mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
-#endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
 #endif
 
 #if defined(MBEDTLS_RSA_C)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
         goto exit;
     }
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
         goto exit;
     }
 #endif
@@ -456,6 +472,8 @@ int main(int argc, char **argv) {
 #endif
         goto exit;
     }
+
+    mbedtls_ssl_set_bio(&tls, &client, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 #if defined(MEASURE_SESSION)
     if((ret = measurement_measure_config(&measure)) != 0) {
@@ -478,7 +496,9 @@ int main(int argc, char **argv) {
     printf(" ok");
 #endif
 
+#if defined(MEASURE_SESSION)
     for(i = 0; i < n_tests; i++) {
+#endif
         // Reset the connection
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nResetting the connection..................");
@@ -506,7 +526,6 @@ int main(int argc, char **argv) {
             goto exit;
     }
 
-        mbedtls_ssl_set_bio(&tls, &client, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -634,7 +653,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        sprintf(buffer, "\nserver,%d", input_size);
+        sprintf(buffer, "server,%d", input_size);
 
         if((ret = measure_finish(&measure, path, buffer)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -647,7 +666,9 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
+#if defined(MEASURE_SESSION)
     }
+#endif
 
     // Final connection status
     printf("\n\nFinal status:");

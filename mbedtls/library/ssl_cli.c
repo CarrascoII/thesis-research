@@ -2368,7 +2368,7 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,get_ecdh_params_from_cert")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,get_ecdh_params_from_cert")) != 0) {
             return(ret);
         }
         
@@ -2465,7 +2465,7 @@ start_processing:
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,parse_server_psk_hint")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,parse_server_psk_hint")) != 0) {
             return(ret);
         }
         
@@ -2507,7 +2507,7 @@ start_processing:
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,parse_server_dh_params")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,parse_server_dh_params")) != 0) {
             return(ret);
         }
         
@@ -2544,7 +2544,7 @@ start_processing:
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,parse_server_ecdh_params")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,parse_server_ecdh_params")) != 0) {
             return(ret);
         }
         
@@ -2745,7 +2745,7 @@ start_processing:
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,ciphersuite_uses_server_signature")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ciphersuite_uses_server_signature")) != 0) {
             return(ret);
         }
 #endif
@@ -2947,7 +2947,7 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
         return(ret);
     }
 
-    if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,parse_certificate_request")) != 0) {
+    if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,parse_certificate_request")) != 0) {
         return(ret);
     }
 #endif
@@ -3035,7 +3035,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,dhm_make_public")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,dhm_make_public")) != 0) {
             return(ret);
         }
 #endif
@@ -3068,7 +3068,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,dhm_calc_secret")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,dhm_calc_secret")) != 0) {
             return(ret);
         }
 
@@ -3123,7 +3123,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,ecdh_make_public")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_make_public")) != 0) {
             return(ret);
         }
 #endif
@@ -3172,7 +3172,7 @@ ecdh_calc_secret:
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,ecdh_calc_secret")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_calc_secret")) != 0) {
             return(ret);
         }
 
@@ -3246,7 +3246,7 @@ ecdh_calc_secret:
                 return(ret);
             }
 
-            if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,write_encrypted_pms")) != 0) {
+            if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,write_encrypted_pms")) != 0) {
                 return(ret);
             }
 
@@ -3290,7 +3290,7 @@ ecdh_calc_secret:
                 return(ret);
             }
 
-            if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,dhm_make_public")) != 0) {
+            if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,dhm_make_public")) != 0) {
                 return(ret);
             }
 #endif
@@ -3324,7 +3324,7 @@ ecdh_calc_secret:
                 return(ret);
             }
 
-            if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,ecdh_make_public")) != 0) {
+            if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_make_public")) != 0) {
                 return(ret);
             }
 #endif
@@ -3371,7 +3371,7 @@ ecdh_calc_secret:
             return(ret);
         }
 
-        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,write_encrypted_pms")) != 0) {
+        if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,write_encrypted_pms")) != 0) {
             return(ret);
         }
 
@@ -3539,7 +3539,7 @@ sign:
         return(ret);
     }
 
-    if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,hash_cert_verify")) != 0) {
+    if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,hash_cert_verify")) != 0) {
         return(ret);
     }
 #endif
@@ -3642,7 +3642,7 @@ sign:
         return(ret);
     }
 
-    if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "\nclient,sign_cert_verify")) != 0) {
+    if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,sign_cert_verify")) != 0) {
         return(ret);
     }
 

@@ -32,11 +32,8 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     total_ciphersuites = utils.parse_algorithms(filename)
     n_total = len(total_ciphersuites)
     success_ciphersuites = []
-    n_success = 0
     not_ciphersuites = []
-    n_not = 0
     error_ciphersuites = []
-    n_error = 0
     current = 1
     
     print(f'ok\nGot {n_total} ciphersuites')
@@ -77,16 +74,17 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
 
         if srv_ret == 1 and cli_ret == 1:
             not_ciphersuites.append(suite)
-            n_not += 1
 
         elif srv_ret != 0 or cli_ret != 0:
             error_ciphersuites.append(suite)
-            n_error += 1
 
         else:
             print('\n    Data successfully obtained!!!')
             success_ciphersuites.append(suite)
-            n_success += 1
+
+    n_success = len(success_ciphersuites)
+    n_not = len(not_ciphersuites)
+    n_error = len(error_ciphersuites)
 
     # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
@@ -101,19 +99,19 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     print('\nData generation:')
     print(f'    -Number of ciphersuites: {n_total}')
     print(f'    -Number of successes: {n_success}')
-    print(f'    -Number of errors: {n_error}')
     print(f'    -Number of n/a: {n_not}')
-
-    if n_error > 0:
-        print('    -Error ciphersuites:')
-
-        for suite in error_ciphersuites:
-            print(f'        {suite}')
+    print(f'    -Number of errors: {n_error}')
 
     if n_not > 0:
         print('    -N/A ciphersuites:')
 
         for suite in not_ciphersuites:
+            print(f'        {suite}')
+
+    if n_error > 0:
+        print('    -Error ciphersuites:')
+
+        for suite in error_ciphersuites:
             print(f'        {suite}')
 
     print('\nPlot generation:')

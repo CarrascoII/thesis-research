@@ -1,5 +1,5 @@
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "config_psk.h"
+#include "config_algs.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -56,17 +56,88 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 }
 #endif /* MBEDTLS_DEBUG_C */
 
+#if defined(USE_PSK_C)
+typedef struct _psk_entry psk_entry;
+
+struct _psk_entry {
+    const char *name;
+    size_t key_len;
+    unsigned char key[MBEDTLS_PSK_MAX_LEN];
+    psk_entry *next;
+};
+
+/*
+ * Free a list of psk_entry's
+ */
+void psk_free(psk_entry *head) {
+    psk_entry *next;
+
+    while(head != NULL) {
+        next = head->next;
+        free(head);
+        head = next;
+    }
+}
+
+/*
+ * Parse a string of pairs name1,key1[,name2,key2[,...]]
+ * into a usable psk_entry list.
+ *
+ * Modifies the input string! This is not production quality!
+ */
+psk_entry *psk_parse(const unsigned char *psk, int psk_len) {
+    psk_entry *cur = NULL, *new = NULL;
+
+    if((new = (psk_entry *) calloc(1, sizeof(psk_entry))) == NULL) {
+        goto error;
+    }
+
+    memset(new, 0, sizeof(psk_entry));
+
+    new->name = CLI_ID;
+    memcpy(new->key, psk, psk_len);
+    new->key_len = psk_len;
+    new->next = cur;
+    cur = new;
+
+    return(cur);
+
+error:
+    psk_free(new);
+    psk_free(cur);
+
+    return(NULL);
+}
+
+/*
+ * PSK callback
+ */
+int psk_callback(void *p_info, mbedtls_ssl_context *ssl, const unsigned char *name, size_t name_len) {
+    psk_entry *cur = (psk_entry *) p_info;
+
+    while(cur != NULL) {
+        if(name_len == strlen(cur->name) && memcmp(name, cur->name, name_len) == 0) {
+            return(mbedtls_ssl_set_hs_psk(ssl, cur->key, cur->key_len));
+        }
+
+        cur = cur->next;
+    }
+
+    return(-1);
+}
+#endif /* USE_PSK_C */
+
 int main(int argc, char **argv) {
     // Initial setup
-    mbedtls_net_context server;
+    mbedtls_net_context server, client;
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt ca_cert;
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C)
     mbedtls_x509_crt rsa_cert;
     mbedtls_pk_context rsa_key;
 #endif
-#if defined(MBEDTLS_ECP_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt ec_cert;
     mbedtls_pk_context ec_key;
 #endif
@@ -74,6 +145,10 @@ int main(int argc, char **argv) {
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
+
+#if defined(USE_PSK_C)
+    psk_entry *psk_info = NULL;
+#endif
 
 #if defined(MEASURE_KE)
     char path[PATH_SIZE] = FILE_PATH;
@@ -90,9 +165,9 @@ int main(int argc, char **argv) {
 #endif
         suite_id = 0;
     unsigned char *request, *response;
-    const char *pers = "tls_client generate request";
+    const char *pers = "tls_server generates response";
     char *p, *q;
-    const char psk_id[] = CLI_ID;
+#if defined(USE_PSK_C)
     const unsigned char test_psk[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
@@ -101,7 +176,8 @@ int main(int argc, char **argv) {
         ,0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
 #endif
     };
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#endif
+#if defined(MUTUAL_AUTH)
     uint32_t flags;
 #endif
 
@@ -169,14 +245,15 @@ int main(int argc, char **argv) {
 	}
 
     mbedtls_net_init(&server);
+    mbedtls_net_init(&client);
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C)
     mbedtls_x509_crt_init(&rsa_cert);
     mbedtls_pk_init(&rsa_key);
 #endif
-#if defined(MBEDTLS_ECP_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt_init(&ec_cert);
     mbedtls_pk_init(&ec_key);
 #endif
@@ -188,6 +265,26 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
 #endif
+
+    // Load PSK list
+#if defined(USE_PSK_C)
+#if defined(MBEDTLS_DEBUG_C)
+    printf("\nLoading the psk list......................");
+    fflush(stdout);
+#endif
+
+    if((psk_info = psk_parse(test_psk, sizeof(test_psk))) == NULL) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf("psk_list invalid");
+#endif
+        ret = -1;
+        goto exit;
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+#endif
+#endif /* USE_PSK_C */
 
     // Load CA certificate(s)
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
@@ -210,14 +307,14 @@ int main(int argc, char **argv) {
 #endif
 #endif
 
-    // Load client RSA certificate and key
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+    // Load server RSA certificate and key
+#if defined(MBEDTLS_RSA_C)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the client rsa certificate........");
+    printf("\nLoading the server rsa certificate........");
     fflush(stdout);
 #endif
 
-    if((ret = mbedtls_x509_crt_parse(&rsa_cert, (const unsigned char *) mbedtls_test_cli_crt_rsa, mbedtls_test_cli_crt_rsa_len)) != 0) {
+    if((ret = mbedtls_x509_crt_parse(&rsa_cert, (const unsigned char *) mbedtls_test_srv_crt_rsa, mbedtls_test_srv_crt_rsa_len)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
 #endif
@@ -227,11 +324,11 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the client rsa key................");
+    printf("\nLoading the server rsa key................");
     fflush(stdout);
 #endif
 
-    if((ret = mbedtls_pk_parse_key(&rsa_key, (const unsigned char *) mbedtls_test_cli_key_rsa, mbedtls_test_cli_key_rsa_len, NULL, 0)) != 0) {
+    if((ret = mbedtls_pk_parse_key(&rsa_key, (const unsigned char *) mbedtls_test_srv_key_rsa, mbedtls_test_srv_key_rsa_len, NULL, 0)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
 #endif
@@ -241,16 +338,16 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* MBEDTLS_RSA_C && MUTUAL_AUTH */
+#endif /* MBEDTLS_RSA_C */
 
-    // Load client EC certificate and key
-#if defined(MBEDTLS_ECP_C) && defined(MUTUAL_AUTH)
+    // Load EC certificate and key
+#if defined(MBEDTLS_ECDSA_C)
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\nLoading the client ec certificate.........");
+    printf("\nLoading the server ec certificate.........");
     fflush(stdout);
 #endif
 
-    if((ret = mbedtls_x509_crt_parse(&ec_cert, (const unsigned char *) mbedtls_test_cli_crt_ec, mbedtls_test_cli_crt_ec_len)) != 0) {
+    if((ret = mbedtls_x509_crt_parse(&ec_cert, (const unsigned char *) mbedtls_test_srv_crt_ec, mbedtls_test_srv_crt_ec_len)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
 #endif
@@ -260,11 +357,11 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    printf("\nLoading the client ec key.................");
+    printf("\nLoading the server ec key.................");
     fflush(stdout);
 #endif
 
-    if((ret = mbedtls_pk_parse_key(&ec_key, (const unsigned char *) mbedtls_test_cli_key_ec, mbedtls_test_cli_key_ec_len, NULL, 0)) != 0) {
+    if((ret = mbedtls_pk_parse_key(&ec_key, (const unsigned char *) mbedtls_test_srv_key_ec, mbedtls_test_srv_key_ec_len, NULL, 0)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
 #endif
@@ -274,7 +371,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* MBEDTLS_ECP_C && MUTUAL_AUTH */
+#endif /* MBEDTLS_ECDSA_C */
 
     // Seed the RNG
 #if defined(MBEDTLS_DEBUG_C)
@@ -292,18 +389,36 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
+    // Create and bind socket
+    printf("\nBinding server to tcp/%s/%s......", SERVER_IP, SERVER_PORT);
+    fflush(stdout);
+#endif
+
+    if((ret = mbedtls_net_bind(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" failed! mbedtls_net_bind returned -0x%04x\n", -ret);
+#endif
+        goto exit;      
+    }
+
+#if defined(MBEDTLS_DEBUG_C)
+    printf(" ok");
+
     // Setup ssl session
     printf("\nSetting up TLS session....................");
     fflush(stdout);
 #endif
 
-    if((ret = mbedtls_ssl_config_defaults(&tls_conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
+    if((ret = mbedtls_ssl_config_defaults(&tls_conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_config_defaults returned -0x%04x\n", -ret);
 #endif
         goto exit;
     }
 
+#if defined(MUTUAL_AUTH)
+    mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+#endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
@@ -315,19 +430,15 @@ int main(int argc, char **argv) {
     if(suite_id != 0) {
         mbedtls_ssl_conf_ciphersuites(&tls_conf, &suite_id);
     }
-    
-    if((ret = mbedtls_ssl_conf_psk(&tls_conf, test_psk, sizeof(test_psk), (const unsigned char *) psk_id, sizeof(psk_id) - 1)) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-        printf(" failed! mbedtls_ssl_conf_psk returned -0x%04x\n", -ret);
-#endif
-        goto exit;
-    }
 
+#if defined(USE_PSK_C)
+    mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
+#endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
 #endif
 
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
@@ -336,7 +447,7 @@ int main(int argc, char **argv) {
     }
 #endif
 
-#if defined(MBEDTLS_ECP_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
@@ -352,16 +463,7 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-    if((ret = mbedtls_ssl_set_hostname(&tls, SERVER_IP)) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-        printf(" failed! mbedtls_ssl_set_hostname returned -0x%04x\n", -ret);
-#endif
-        goto exit;
-    }
-#endif
-
-    mbedtls_ssl_set_bio(&tls, &server, mbedtls_net_send, mbedtls_net_recv, NULL);
+    mbedtls_ssl_set_bio(&tls, &client, mbedtls_net_send, mbedtls_net_recv, NULL);
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
@@ -386,17 +488,17 @@ int main(int argc, char **argv) {
 #endif
 #endif  /* MEASURE_KE */
 
-        // Create socket and connect to server
+        // Listen and accept client
 #if defined(MBEDTLS_DEBUG_C)
-        printf("\nConnecting client to tcp/%s/%s...", SERVER_IP, SERVER_PORT);
+        printf("\nWaiting for client to connect.............");
         fflush(stdout);
 #endif
-    
-        if((ret = mbedtls_net_connect(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
+
+        if((ret = mbedtls_net_accept(&server, &client, NULL, 0, NULL)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
-            printf(" failed! mbedtls_net_connect returned -0x%04x\n", -ret);
+            printf(" failed! mbedtls_net_accept returned -0x%04x\n", -ret);
 #endif
-            goto exit;     
+            goto exit; 
         }
 
 #if defined(MBEDTLS_DEBUG_C)
@@ -419,11 +521,11 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
-    
-        // Verify server certificate
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+
+        // Verify client certificate
+#if defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
-        printf("\nVerifying server certificate..............");
+        printf("\nVerifying client certificate..............");
 #endif
 
         if((flags = mbedtls_ssl_get_verify_result(&tls)) != 0) {
@@ -438,7 +540,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
-#endif /* MBEDTLS_RSA_C || MBEDTLS_ECP_C */
+#endif /* MUTUAL_AUTH */
 
 #if defined(MEASURE_KE)
         if(i == 0) {
@@ -457,7 +559,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, "client")) != 0) {
+        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, "server")) != 0) {
             return(ret);
         }
     }
@@ -471,12 +573,12 @@ int main(int argc, char **argv) {
         request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
         response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
 
-        // Generate the request
-        memset(request, 0, input_size);
+        // Generate the response
+        memset(response, 0, input_size);
 
-        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, request, input_size)) != 0) {
+        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, response, input_size)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
-            printf(" failed! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
+            printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
@@ -484,15 +586,16 @@ int main(int argc, char **argv) {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         for(i = 0; i < n_tests; i++) {
 #endif
-            // Send request
+            // Receive request
 #if defined(MBEDTLS_DEBUG_C)
-            printf("\n  < Write to server:");
+            printf("\n  > Read from client:");
             fflush(stdout);
 #endif
+            memset(request, 0, input_size);
 
-            if((ret = mbedtls_ssl_write(&tls, request, input_size)) < 0) {
+            if((ret = mbedtls_ssl_read(&tls, request, input_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf(" mbedtls_ssl_write returned -0x%04x\n", -ret);
+                printf(" failed! mbedtls_ssl_read returned -0x%04x\n", -ret);
 #endif
                 goto exit;
             }
@@ -504,16 +607,14 @@ int main(int argc, char **argv) {
 #endif
             fflush(stdout);
 
-            // Receive response
-            printf("\n  > Read from server:");
+            // Send response
+            printf("\n  < Write to client:");
             fflush(stdout);
 #endif /* MBEDTLS_DEBUG_C */
 
-            memset(response, 0, input_size);
-
-            if((ret = mbedtls_ssl_read(&tls, response, input_size)) < 0) {
+            if((ret = mbedtls_ssl_write(&tls, response, input_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf(" mbedtls_ssl_read returned -0x%04x\n", -ret);
+                printf(" failed! mbedtls_ssl_write returned -0x%04x\n", -ret);
 #endif
                 goto exit;
             }
@@ -540,7 +641,7 @@ int main(int argc, char **argv) {
 
     if((ret = mbedtls_ssl_close_notify(&tls)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
-        printf(" failed! mbedtls_ssl_close_notify returned -0x%04x\n", -ret);
+        printf(" failed! mbedtls_ssl_close_notify returned -0x%04x\n",-ret);
 #endif
         goto exit;
     }
@@ -559,12 +660,11 @@ int main(int argc, char **argv) {
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
 
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MUTUAL_AUTH)
     if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
         char crt_buf[512];
-
         mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
-        printf("\n  -Server certificate:\n%s", crt_buf);
+        printf("\n  -Client certificate:\n%s", crt_buf);
     }
 #endif
 #endif /* MBEDTLS_DEBUG_C */
@@ -576,17 +676,21 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
-#if defined(MBEDTLS_ECP_C) && defined(MUTUAL_AUTH)
+#if defined(USE_PSK_C)
+    psk_free(psk_info);
+#endif
+#if defined(MBEDTLS_ECDSA_C)
     mbedtls_pk_free(&ec_key);
     mbedtls_x509_crt_free(&ec_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C)
     mbedtls_pk_free(&rsa_key);
     mbedtls_x509_crt_free(&rsa_cert);
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_free(&ca_cert);
 #endif
+    mbedtls_net_free(&client);
     mbedtls_net_free(&server);
 
 #if defined(MEASURE_CIPHER)

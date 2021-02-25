@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         if(strcmp(p, "input_size") == 0) {
             input_size = atoi(q);
 
-            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE || input_size % MIN_INPUT_SIZE != 0) {
+            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Input size must be between %d and %d \n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif
@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, "\nclient")) != 0) {
+        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, "client")) != 0) {
             return(ret);
         }
     }

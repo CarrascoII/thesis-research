@@ -73,7 +73,7 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         if headers == []:
             headers = hdr
         
-        elif len(headers) != len(hdr):
+        elif headers != hdr:
             print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
             return None
 

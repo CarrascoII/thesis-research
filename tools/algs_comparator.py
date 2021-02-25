@@ -65,7 +65,7 @@ def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
                 all_data[key] = data
                 headers = hdr
             
-            elif len(headers) == len(hdr):
+            elif headers == hdr:
                 for key1, key2 in zip(list(all_data[key].keys()), list(data.keys())):
                     for entry in data[key2]:
                         all_data[key][key1][entry] += data[key2][entry]

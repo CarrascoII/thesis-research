@@ -16,6 +16,7 @@ MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
 MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
 CIPHER_MAKE = $(MAKE) -C cipher
+TLS_ALGS_MAKE = $(MAKE) -C tls_algs
 TLS_SESSION_MAKE = $(MAKE) -C tls_session
 TLS_PSK_MAKE = $(MAKE) -C tls_psk
 TLS_RSA_MAKE = $(MAKE) -C tls_rsa
@@ -25,8 +26,11 @@ PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement lib_measurement_papi alt_session alt_psk alt_rsa alt_ec alt_cipher \
-		lib_mbedtls lib_session lib_session_papi lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_ec lib_ec_papi lib_cipher progs \
+.PHONY: lib_measurement lib_measurement_papi alt_algs alt_session alt_psk alt_rsa alt_ec alt_cipher \
+		lib_mbedtls lib_algs lib_algs_papi lib_session lib_session_papi \
+		lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_ec lib_ec_papi lib_cipher progs \
+		algs_server run_algs_server algs_client run_algs_client algs \
+		algs_server_papi run_algs_server_papi algs_client_papi run_algs_client_papi algs_papi \		
 		session_server run_session_server session_client run_session_client session \
 		session_server_papi run_session_server_papi session_client_papi run_session_client_papi session_papi \		
 		psk_server run_psk_server psk_client run_psk_client psk \
@@ -46,6 +50,9 @@ lib_measurement_papi:
 	$(MEASUREMENT_LIB_MAKE) PAPI_CFLAGS="$(PAPI_CFLAGS)"
 	
 ### MAKE MBEDTLS ALT ###
+alt_algs:
+	$(TLS_ALGS_MAKE) alt_lib
+
 alt_session:
 	$(TLS_SESSION_MAKE) alt_lib
 
@@ -66,6 +73,12 @@ lib_mbedtls:
 	$(MY_MBEDTLS_MAKE)
 	echo "make mbedtls:"
 	$(MBEDTLS_LIB_MAKE)
+
+lib_algs:
+	$(TLS_ALGS_MAKE) lib
+
+lib_algs_papi:
+	$(TLS_ALGS_MAKE) lib_papi
 
 lib_session:
 	$(TLS_SESSION_MAKE) lib
@@ -97,6 +110,38 @@ lib_cipher:
 ### MAKE MBEDTLS PROGRAMS ###
 progs: lib_mbedtls
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I$(MY_AES_MODULE_DIR) $(PERSONAL_DIR)/$(MY_AES).o $(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
+
+### MAKE TLS ALGS ###
+algs_server:
+	$(TLS_ALGS_MAKE) server
+
+run_algs_server: algs_server
+	./tls_algs/server.out
+
+algs_client:
+	$(TLS_ALGS_MAKE) client
+
+run_algs_client: algs_client
+	./tls_algs/client.out
+
+algs:
+	$(TLS_ALGS_MAKE) local
+
+### MAKE TLS ALGS PAPI ###
+algs_server_papi:
+	$(TLS_ALGS_MAKE) server_papi
+
+run_algs_server_papi: algs_server_papi
+	./tls_algs/server.out
+
+algs_client_papi:
+	$(TLS_ALGS_MAKE) client_papi
+
+run_algs_client_papi: algs_client_papi
+	./tls_algs/client.out
+
+algs_papi:
+	$(TLS_ALGS_MAKE) local_papi
 
 ### MAKE TLS SESSION ###
 session_server:
@@ -236,6 +281,7 @@ run_cipher:
 ### CLEAN ###
 clean_local:
 	$(CIPHER_MAKE) clean_local
+	$(TLS_ALGS_MAKE) clean_local
 	$(TLS_SESSION_MAKE) clean_local
 	$(TLS_PSK_MAKE) clean_local
 	$(TLS_RSA_MAKE) clean_local
