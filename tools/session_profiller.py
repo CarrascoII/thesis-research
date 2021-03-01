@@ -92,7 +92,7 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     session_comparator.make_figs(success_ciphersuites, weight=weight, strlen=strlen, spacing='    ')
     
     # Step 7: Save successful ciphersuites in a file
-    utils.write_ciphersuites('session_suites.txt', success_ciphersuites)
+    utils.write_ciphersuites('session', success_ciphersuites)
 
     # Step 8: Report final status
     print('\n--- FINAL STATUS ---')

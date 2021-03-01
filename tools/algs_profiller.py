@@ -166,8 +166,8 @@ def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
 
     # Step 9: For each target, save successful ciphersuites in a file
     # for key in exec_dict:
-    #     utils.write_ciphersuites(key + '_suites.txt', exec_dict[key])
-    utils.write_ciphersuites(target + '_suites.txt', success_ciphersuites)
+    #     utils.write_ciphersuites(key, exec_dict[key])
+    utils.write_ciphersuites(target, success_ciphersuites)
 
     # Step 10: Report final status
     print('\n--- FINAL STATUS ---')
