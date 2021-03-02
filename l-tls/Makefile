@@ -1,5 +1,6 @@
 MY_MBEDTLS_DIR = my_mbedtls
 MEASUREMENT_LIB_DIR = measurement/library
+MBEDCORE_LIB_DIR = mbedcore/library
 MY_AES_MODULE_DIR = ../../l-tls/my_mbedtls/aes_module
 MBEDTLS_LIB_DIR = ../mbedtls/library
 MBEDTLS_PROG_DIR = ../mbedtls/programs
@@ -12,12 +13,14 @@ MY_AES_MODULE = $(MY_MBEDTLS_DIR)/aes_module/aes_alt
 MY_SHA256 = $(MY_MBEDTLS_DIR)/sha256/sha256_alt
 
 MEASUREMENT_LIB_MAKE = $(MAKE) -C $(MEASUREMENT_LIB_DIR)
+MBEDCORE_LIB_MAKE = $(MAKE) -C $(MBEDCORE_LIB_DIR)
 MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
 MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
 CIPHER_MAKE = $(MAKE) -C cipher
 TLS_ALGS_MAKE = $(MAKE) -C tls_algs
 TLS_SESSION_MAKE = $(MAKE) -C tls_session
+TLS_CORE_MAKE = $(MAKE) -C tls_core
 TLS_PSK_MAKE = $(MAKE) -C tls_psk
 TLS_RSA_MAKE = $(MAKE) -C tls_rsa
 TLS_EC_MAKE = $(MAKE) -C tls_ec
@@ -26,13 +29,15 @@ PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement lib_measurement_papi alt_algs alt_session alt_psk alt_rsa alt_ec alt_cipher \
-		lib_mbedtls lib_algs lib_algs_papi lib_session lib_session_papi \
+.PHONY: lib_measurement lib_measurement_papi alt_algs alt_session alt_core alt_psk alt_rsa alt_ec alt_cipher \
+		lib_mbedtls lib_algs lib_algs_papi lib_session lib_session_papi lib_core lib_core_papi \
 		lib_psk lib_psk_papi lib_rsa lib_rsa_papi lib_ec lib_ec_papi lib_cipher progs \
 		algs_server run_algs_server algs_client run_algs_client algs \
-		algs_server_papi run_algs_server_papi algs_client_papi run_algs_client_papi algs_papi \		
+		algs_server_papi run_algs_server_papi algs_client_papi run_algs_client_papi algs_papi \
 		session_server run_session_server session_client run_session_client session \
-		session_server_papi run_session_server_papi session_client_papi run_session_client_papi session_papi \		
+		session_server_papi run_session_server_papi session_client_papi run_session_client_papi session_papi \
+		core_server run_core_server core_client run_core_client core \
+		core_server_papi run_core_server_papi core_client_papi run_core_client_papi core_papi \
 		psk_server run_psk_server psk_client run_psk_client psk \
 		psk_server_papi run_psk_server_papi psk_client_papi run_psk_client_papi psk_papi \
 		rsa_server run_rsa_server rsa_client run_rsa_client rsa \
@@ -55,6 +60,9 @@ alt_algs:
 
 alt_session:
 	$(TLS_SESSION_MAKE) alt_lib
+
+alt_core:
+	$(TLS_CORE_MAKE) alt_lib
 
 alt_psk:
 	$(TLS_PSK_MAKE) alt_lib
@@ -85,6 +93,12 @@ lib_session:
 
 lib_session_papi:
 	$(TLS_SESSION_MAKE) lib_papi
+
+lib_core:
+	$(TLS_CORE_MAKE) lib
+
+lib_core_papi:
+	$(TLS_CORE_MAKE) lib_papi
 
 lib_psk:
 	$(TLS_PSK_MAKE) lib
@@ -174,6 +188,38 @@ run_session_client_papi: session_client_papi
 
 session_papi:
 	$(TLS_SESSION_MAKE) local_papi
+
+### MAKE TLS CORE ###
+core_server:
+	$(TLS_CORE_MAKE) server
+
+run_core_server: core_server
+	./tls_core/server.out
+
+core_client:
+	$(TLS_CORE_MAKE) client
+
+run_core_client: core_client
+	./tls_core/client.out
+
+core:
+	$(TLS_CORE_MAKE) local
+
+### MAKE TLS CORE PAPI ###
+core_server_papi:
+	$(TLS_CORE_MAKE) server_papi
+
+run_core_server_papi: core_server_papi
+	./tls_core/server.out
+
+core_client_papi:
+	$(TLS_CORE_MAKE) client_papi
+
+run_core_client_papi: core_client_papi
+	./tls_core/client.out
+
+core_papi:
+	$(TLS_CORE_MAKE) local_papi
 
 ### MAKE TLS PSK ###
 psk_server:
@@ -283,12 +329,14 @@ clean_local:
 	$(CIPHER_MAKE) clean_local
 	$(TLS_ALGS_MAKE) clean_local
 	$(TLS_SESSION_MAKE) clean_local
+	$(TLS_CORE_MAKE) clean_local
 	$(TLS_PSK_MAKE) clean_local
 	$(TLS_RSA_MAKE) clean_local
 	$(TLS_EC_MAKE) clean_local
 	
 clean: clean_local
 	$(MEASUREMENT_LIB_MAKE) clean
+	$(MBEDCORE_LIB_MAKE) clean
 	$(MY_MBEDTLS_MAKE) clean
 	echo -n "Cleaning mbedtls......... "
 	$(MBEDTLS_LIB_MAKE) clean

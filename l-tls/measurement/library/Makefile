@@ -1,4 +1,3 @@
-
 ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -O2 -g3 -I../include -D_FILE_OFFSET_BITS=64
 PAPI_CFLAGS ?=
 
