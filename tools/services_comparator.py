@@ -4,21 +4,25 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_record_alg_cmp_bar(alg, ylabel, stats, stats_type):
+def make_record_alg_cmp_bar(serv, ylabel, stats, stats_type):
     labels = list(stats.keys())
     xtickslabels = stats[next(iter(stats))]['keys']
     operations = []
     extentions = []
 
-    if alg == 'cipher':
+    if serv == 'conf':
         operations = ['encrypt', 'decrypt']
         extentions = ['_out', '_in']
 
-    elif alg == 'md':
+    elif serv == 'int':
         operations = ['hash', 'verify']
         extentions = ['_out', '_in']
 
-    elif alg == 'ke':
+    elif serv == 'auth':
+        operations = ['handshake']
+        extentions = ['']
+
+    elif serv == 'pfs':
         operations = ['handshake']
         extentions = ['']
 
@@ -34,22 +38,26 @@ def make_record_alg_cmp_bar(alg, ylabel, stats, stats_type):
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/alg_' + alg + '_' + op + '_' + stype + '_' + ylabel + '.png')
+            utils.save_fig(fig, '../docs/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
-def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
+def make_alg_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
+    data_files = {'conf': 'cipher', 'int': 'md', 'auth': 'ke', 'pfs': 'ke'}
+    eq = {'DHE': '', 'ECDHE': 'ECDH-'}
 
     data_ops = {
-        'cipher': utils.parse_record_data,
-        'md': utils.parse_record_data,
-        'ke':utils.parse_handshake_data
+        'conf': utils.parse_record_data,
+        'int': utils.parse_record_data,
+        'auth': utils.parse_handshake_data,
+        'pfs': utils.parse_handshake_data
     }
 
     write_ops = {
-        'cipher': utils.write_record_cmp_csv,
-        'md': utils.write_record_cmp_csv,
-        'ke':utils.write_handshake_cmp_csv
+        'conf': utils.write_record_cmp_csv,
+        'int': utils.write_record_cmp_csv,
+        'auth': utils.write_handshake_cmp_csv,
+        'pfs': utils.write_handshake_cmp_csv,
     }
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
@@ -58,8 +66,14 @@ def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
         all_data[key] = {}
 
         for suite in grouped_suites[key]:
-            path = '../docs/' + suite + '/' + alg + '_data.csv'
-            data, hdr = data_ops[alg](path)
+            path = '../docs/' + suite + '/' + data_files[serv] + '_data.csv'
+            data, hdr = data_ops[serv](path)
+
+            if serv == 'PFS':
+                data = utils.calc_pfs_cost(data, hdr, path.replace(key + '-', eq[key]), weight=weight)
+
+                if data == None:
+                    continue
 
             if all_data[key] == {}:
                 all_data[key] = data
@@ -104,28 +118,28 @@ def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
     print('ok')
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     
-    path = '../docs/alg_' + alg + '_'
-    write_ops[alg](path, all_stats)
+    path = '../docs/serv_' + serv + '_'
+    write_ops[serv](path, all_stats)
     
     print('ok')
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(alg, hdr, all_stats, stats_type[:-1])
+        make_record_alg_cmp_bar(serv, hdr, all_stats, stats_type[:-1])
 
     print('ok')
 
-def make_figs(algs_fname, ciphersuites, alg_set=['cipher', 'md', 'ke'], weight=1.5, strlen=40, spacing=''):
-    algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
+def make_figs(servs_fname, ciphersuites, serv_set=['conf', 'int', 'auth', 'pfs'], weight=1.5, strlen=40, spacing=''):
+    servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
     
-    for alg in algs:
-        print(f'{spacing}\n{alg.upper()} data:')
+    for serv in servs:
+        print(f'{spacing}\n{serv.upper()} data:')
 
-        make_alg_cmp_figs(algs[alg], alg, weight=weight, strlen=strlen, spacing=spacing)
+        make_alg_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:cmk', ['help', 'filter=', 'cipher', 'md', 'ke'])
+        opts, args = getopt.getopt(argv, 'hf:caip', ['help', 'filter=', 'conf', 'int', 'auth', 'pfs'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -141,25 +155,28 @@ def main(argv):
 
     weight = 1.5
     suites = []
-    algs = []
+    servs = []
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_comparator.py [-f <weight>] [-c] [-m] [-k] <algorithm_list> <ciphersuite_list>')
-            print('algs_comparator.py [--filter=<weight>] [--cipher] [--md] [--ke] <algorithm_list> <ciphersuite_list>')
+            print('services_comparator.py [-f <weight>] [-c] [-i] [-a] [-p] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [--filter=<weight>] [--conf] [--int] [--auth] [--pfs] <services_list> <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-f', '--filter'):
             weight = float(arg)
 
-        elif opt in ('-c', '--cipher'):
-            algs.append('cipher')
+        elif opt in ('-c', '--conf'):
+            servs.append('conf')
 
-        elif opt in ('-m', '--md'):
-            algs.append('md')
+        elif opt in ('-i', '--int'):
+            servs.append('int')
 
-        elif opt in ('-k', '--ke'):
-            algs.append('ke')
+        elif opt in ('-a', '--auth'):
+            servs.append('auth')
+
+        elif opt in ('-p', '--pfs'):
+            servs.append('pfs')
 
         else:
             print(f'Option "{opt}" does not exist')
@@ -168,7 +185,7 @@ def main(argv):
     os.system('clear')
     suites = utils.parse_ciphersuites(args[1])
     
-    make_figs(args[0], suites, weight=weight, alg_set=algs)
+    make_figs(args[0], suites, weight=weight, serv_set=servs)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

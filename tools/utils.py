@@ -13,6 +13,62 @@ def write_ciphersuites(target, ciphersuites):
     with open('example/' + target + '_suites.txt', 'w') as fl:
         fl.writelines([f'{suite}\n' for suite in ciphersuites])
 
+def parse_services(filename):
+    with open(filename, 'r') as fl:
+        algs = {'CONF': [], 'INT': [], 'AUTH': [], 'PFS': []}
+
+        for line in fl.readlines():
+            line = line.split(',')
+            algs[line[0].strip()] += [line[1].strip()]
+
+        ciphersuites = []
+
+        for conf in algs['CONF']:
+            for inte in algs['INT']:
+                for auth in algs['AUTH']:
+                    ciphersuites.append('TLS-' + auth + '-WITH-' + conf + '-' + inte)
+
+                    for pfs in algs['PFS']:
+                        ciphersuites.append('TLS-' + pfs + '-' + auth + '-WITH-' + conf + '-' + inte)
+
+        return ciphersuites
+
+def parse_services_grouped(filename, serv_set, ciphersuites):
+    serv_dict = {}
+    servs = {}
+
+    for serv in serv_set:
+        serv_dict[serv] = {}
+        servs[serv.upper()] = []
+         
+    with open(filename, 'r') as fl:
+        for line in fl.readlines():
+            line = line.split(',')
+            if line[0].strip() in list(servs.keys()):
+                serv_dict[line[0].strip().lower()][line[1].strip()] = []
+                servs[line[0].strip()] += [line[1].strip()]
+
+        for suite in ciphersuites:
+            for key in servs:
+                for serv in servs[key]:
+                    if key == 'CONF' and suite.find(serv) != -1:
+                        serv_dict['conf'][serv].append(suite)
+                        break
+                    
+                    elif key == 'INT' and suite.find(serv, len(suite) - len(serv)) != -1:
+                        serv_dict['int'][serv].append(suite)
+                        break
+
+                    elif key == 'AUTH' and suite.find('TLS-' + serv + '-WITH') != -1:
+                        serv_dict['auth'][serv].append(suite)
+                        break
+
+                    elif key == 'PFS' and suite.find('TLS-' + serv + '-') != -1:
+                        serv_dict['pfs'][serv].append(suite)
+                        break
+
+        return serv_dict
+
 def parse_algorithms(filename):
     with open(filename, 'r') as fl:
         algs = {'CIPHER': [], 'MD': [], 'KE': []}
@@ -23,9 +79,9 @@ def parse_algorithms(filename):
 
         ciphersuites = []
 
-        for ke in algs['KE']:
-            for cipher in algs['CIPHER']:
-                for md in algs['MD']:
+        for cipher in algs['CIPHER']:
+            for md in algs['MD']:
+                for ke in algs['KE']:
                     ciphersuites.append('TLS-' + ke + '-WITH-' + cipher + '-' + md)
 
         return ciphersuites
@@ -413,6 +469,32 @@ def filter_iqr(data, weight=1.5):
             data[key][sub] = tmp
 
     return data
+
+def calc_pfs_cost(data, hdr, alt_path, weight=1.5):
+    try:
+        alt_data, alt_hdr = parse_handshake_data(alt_path)
+    
+        if hdr == alt_hdr:
+            new_data = {}
+            alt_data = filter_iqr(alt_data, weight=weight)
+
+            for key in alt_data:
+                new_data[key] = {}
+
+                for sub in alt_data[key]:
+                    new_data[key][sub] = []
+                    mean = np.mean(alt_data[key][sub])
+
+                    for i in range(len(alt_data[key][sub])):
+                        new_data[key][sub].append(data[key][sub][i] - mean)
+
+            return new_data
+
+        else:
+            return None
+    
+    except:
+        return None
 
 def calc_statistics(data, stats_type):
     stats = {'keys': list(data.keys())}
