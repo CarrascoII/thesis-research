@@ -40,24 +40,104 @@ def make_record_alg_cmp_bar(serv, ylabel, stats, stats_type):
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
             utils.save_fig(fig, '../docs/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
-def make_alg_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
+def make_pfs_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
-    data_files = {'conf': 'cipher', 'int': 'md', 'auth': 'ke', 'pfs': 'ke'}
     eq = {'DHE': '', 'ECDHE': 'ECDH-'}
+
+    print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
+
+    for key in grouped_suites:
+        all_data[key] = {}
+
+        for suite in grouped_suites[key]:
+            path = '../docs/' + suite + '/ke_data.csv'
+            data, hdr = utils.parse_handshake_data(path)
+            alt_data = {}
+
+            try:
+                alt_data, alt_hdr = utils.parse_handshake_data(path.replace(key + '-', eq[key]))
+
+                if hdr != alt_hdr:
+                    continue
+
+            except:
+                continue
+
+            if all_data[key] == {}:
+                all_data[key] = (data, alt_data)
+                headers = hdr
+            
+            elif headers == hdr:
+                for key1, key2 in zip(list(all_data[key][0].keys()), list(data.keys())):
+                    for entry in data[key2]:
+                        all_data[key][0][key1][entry] += data[key2][entry]
+
+                for key1, key2 in zip(list(all_data[key][1].keys()), list(alt_data.keys())):
+                    for entry in alt_data[key2]:
+                        all_data[key][1][key1][entry] += alt_data[key2][entry]
+
+            else:
+                print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
+                return None
+
+        if all_data[key] == {}:
+            all_data.pop(key)
+
+    print('ok')
+
+    if weight != 0:
+        print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
+        
+        for key in all_data:
+            data = utils.filter_iqr(all_data[key][0], weight=weight)
+            alt_data = utils.filter_iqr(all_data[key][1], weight=weight)
+            all_data[key] = (data, alt_data)
+        
+        print('ok')
+
+    print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
+
+    all_stats = {}
+    stats_type = ['mean', 'stddev']
+
+    for key in all_data:
+        stats = utils.calc_pfs_statistics(all_data[key][0], all_data[key][1], stats_type, headers)
+
+        if stats == None:
+            return None
+
+        all_stats[key] = stats
+
+    print('ok')
+    print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    
+    path = '../docs/serv_' + serv + '_'
+    utils.write_handshake_cmp_csv(path, all_stats)
+    
+    print('ok')
+    print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    
+    for hdr in headers:
+        make_record_alg_cmp_bar(serv, hdr, all_stats, stats_type[:-1])
+
+    print('ok')
+
+def make_serv_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
+    all_data = {}
+    headers = []
+    data_files = {'conf': 'cipher', 'int': 'md', 'auth': 'ke'}
 
     data_ops = {
         'conf': utils.parse_record_data,
         'int': utils.parse_record_data,
-        'auth': utils.parse_handshake_data,
-        'pfs': utils.parse_handshake_data
+        'auth': utils.parse_handshake_data
     }
 
     write_ops = {
         'conf': utils.write_record_cmp_csv,
         'int': utils.write_record_cmp_csv,
-        'auth': utils.write_handshake_cmp_csv,
-        'pfs': utils.write_handshake_cmp_csv,
+        'auth': utils.write_handshake_cmp_csv
     }
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
@@ -68,12 +148,6 @@ def make_alg_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
         for suite in grouped_suites[key]:
             path = '../docs/' + suite + '/' + data_files[serv] + '_data.csv'
             data, hdr = data_ops[serv](path)
-
-            if serv == 'PFS':
-                data = utils.calc_pfs_cost(data, hdr, path.replace(key + '-', eq[key]), weight=weight)
-
-                if data == None:
-                    continue
 
             if all_data[key] == {}:
                 all_data[key] = data
@@ -135,7 +209,11 @@ def make_figs(servs_fname, ciphersuites, serv_set=['conf', 'int', 'auth', 'pfs']
     for serv in servs:
         print(f'{spacing}\n{serv.upper()} data:')
 
-        make_alg_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
+        if serv != 'pfs':
+            make_serv_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
+        
+        else:
+            make_pfs_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:

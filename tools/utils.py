@@ -470,31 +470,37 @@ def filter_iqr(data, weight=1.5):
 
     return data
 
-def calc_pfs_cost(data, hdr, alt_path, weight=1.5):
-    try:
-        alt_data, alt_hdr = parse_handshake_data(alt_path)
-    
-        if hdr == alt_hdr:
-            new_data = {}
-            alt_data = filter_iqr(alt_data, weight=weight)
+def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
+    for key in data:
+        for sub in data[key]:
+            m = len(data[key][sub])
+            n = len(alt_data[key][sub])
 
-            for key in alt_data:
-                new_data[key] = {}
+            if n < m:
+                m = n
+            elif n == m:
+                continue
 
-                for sub in alt_data[key]:
-                    new_data[key][sub] = []
-                    mean = np.mean(alt_data[key][sub])
+            data[key][sub] = data[key][sub][:m]
+            alt_data[key][sub] = alt_data[key][sub][:m]
+        
+    stats = calc_statistics(data, stats_type)
+    alt_stats = calc_statistics(alt_data, stats_type)
 
-                    for i in range(len(alt_data[key][sub])):
-                        new_data[key][sub].append(data[key][sub][i] - mean)
+    for key in list(stats.keys())[1:]:
+        for hdr in hdrs:
+            if key == 'mean_' + hdr:
+                for i in range(len(stats['keys'])):
+                    stats[key][i] = stats[key][i] - alt_stats[key][i]
+            
+            elif key == 'stddev_' + hdr:
+                for end in stats['keys']:
+                    idx = stats['keys'].index(end) 
+                    cov = np.cov([data[end][hdr], alt_data[end][hdr]])
+                    v = np.square(stats[key][idx]) + np.square(alt_stats[key][idx]) - 2*cov[0][1]
+                    stats[key][idx] = np.sqrt(v)
 
-            return new_data
-
-        else:
-            return None
-    
-    except:
-        return None
+    return stats
 
 def calc_statistics(data, stats_type):
     stats = {'keys': list(data.keys())}
