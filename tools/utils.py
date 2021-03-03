@@ -28,43 +28,61 @@ def parse_services(filename):
                 for auth in algs['AUTH']:
                     ciphersuites.append('TLS-' + auth + '-WITH-' + conf + '-' + inte)
 
-                    for pfs in algs['PFS']:
-                        ciphersuites.append('TLS-' + pfs + '-' + auth + '-WITH-' + conf + '-' + inte)
+                for pfs in algs['PFS']:
+                    ciphersuites.append('TLS-' + pfs + '-WITH-' + conf + '-' + inte)
 
         return ciphersuites
 
 def parse_services_grouped(filename, serv_set, ciphersuites):
     serv_dict = {}
-    servs = {}
+    alg_conv = {}
+    eq = {
+        'DHE-PSK': 'PSK', 'DHE-RSA': 'RSA',
+        'ECDHE-RSA': 'ECDH-RSA', 'ECDHE-ECDSA': 'ECDH-ECDSA'
+    }
 
     for serv in serv_set:
         serv_dict[serv] = {}
-        servs[serv.upper()] = []
+        alg_conv[serv.upper()] = []
+
+        if serv == 'pfs':
+            serv_dict['non-' + serv] = {}
          
     with open(filename, 'r') as fl:
         for line in fl.readlines():
             line = line.split(',')
-            if line[0].strip() in list(servs.keys()):
-                serv_dict[line[0].strip().lower()][line[1].strip()] = []
-                servs[line[0].strip()] += [line[1].strip()]
+            serv = line[0].strip()
+            alg = line[1].strip()
+            
+            if serv in list(alg_conv.keys()):
+                serv_dict[serv.lower()][alg] = []
+
+                if serv == 'PFS':
+                    serv_dict['non-pfs'][alg] = []
+
+                alg_conv[serv] += [alg]
 
         for suite in ciphersuites:
-            for key in servs:
-                for serv in servs[key]:
-                    if key == 'CONF' and suite.find(serv) != -1:
-                        serv_dict['conf'][serv].append(suite)
+            for key in alg_conv:
+                for alg in alg_conv[key]:
+                    if key == 'CONF' and suite.find(alg) != -1:
+                        serv_dict['conf'][alg].append(suite)
                         break
                     
-                    elif key == 'INT' and suite.find(serv, len(suite) - len(serv)) != -1:
-                        serv_dict['int'][serv].append(suite)
+                    elif key == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
+                        serv_dict['int'][alg].append(suite)
                         break
 
-                    elif key == 'AUTH' and suite.find('TLS-' + serv + '-WITH') != -1:
-                        serv_dict['auth'][serv].append(suite)
+                    elif key == 'AUTH' and suite.find('TLS-' + alg + '-WITH') != -1:
+                        serv_dict['auth'][alg].append(suite)
                         break
 
-                    elif key == 'PFS' and suite.find('TLS-' + serv + '-') != -1:
-                        serv_dict['pfs'][serv].append(suite)
+                    elif key == 'PFS' and suite.find('TLS-' + alg + '-WITH') != -1:
+                        serv_dict['pfs'][alg].append(suite)
+                        break
+
+                    elif key == 'PFS' and suite.find('TLS-' + eq[alg] + '-WITH') != -1:
+                        serv_dict['non-pfs'][alg].append(suite)
                         break
 
         return serv_dict

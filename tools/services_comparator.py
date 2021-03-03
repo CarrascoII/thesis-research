@@ -40,61 +40,82 @@ def make_record_alg_cmp_bar(serv, ylabel, stats, stats_type):
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
             utils.save_fig(fig, '../docs/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
-def make_pfs_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
+def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, weight=1.5, strlen=40, spacing=''):
     all_data = {}
+    all_alt_data = {}
     headers = []
-    eq = {'DHE': '', 'ECDHE': 'ECDH-'}
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
-    for key in grouped_suites:
+    for key in pfs_suites:
         all_data[key] = {}
+        all_alt_data[key] = {}
 
-        for suite in grouped_suites[key]:
+        for suite in pfs_suites[key]:
             path = '../docs/' + suite + '/ke_data.csv'
             data, hdr = utils.parse_handshake_data(path)
-            alt_data = {}
-
-            try:
-                alt_data, alt_hdr = utils.parse_handshake_data(path.replace(key + '-', eq[key]))
-
-                if hdr != alt_hdr:
-                    continue
-
-            except:
-                continue
 
             if all_data[key] == {}:
-                all_data[key] = (data, alt_data)
+                all_data[key] = data
                 headers = hdr
             
             elif headers == hdr:
-                for key1, key2 in zip(list(all_data[key][0].keys()), list(data.keys())):
+                for key1, key2 in zip(list(all_data[key].keys()), list(data.keys())):
                     for entry in data[key2]:
-                        all_data[key][0][key1][entry] += data[key2][entry]
-
-                for key1, key2 in zip(list(all_data[key][1].keys()), list(alt_data.keys())):
-                    for entry in alt_data[key2]:
-                        all_data[key][1][key1][entry] += alt_data[key2][entry]
+                        all_data[key][key1][entry] += data[key2][entry]
 
             else:
                 print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
                 return None
 
-        if all_data[key] == {}:
+        for suite in non_pfs_suites[key]:
+            path = '../docs/' + suite + '/ke_data.csv'
+            data, hdr = utils.parse_handshake_data(path)
+
+            if all_alt_data[key] == {}:
+                all_alt_data[key] = data
+                headers = hdr
+            
+            elif headers == hdr:
+                for key1, key2 in zip(list(all_alt_data[key].keys()), list(data.keys())):
+                    for entry in data[key2]:
+                        all_alt_data[key][key1][entry] += data[key2][entry]
+
+            else:
+                print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
+                return None
+
+        if all_data[key] == {} or all_alt_data[key] == {}:
             all_data.pop(key)
+            all_alt_data.pop(key)
 
     print('ok')
+
+    # print('\nkey:\t\t pfs  : non-pfs')
+    # for key in all_data:
+    #     for sub in all_data[key]:
+    #         for subb in all_data[key][sub]:
+    #             print(f'{key}:\t{len(all_data[key][sub][subb])} : ', end='')
+    #             print(f'{len(all_alt_data[key][sub][subb])}')
 
     if weight != 0:
         print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
-            data = utils.filter_iqr(all_data[key][0], weight=weight)
-            alt_data = utils.filter_iqr(all_data[key][1], weight=weight)
-            all_data[key] = (data, alt_data)
+            data = utils.filter_iqr(all_data[key], weight=weight)
+            all_data[key] = data
+
+            alt_data = utils.filter_iqr(all_alt_data[key], weight=weight)
+            all_alt_data[key] = alt_data
         
         print('ok')
+
+    # print('\nkey:\t\t pfs  : non-pfs')
+    # for key in all_data:
+    #     for sub in all_data[key]:
+    #         for subb in all_data[key][sub]:
+    #             print(f'{key}:\t{len(all_data[key][sub][subb])} : ', end='')
+    #             print(f'{len(all_alt_data[key][sub][subb])}')
 
     print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
@@ -102,7 +123,7 @@ def make_pfs_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
     stats_type = ['mean', 'stddev']
 
     for key in all_data:
-        stats = utils.calc_pfs_statistics(all_data[key][0], all_data[key][1], stats_type, headers)
+        stats = utils.calc_pfs_statistics(all_data[key], all_alt_data[key], stats_type, headers)
 
         if stats == None:
             return None
@@ -205,15 +226,15 @@ def make_serv_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
 
 def make_figs(servs_fname, ciphersuites, serv_set=['conf', 'int', 'auth', 'pfs'], weight=1.5, strlen=40, spacing=''):
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
-    
-    for serv in servs:
+
+    for serv in serv_set:
         print(f'{spacing}\n{serv.upper()} data:')
 
         if serv != 'pfs':
             make_serv_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
         
         else:
-            make_pfs_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
+            make_pfs_cmp_figs(servs['pfs'], servs['non-pfs'], serv, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
