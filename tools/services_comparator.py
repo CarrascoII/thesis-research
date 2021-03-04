@@ -4,26 +4,15 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_record_alg_cmp_bar(serv, ylabel, stats, stats_type):
+def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
     xtickslabels = stats[next(iter(stats))]['keys']
-    operations = []
     extentions = []
 
-    if serv == 'conf':
-        operations = ['encrypt', 'decrypt']
+    if serv == 'conf' or serv == 'int':
         extentions = ['_out', '_in']
 
-    elif serv == 'int':
-        operations = ['hash', 'verify']
-        extentions = ['_out', '_in']
-
-    elif serv == 'auth':
-        operations = ['handshake']
-        extentions = ['']
-
-    elif serv == 'pfs':
-        operations = ['handshake']
+    elif serv == 'auth' or serv == 'pfs':
         extentions = ['']
 
     for stype in stats_type:
@@ -134,13 +123,13 @@ def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, labels, weight=1.5, strl
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     
     path = '../docs/serv_' + serv + '_'
-    utils.write_handshake_cmp_csv(path, labels, all_stats)
+    utils.write_handshake_cmp_csv(path, 'algorithm', labels, all_stats)
     
     print('ok')
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(serv, hdr, all_stats, stats_type[:-1])
+        make_record_alg_cmp_bar(serv, labels, hdr, all_stats, stats_type[:-1])
 
     print('ok')
 
@@ -220,7 +209,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(serv, hdr, all_stats, stats_type[:-1])
+        make_record_alg_cmp_bar(serv, labels, hdr, all_stats, stats_type[:-1])
 
     print('ok')
 

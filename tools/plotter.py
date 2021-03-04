@@ -4,17 +4,10 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_errorbar(ylabel, file_path, stats, types):
+def make_errorbar(ylabel, operations, file_path, stats, types):
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    operations = []
     params = [{'color': 'red'}, {'color': 'blue'}]
     entry = ['_out', '_in']
-
-    if file_path.find('cipher') != -1:
-        operations = ['cipher', 'decipher']
-
-    elif file_path.find('md') != -1:
-        operations = ['hash', 'verify']
 
     for i in range(len(axes)):
         axes[i] = utils.custom_errorbar(stats['keys'], stats[types[0] + '_' + ylabel + entry[i]],
@@ -23,63 +16,24 @@ def make_errorbar(ylabel, file_path, stats, types):
 
     utils.save_fig(fig, file_path + ylabel + '_deviation.png')
 
-def make_plot(ylabel, file_path, stats, types):
+def make_plot(ylabel, operations, file_path, stats, types):
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    params1 = {'color': 'red', 'linestyle': '-'}
-    params2 = {'color': 'blue', 'linestyle': '--'}
+    params1 = {'color': 'red', 'linestyle': '-', 'label': operations[0]}
+    params2 = {'color': 'blue', 'linestyle': '--', 'label': operations[1]}
     entry = ['_out', '_in']
-
-    if file_path.find('cipher') != -1:
-        params1['label'] = 'encryption'
-        params2['label'] = 'decryption'
-
-    elif file_path.find('md') != -1:
-        params1['label'] = 'digest'
-        params2['label'] = 'verify'
 
     for ax, tp in zip(axes, types):
         ax = utils.custom_plots(stats['keys'], stats[tp + '_' + ylabel + entry[0]], stats[tp + '_' + ylabel + entry[1]],
-                                    ax=ax, title=tp.capitalize(), ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+                            ax=ax, title=tp.capitalize(), ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_statistics.png')
 
-# def make_hist(ylabel, file_path, data_out, data_in):
-#     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
-
-#     operations = None
-#     x1 = []
-#     x2 = []
-#     params1 = {'label': list(data_out.keys())}
-#     params2 = {'label': list(data_in.keys())}
-
-#     if file_path.find('cipher') != -1:
-#         operations = ['cipher', 'decipher']
-#     elif file_path.find('md') != -1:
-#         operations = ['hash', 'verify']
-
-#     for key in data_out:
-#         x1.append(data_out[key])
-
-#     for key in data_in:
-#         x2.append(data_in[key])
-
-#     ax1 = utils.custom_hist(x1, ax=ax1, title=operations[0], ylabel=ylabel, kwargs=params1)
-#     ax2 = utils.custom_hist(x2, ax=ax2, title=operations[1], ylabel=ylabel, kwargs=params2)
-#     save_fig(fig, file_path + ylabel + '_hist.png')
-
-def make_scatter(ylabel, file_path, data):
+def make_scatter(ylabel, operations, file_path, data):
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    operations = []
     x = {}
     y = {}
     xtickslabels = list(data.keys())
     kwargs = [{'color': 'red'}, {'color': 'blue'}]
-
-    if file_path.find('cipher') != -1:
-        operations = ['cipher', 'decipher']
-
-    elif file_path.find('md') != -1:
-        operations = ['hash', 'verify']
 
     for op, sub in zip(operations, [ylabel + '_out', ylabel + '_in']):
         x[op] = []
@@ -94,8 +48,9 @@ def make_scatter(ylabel, file_path, data):
                                     xtickslabels=xtickslabels, ylabel=ylabel, kwargs=kwargs[i])
         utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
-def make_figs(filename, weight=1.5, strlen=40, spacing=''):
-    path = filename.replace('data.csv', '')
+def make_figs(fname, alg, labels = {'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify']}, weight=1.5, strlen=40, spacing=''):
+    path = fname + alg + '_'
+    filename = path + 'data.csv'
 
     print(f'{spacing}Parsing obtained data'.ljust(strlen, '.'), end=' ', flush=True)
     data, headers = utils.parse_record_data(filename)
@@ -112,16 +67,14 @@ def make_figs(filename, weight=1.5, strlen=40, spacing=''):
     print('ok')
     
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_alg_csv(path + 'statistics.csv', stats)
+    utils.write_alg_csv(path + 'statistics.csv', labels[alg], stats)
     print('ok')
-
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
-        make_scatter(hdr, path, data)
-        # make_hist(hdr, path, data[hdr + '_out'], data[hdr + '_in'])
-        make_plot(hdr, path, stats, [stats_type[0]] + stats_type[2:])
-        make_errorbar(hdr, path, stats, stats_type[:2])    
+        make_scatter(hdr, labels[alg], path, data)
+        make_plot(hdr, labels[alg], path, stats, [stats_type[0]] + stats_type[2:])
+        make_errorbar(hdr, labels[alg], path, stats, stats_type[:2])    
     
     print('ok')
 
@@ -172,10 +125,10 @@ def main(argv):
         current +=1
         
         for alg in algs:
-            fname = '../docs/' + suite + '/' + alg + '_data.csv'
+            fname = '../docs/' + suite + '/'
 
             print('\n' + alg.upper() + ' algorithm:')
-            make_figs(fname, weight=weight, spacing='  ')
+            make_figs(fname, alg, weight=weight, spacing='  ')
 
 if __name__ == '__main__':
    main(sys.argv[1:])

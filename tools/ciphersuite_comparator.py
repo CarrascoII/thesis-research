@@ -4,15 +4,8 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_cmp_plot(alg, ylabel, all_stats, labels, hdrs):
-    op = []
+def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
     ext = ['_out', '_in']
-
-    if alg == 'cipher':
-        op = ['encrypt', 'decrypt']
-
-    elif alg == 'md':
-        op = ['hash', 'verify']
 
     for hdr in hdrs:
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
@@ -24,6 +17,7 @@ def make_cmp_plot(alg, ylabel, all_stats, labels, hdrs):
 
             for suite in all_stats:
                 x = all_stats[suite]['keys']
+                
                 y_lst.append(all_stats[suite][hdr + '_' + ylabel + ext[i]])
                 kwargs_lst.append({'label': suite})
 
@@ -87,7 +81,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing='',
         print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
         for hdr in all_headers[0]:
-            make_cmp_plot(alg, hdr, all_stats, ciphersuites, stats_type)
+            make_cmp_plot(alg, labels[alg], hdr, all_stats, ciphersuites, stats_type)
         
         print('ok')
 

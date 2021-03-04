@@ -13,6 +13,85 @@ def write_ciphersuites(target, ciphersuites):
     with open('examples/' + target + '_suites.txt', 'w') as fl:
         fl.writelines([f'{suite}\n' for suite in ciphersuites])
 
+# def assign_target(ciphersuites, filename):
+#     with open(filename, 'r') as fl:
+#         exec_dict = {}
+#         rem_lst = []        
+
+#         for line in fl.readlines():
+#             line = line.split(',')
+#             target = line[0].strip()
+#             tls = 'TLS-' + line[1].strip() + '-WITH'
+#             tmp = ciphersuites.copy()
+
+#             if target not in exec_dict.keys():
+#                 exec_dict[target] = []
+
+#             for suite in ciphersuites:
+#                 if suite.find(tls) != -1:
+#                     exec_dict[target].append(suite)
+#                     tmp.remove(suite)
+
+#             ciphersuites = tmp.copy()
+
+#         for key in exec_dict:
+#             if len(exec_dict[key]) == 0:
+#                 rem_lst.append(key)
+
+#         for key in rem_lst:
+#             exec_dict.pop(key)
+
+#         return exec_dict
+
+def parse_algorithms(filename):
+    with open(filename, 'r') as fl:
+        algs = {'CIPHER': [], 'MD': [], 'KE': []}
+        ciphersuites = []
+
+        for line in fl.readlines():
+            line = line.split(',')
+            algs[line[0].strip()] += [line[1].strip()]
+
+        for cipher in algs['CIPHER']:
+            for md in algs['MD']:
+                for ke in algs['KE']:
+                    ciphersuites.append('TLS-' + ke + '-WITH-' + cipher + '-' + md)
+
+        return ciphersuites
+
+def parse_algorithms_grouped(filename, alg_set, ciphersuites):
+    alg_dict = {}
+    algs = {}
+
+    for alg in alg_set:
+        alg_dict[alg] = {}
+        algs[alg.upper()] = []
+         
+    with open(filename, 'r') as fl:
+        for line in fl.readlines():
+            line = line.split(',')
+
+            if line[0].strip() in list(algs.keys()):
+                alg_dict[line[0].strip().lower()][line[1].strip()] = []
+                algs[line[0].strip()] += [line[1].strip()]
+
+        for suite in ciphersuites:
+            for key in algs:
+                for alg in algs[key]:
+                    if key == 'CIPHER' and suite.find(alg) != -1:
+                        alg_dict['cipher'][alg].append(suite)
+                        break
+                    
+                    elif key == 'MD' and suite.find(alg, len(suite) - len(alg)) != -1:
+                        alg_dict['md'][alg].append(suite)
+                        break
+
+                    elif key == 'KE' and suite.find('TLS-' + alg + '-WITH') != -1:
+                        alg_dict['ke'][alg].append(suite)
+                        break
+
+        return alg_dict
+
 def parse_services(filename):
     with open(filename, 'r') as fl:
         algs = {'CONF': [], 'INT': [], 'AUTH': [], 'PFS': []}
@@ -87,67 +166,6 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 
         return serv_dict
 
-def parse_algorithms(filename):
-    with open(filename, 'r') as fl:
-        algs = {'CIPHER': [], 'MD': [], 'KE': []}
-        ciphersuites = []
-
-        for line in fl.readlines():
-            line = line.split(',')
-            algs[line[0].strip()] += [line[1].strip()]
-
-        for cipher in algs['CIPHER']:
-            for md in algs['MD']:
-                for ke in algs['KE']:
-                    ciphersuites.append('TLS-' + ke + '-WITH-' + cipher + '-' + md)
-
-        return ciphersuites
-
-def parse_algorithms_grouped(filename, alg_set, ciphersuites):
-    alg_dict = {}
-    algs = {}
-
-    for alg in alg_set:
-        alg_dict[alg] = {}
-        algs[alg.upper()] = []
-         
-    with open(filename, 'r') as fl:
-        for line in fl.readlines():
-            line = line.split(',')
-
-            if line[0].strip() in list(algs.keys()):
-                alg_dict[line[0].strip().lower()][line[1].strip()] = []
-                algs[line[0].strip()] += [line[1].strip()]
-
-        for suite in ciphersuites:
-            for key in algs:
-                for alg in algs[key]:
-                    if key == 'CIPHER' and suite.find(alg) != -1:
-                        alg_dict['cipher'][alg].append(suite)
-                        break
-                    
-                    elif key == 'MD' and suite.find(alg, len(suite) - len(alg)) != -1:
-                        alg_dict['md'][alg].append(suite)
-                        break
-
-                    elif key == 'KE' and suite.find('TLS-' + alg + '-WITH') != -1:
-                        alg_dict['ke'][alg].append(suite)
-                        break
-
-        return alg_dict
-
-def parse_ke(ciphersuites):
-    ke = []
-
-    for suite in ciphersuites:
-        i = suite.find('-WITH')
-        tmp = suite[4:i]
-
-        if tmp not in ke:
-            ke.append(tmp)
-
-    return ke
-
 def parse_record_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
@@ -206,7 +224,7 @@ def parse_handshake_data(filename, index=1):
         
         return data, headers
 
-def write_alg_csv(filename, stats):
+def write_alg_csv(filename, labels, stats):
     hdrs = list(stats.keys())
     keys = stats['keys']
     lines = []
@@ -216,15 +234,8 @@ def write_alg_csv(filename, stats):
         line += hdr + ','
 
     line = line.replace('keys', 'data_size')
-
-    if filename.find('cipher') != -1:
-        line = line.replace('out', 'encrypt')
-        line = line.replace('in', 'decrypt')
-
-    elif filename.find('md') != -1:
-        line = line.replace('out', 'hash')
-        line = line.replace('in', 'verify')
-
+    line = line.replace('out', labels[0])
+    line = line.replace('in', labels[1])
     lines.append(line[:-1] + '\n')
 
     for i in range(len(keys)):
@@ -314,35 +325,17 @@ def write_session_cmp_csv(path, all_stats):
         with open(path + key + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[key])
 
-def assign_target(ciphersuites, filename):
-    with open(filename, 'r') as fl:
-        exec_dict = {}
-        rem_lst = []        
+def parse_ke(ciphersuites):
+    ke = []
 
-        for line in fl.readlines():
-            line = line.split(',')
-            target = line[0].strip()
-            tls = 'TLS-' + line[1].strip() + '-WITH'
-            tmp = ciphersuites.copy()
+    for suite in ciphersuites:
+        i = suite.find('-WITH')
+        tmp = suite[4:i]
 
-            if target not in exec_dict.keys():
-                exec_dict[target] = []
+        if tmp not in ke:
+            ke.append(tmp)
 
-            for suite in ciphersuites:
-                if suite.find(tls) != -1:
-                    exec_dict[target].append(suite)
-                    tmp.remove(suite)
-
-            ciphersuites = tmp.copy()
-
-        for key in exec_dict:
-            if len(exec_dict[key]) == 0:
-                rem_lst.append(key)
-
-        for key in rem_lst:
-            exec_dict.pop(key)
-
-        return exec_dict
+    return ke
 
 ########## PLOTTING UTILS ##########
 def save_fig(fig, fname):
@@ -448,30 +441,30 @@ def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xtickslabels=N
     return(ax)
 
 ########## DATA ANALYSIS UTILS ##########
-def filter_z_score(data, weight=2):
-    for key in data:
-        sub_dict = data[key]
+# def filter_z_score(data, weight=2):
+#     for key in data:
+#         sub_dict = data[key]
         
-        for sub in sub_dict:
-            tmp = []
-            mean = np.mean(sub_dict[sub])
-            stdev = np.std(sub_dict[sub])
+#         for sub in sub_dict:
+#             tmp = []
+#             mean = np.mean(sub_dict[sub])
+#             stdev = np.std(sub_dict[sub])
 
-            for val in sub_dict[sub]:
-                stdw = weight * stdev
+#             for val in sub_dict[sub]:
+#                 stdw = weight * stdev
 
-                if val > (mean + stdw):
-                    continue
+#                 if val > (mean + stdw):
+#                     continue
 
-                elif val < (mean - stdw):
-                    continue
+#                 elif val < (mean - stdw):
+#                     continue
 
-                else:
-                    tmp.append(val)
+#                 else:
+#                     tmp.append(val)
             
-            data[key][sub] = tmp
+#             data[key][sub] = tmp
 
-    return data
+#     return data
 
 def filter_iqr(data, weight=1.5):
     for key in data:
@@ -498,6 +491,31 @@ def filter_iqr(data, weight=1.5):
             data[key][sub] = tmp
 
     return data
+
+def calc_statistics(data, stats_type):
+    stats = {'keys': list(data.keys())}
+    ops = {
+        'mean': np.mean,
+        'stddev': np.std,
+        'median':np.median,
+        'mode': statistics.mode
+    }
+
+    for sub in data[stats['keys'][0]]:
+        for stat in stats_type:
+            stats[stat + '_' + sub] = []
+
+    for key in data:
+        for sub in data[key]:
+            for stat in stats_type:
+                try:
+                    stats[stat + '_' + sub].append(ops[stat](data[key][sub]))
+
+                except:
+                    print(f' {stat} is not an allowed type of statistic')
+                    return None
+
+    return stats
 
 def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
     for key in data:
@@ -528,31 +546,6 @@ def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
                     cov = np.cov([data[end][hdr], alt_data[end][hdr]])
                     v = np.square(stats[key][idx]) + np.square(alt_stats[key][idx]) - 2*cov[0][1]
                     stats[key][idx] = np.sqrt(v)
-
-    return stats
-
-def calc_statistics(data, stats_type):
-    stats = {'keys': list(data.keys())}
-    ops = {
-        'mean': np.mean,
-        'stddev': np.std,
-        'median':np.median,
-        'mode': statistics.mode
-    }
-
-    for sub in data[stats['keys'][0]]:
-        for stat in stats_type:
-            stats[stat + '_' + sub] = []
-
-    for key in data:
-        for sub in data[key]:
-            for stat in stats_type:
-                try:
-                    stats[stat + '_' + sub].append(ops[stat](data[key][sub]))
-
-                except:
-                    print(f' {stat} is not an allowed type of statistic')
-                    return None
 
     return stats
 
