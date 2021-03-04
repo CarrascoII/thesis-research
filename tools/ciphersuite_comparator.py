@@ -31,12 +31,13 @@ def make_cmp_plot(alg, ylabel, all_stats, labels, hdrs):
 
         utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
-def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
+def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing='',
+                labels = {'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify']}):
     all_data = {}
     all_headers = []
 
     for alg in algs:
-        print('\n' + f'{spacing}{alg.upper()} algorithm:')
+        print(f'\n{spacing}{alg.upper()} algorithm:')
         print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for suite in ciphersuites:
@@ -80,7 +81,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
         print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
         
         path = '../docs/cmp_' + alg + '_alg_'
-        utils.write_record_cmp_csv(path, all_stats)
+        utils.write_record_cmp_csv(path, 'ciphersuite', labels[alg], all_stats)
         
         print('ok')
         print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)

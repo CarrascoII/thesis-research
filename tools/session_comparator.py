@@ -105,7 +105,7 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     path = '../docs/session_'
-    utils.write_handshake_cmp_csv(path, all_stats)
+    utils.write_session_cmp_csv(path, all_stats)
 
     print('ok')
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)

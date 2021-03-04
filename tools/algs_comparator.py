@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import utils
 
 
-def make_record_alg_cmp_bar(alg, ylabel, stats, stats_type):
+def make_alg_cmp_bar(alg, ylabel, stats, stats_type):
     labels = list(stats.keys())
     xtickslabels = stats[next(iter(stats))]['keys']
     operations = []
@@ -36,7 +36,7 @@ def make_record_alg_cmp_bar(alg, ylabel, stats, stats_type):
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
             utils.save_fig(fig, '../docs/alg_' + alg + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
-def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
+def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
 
@@ -105,23 +105,25 @@ def make_alg_cmp_figs(grouped_suites, alg, weight=1.5, strlen=40, spacing=''):
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     
     path = '../docs/alg_' + alg + '_'
-    write_ops[alg](path, all_stats)
+    write_ops[alg](path, 'algorithm', labels, all_stats)
     
     print('ok')
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(alg, hdr, all_stats, stats_type[:-1])
+        make_alg_cmp_bar(alg, hdr, all_stats, stats_type[:-1])
 
     print('ok')
 
-def make_figs(algs_fname, ciphersuites, alg_set=['cipher', 'md', 'ke'], weight=1.5, strlen=40, spacing=''):
+def make_figs(algs_fname, ciphersuites, alg_set=['cipher', 'md', 'ke'],
+            labels={'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify'], 'ke': ['handshake']},
+            weight=1.5, strlen=40, spacing=''):
     algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
     
     for alg in algs:
         print(f'{spacing}\n{alg.upper()} data:')
 
-        make_alg_cmp_figs(algs[alg], alg, weight=weight, strlen=strlen, spacing=spacing)
+        make_alg_cmp_figs(algs[alg], alg, labels[alg], weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:

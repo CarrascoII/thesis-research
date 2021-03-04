@@ -90,12 +90,11 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 def parse_algorithms(filename):
     with open(filename, 'r') as fl:
         algs = {'CIPHER': [], 'MD': [], 'KE': []}
+        ciphersuites = []
 
         for line in fl.readlines():
             line = line.split(',')
             algs[line[0].strip()] += [line[1].strip()]
-
-        ciphersuites = []
 
         for cipher in algs['CIPHER']:
             for md in algs['MD']:
@@ -115,6 +114,7 @@ def parse_algorithms_grouped(filename, alg_set, ciphersuites):
     with open(filename, 'r') as fl:
         for line in fl.readlines():
             line = line.split(',')
+
             if line[0].strip() in list(algs.keys()):
                 alg_dict[line[0].strip().lower()][line[1].strip()] = []
                 algs[line[0].strip()] += [line[1].strip()]
@@ -238,19 +238,16 @@ def write_alg_csv(filename, stats):
     with open(filename, 'w') as fl:
         fl.writelines(lines)
 
-def write_record_cmp_csv(path, all_stats):
+def write_record_cmp_csv(path, hdr, labels, all_stats):
     lines = {'out': [], 'in': []}
     keys = []
-    line = 'ciphersuite,data_size,'
-    operation = []
+    line = hdr + ',data_size,'
+    elem = next(iter(all_stats.values()))
 
-    for suite in all_stats:
-        for key in all_stats[suite]:
-            if key.find('out') != -1:
-                keys.append(key[:-4])
-                line += key[:-4] + ','
-
-        break
+    for key in elem:
+        if key.find('out') != -1:
+            keys.append(key[:-4])
+            line += key[:-4] + ','
 
     for end in lines:
         lines[end].append(line[:-1] + '\n')
@@ -267,41 +264,55 @@ def write_record_cmp_csv(path, all_stats):
 
                 lines[end].append(sub[:-1] + '\n')
 
-    if path.find('cipher') != -1:
-        operation = ['encrypt', 'decrypt']
-
-    elif path.find('md') != -1:
-        operation = ['hash', 'verify']
-
-    for end, op in zip(lines, operation):
-        with open(path + op + '_statistics.csv', 'w') as fl:
+    for end, label in zip(lines, labels):
+        with open(path + label + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
-def write_handshake_cmp_csv(path, all_stats):
-    lines = {'server': [], 'client': []}
-    line = ''
+def write_handshake_cmp_csv(path, hdr, label, all_stats):
+    lines = []
+    line = hdr + ',endpoint,'
+    elem = next(iter(all_stats.values()))
 
-    for suite in all_stats:
-        for key in all_stats[suite]:
-            line += key + ','
-        break
+    for key in list(elem.keys())[1:]:
+        line += key + ','
 
-    line = line.replace('keys', 'ciphersuite')
-    for end in lines:
-        lines[end].append(line[:-1] + '\n')
+    lines.append(line[:-1] + '\n')
 
-    for suite in all_stats:
-        for i, end in zip(range(len(lines.keys())), lines):
-            line = suite + ','
+    for key in all_stats:
+        for i, end in enumerate(elem['keys']):
+            line = key + ',' + end + ','
 
-            for key in list(all_stats[suite].keys())[1:]:
-                line += str(all_stats[suite][key][i]) + ','
+            for sub in list(all_stats[key].keys())[1:]:
+                line += str(all_stats[key][sub][i]) + ','
+
+            lines.append(line[:-1] + '\n')
+
+    with open(path + label[0] + '_statistics.csv', 'w') as fl:
+        fl.writelines(lines)
+
+def write_session_cmp_csv(path, all_stats):
+    lines = {'client': [], 'server': []}
+    line = 'ciphersuite,'
+    elem = next(iter(all_stats.values()))
+
+    for key in list(elem.keys())[1:]:
+        line += key + ','
+
+    for key in lines:
+        lines[key].append(line[:-1] + '\n')
+
+    for key in all_stats:
+        for i, end in enumerate(elem['keys']):
+            line = key + ','
+
+            for sub in list(all_stats[key].keys())[1:]:
+                line += str(all_stats[key][sub][i]) + ','
 
             lines[end].append(line[:-1] + '\n')
 
-    for end in lines:
-        with open(path + end + '_statistics.csv', 'w') as fl:
-            fl.writelines(lines[end])
+    for key in lines:
+        with open(path + key + '_statistics.csv', 'w') as fl:
+            fl.writelines(lines[key])
 
 def assign_target(ciphersuites, filename):
     with open(filename, 'r') as fl:

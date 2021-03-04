@@ -40,7 +40,7 @@ def make_record_alg_cmp_bar(serv, ylabel, stats, stats_type):
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
             utils.save_fig(fig, '../docs/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
-def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, weight=1.5, strlen=40, spacing=''):
+def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     all_alt_data = {}
     headers = []
@@ -134,7 +134,7 @@ def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, weight=1.5, strlen=40, s
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     
     path = '../docs/serv_' + serv + '_'
-    utils.write_handshake_cmp_csv(path, all_stats)
+    utils.write_handshake_cmp_csv(path, labels, all_stats)
     
     print('ok')
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
@@ -144,7 +144,7 @@ def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, weight=1.5, strlen=40, s
 
     print('ok')
 
-def make_serv_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     data_files = {'conf': 'cipher', 'int': 'md', 'auth': 'ke'}
@@ -214,7 +214,7 @@ def make_serv_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     
     path = '../docs/serv_' + serv + '_'
-    write_ops[serv](path, all_stats)
+    write_ops[serv](path, labels, all_stats)
     
     print('ok')
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
@@ -224,17 +224,19 @@ def make_serv_cmp_figs(grouped_suites, serv, weight=1.5, strlen=40, spacing=''):
 
     print('ok')
 
-def make_figs(servs_fname, ciphersuites, serv_set=['conf', 'int', 'auth', 'pfs'], weight=1.5, strlen=40, spacing=''):
+def make_figs(servs_fname, ciphersuites, serv_set=['conf', 'int', 'auth', 'pfs'],
+            labels={'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'], 'auth': ['handshake'], 'pfs': ['handshake']},
+            weight=1.5, strlen=40, spacing=''):
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
 
     for serv in serv_set:
         print(f'{spacing}\n{serv.upper()} data:')
 
         if serv != 'pfs':
-            make_serv_cmp_figs(servs[serv], serv, weight=weight, strlen=strlen, spacing=spacing)
+            make_serv_cmp_figs(servs[serv], serv, labels[serv], weight=weight, strlen=strlen, spacing=spacing)
         
         else:
-            make_pfs_cmp_figs(servs['pfs'], servs['non-pfs'], serv, weight=weight, strlen=strlen, spacing=spacing)
+            make_pfs_cmp_figs(servs['pfs'], servs['non-pfs'], serv, labels[serv], weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
