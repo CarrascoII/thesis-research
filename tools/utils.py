@@ -525,6 +525,7 @@ def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
 
             if n < m:
                 m = n
+                
             elif n == m:
                 continue
 
