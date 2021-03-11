@@ -2,6 +2,52 @@
 #define MBEDTLS_CONFIG_H
 
 /**
+ * Profiling program flags
+ */
+#include "measurement/config.h"
+
+#if defined(MEASUREMENT_MEASURE_C)
+#define MEASURE_CIPHER
+#define MEASURE_MD
+#define MEASURE_KE
+// #define MEASURE_KE_ROUTINES
+#endif
+
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
+    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#define FILE_PATH           "../docs/"
+#define PATH_SIZE           100
+#endif
+
+#if defined(MEASURE_CIPHER)
+#define CIPHER_EXTENSION    "/cipher_data.csv"
+#define CIPHER_FNAME_SIZE   17 /* = len(CIPHER_EXTENSION) + len("\0") */
+char *cipher_fname;
+#endif
+
+#if defined(MEASURE_MD)
+#define MD_EXTENSION        "/md_data.csv"
+#define MD_FNAME_SIZE       13 /* = len(MD_EXTENSION) + len("\0") */
+char *md_fname;
+#endif
+
+#if defined(MEASURE_KE)
+#define KE_EXTENSION        "/ke_data.csv"
+#define KE_FNAME_SIZE       13 /* = len(KE_EXTENSION) + len("\0") */
+#define CERTS_PATH          "examples/"
+#define CERT_KEY_PATH_LEN   30
+static const int psk_key_sizes[4] = {10, 16, 24, 32};           /* in bytes */
+static const int rsa_key_sizes[4] = {1024, 2048, 4096, 8192};   /* in bits */
+static const int ec_key_sizes[4] =  {192, 224, 384, 521};       /* in bits */
+#endif
+
+#if defined(MEASURE_KE_ROUTINES)
+#define KE_ROUTINES_EXTENTION   "/ke_routines.csv"
+#define KE_ROUTINES_FNAME_SIZE  17 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
+char *ke_routines_fname;
+#endif
+
+/**
  *  mbed TLS feature support
  */
 /* Protocol version */
@@ -24,6 +70,11 @@
  * mbed TLS modules
  */
 /* Key Exchange / Authentication algorithm */
+#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) || \
+    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
+#define USE_PSK_C
+#endif
+
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
     defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)
 #define MBEDTLS_RSA_C
@@ -40,8 +91,14 @@
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECP_C
-#define MBEDTLS_ECP_DP_SECP384R1_ENABLED    /* ca curve */
+#if defined(MEASURE_KE)
+#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
+#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
+#define MBEDTLS_ECP_DP_SECP521R1_ENABLED
+#else
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED    /* srv/cli curve */
+#endif
+#define MBEDTLS_ECP_DP_SECP384R1_ENABLED    /* ca curve */
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
@@ -113,7 +170,10 @@
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
+#if defined(MEASURE_KE)
+#define MBEDTLS_FS_IO
+#endif
 
 /* Aditional features */
 #define MBEDTLS_PLATFORM_C
@@ -121,7 +181,6 @@
 /**
  *  Options to reduce footprint
  */
-#define MBEDTLS_PSK_MAX_LEN             32  /* 128-bits keys are generally enough */
 // #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
 // #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
@@ -136,7 +195,8 @@
 // #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 // #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
-// #define MBEDTLS_SSL_CIPHERSUITES
+#define MBEDTLS_SSL_CIPHERSUITES \
+            MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA
 
             /* Regular PSK ciphersuites - 10 */
             // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
@@ -410,12 +470,22 @@
 /**
  * Server and client program flags
  */
-#define CLI_ID                          "Client_identity"
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  16384
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define N_TESTS                         10000
+#endif
+#if defined(USE_PSK_C)
+#define CLI_ID                          "Client_identity"
+static const unsigned char test_psk[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+};
+#endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
 // #define MUTUAL_AUTH
 #endif
@@ -423,51 +493,6 @@
 #define DEBUG_LEVEL                     1
 // #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MSG_HEX
-#endif
-#if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
-#define USE_PSK_C
-#endif
-
-/**
- * Profiling program flags
- */
-#include "measurement/config.h"
-
-#if defined(MEASUREMENT_MEASURE_C)
-#define MEASURE_CIPHER
-#define MEASURE_MD
-#define MEASURE_KE
-// #define MEASURE_KE_ROUTINES
-#endif
-
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
-    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
-#define FILE_PATH               "../docs/"
-#define PATH_SIZE               100
-#endif
-
-#if defined(MEASURE_CIPHER)
-#define CIPHER_EXTENSION        "/cipher_data.csv"
-#define CIPHER_FNAME_SIZE       17 /* = len(CIPHER_EXTENSION) + len("\0") */
-char *cipher_fname;
-#endif
-
-#if defined(MEASURE_MD)
-#define MD_EXTENSION            "/md_data.csv"
-#define MD_FNAME_SIZE           13 /* = len(MD_EXTENSION) + len("\0") */
-char *md_fname;
-#endif
-
-#if defined(MEASURE_KE)
-#define KE_EXTENSION            "/ke_data.csv"
-#define KE_FNAME_SIZE           13 /* = len(KE_EXTENSION) + len("\0") */
-#endif
-
-#if defined(MEASURE_KE_ROUTINES)
-#define KE_ROUTINES_EXTENTION   "/ke_routines.csv"
-#define KE_ROUTINES_FNAME_SIZE  17 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
-char *ke_routines_fname;
 #endif
 
 /**
