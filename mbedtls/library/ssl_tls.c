@@ -1555,9 +1555,8 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             int ret;
 
             if(ssl->out_msgtype == 23) {
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -1579,19 +1578,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             if(ssl->out_msgtype == 23) {
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
-                }
 
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    sprintf(buffer, "client,digest,%zu", ssl->out_msglen);
-                } else {
-                    sprintf(buffer, "server,digest,%zu", ssl->out_msglen);
-                }
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                    sprintf(buffer, "client,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                else
+                    sprintf(buffer, "server,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
-                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0) {
+                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -1628,9 +1624,8 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->out_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0)
                 return(ret);
-            }
         }
 #endif
 
@@ -1646,19 +1641,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->out_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
-            }
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                sprintf(buffer, "client,encrypt,%zu", ssl->out_msglen);
-            } else {
-                sprintf(buffer, "server,encrypt,%zu", ssl->out_msglen);
-            }
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                sprintf(buffer, "client,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+            else
+                sprintf(buffer, "server,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
-            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0) {
+            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
                 return(ret);
-            }
         }
 #endif
 
@@ -1825,9 +1817,8 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->out_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0)
                 return(ret);
-            }
         }
 #endif
 
@@ -1843,19 +1834,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->out_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
-            }
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                sprintf(buffer, "client,encrypt,%zu", enc_msglen);
-            } else {
-                sprintf(buffer, "server,encrypt,%zu", enc_msglen);
-            }
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                sprintf(buffer, "client,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+            else
+                sprintf(buffer, "server,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
-            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0) {
+            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
                 return(ret);
-            }
         }
 #endif
 
@@ -1903,9 +1891,8 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             if(ssl->out_msgtype == 23) {
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -1925,19 +1912,16 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             if(ssl->out_msgtype == 23) {
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
-                }
 
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    sprintf(buffer, "client,digest,%zu", ssl->out_msglen);
-                } else {
-                    sprintf(buffer, "server,digest,%zu", ssl->out_msglen);
-                }
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                    sprintf(buffer, "client,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                else
+                    sprintf(buffer, "server,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
-                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0) {
+                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -2010,9 +1994,8 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->in_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0)
                 return(ret);
-            }
         }
 #endif
 
@@ -2028,19 +2011,21 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->in_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0) {
-                return(ret);
-            }
+            int len = ssl->in_msglen;
+#if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
+            len -= ssl->transform_in->maclen;
+#endif
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                sprintf(buffer, "client,decrypt,%zu", ssl->in_msglen);
-            } else {
-                sprintf(buffer, "server,decrypt,%zu", ssl->in_msglen);
-            }
-
-            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
-            }
+
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                sprintf(buffer, "client,decrypt,%d", len);
+            else
+                sprintf(buffer, "server,decrypt,%d", len);
+
+            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
+                return(ret);
         }
 #endif
 
@@ -2214,9 +2199,8 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             if(ssl->in_msgtype == 23) {
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -2236,19 +2220,8 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             if(ssl->in_msgtype == 23) {
-                if(ret = (measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
-                }
-
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    sprintf(buffer, "client,verify,%zu", ssl->in_msglen);
-                } else {
-                    sprintf(buffer, "server,verify,%zu", ssl->in_msglen);
-                }
-
-                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0) {
-                    return(ret);
-                }
             }
 #endif
 
@@ -2295,9 +2268,8 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->in_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_START)) != 0)
                 return(ret);
-            }
         }
 #endif
 
@@ -2313,19 +2285,35 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->in_msgtype == 23) {
-            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0) {
-                return(ret);
-            }
+            int len = dec_msglen - (1 + ssl->in_msg[ssl->in_msglen - 1]);
+#if !defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
+            len -= ssl->transform_in->maclen;
+#endif
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                sprintf(buffer, "client,decrypt,%zu", dec_msglen);
-            } else {
-                sprintf(buffer, "server,decrypt,%zu", dec_msglen);
-            }
-
-            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0) {
+            if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
-            }
+
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                sprintf(buffer, "client,decrypt,%d", len);
+            else
+                sprintf(buffer, "server,decrypt,%d", len);
+
+            if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
+                return(ret);
+        }
+#endif
+
+#if defined(MEASURE_MD) && defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
+        if(ssl->in_msgtype == 23) {
+            int len = dec_msglen - (1 + ssl->in_msg[ssl->in_msglen - 1]);
+
+            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                sprintf(buffer, "client,verify,%d", len);
+            else
+                sprintf(buffer, "server,verify,%d", len);
+
+            if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
+                return(ret);
         }
 #endif
 
@@ -2543,9 +2531,8 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)   
             if(ssl->in_msgtype == 23) { 
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_START)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -2577,19 +2564,16 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_MD)
             if(ssl->in_msgtype == 23) {
-                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0) {
+                if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
-                }
 
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-                    sprintf(buffer, "client,verify,%zu", ssl->in_msglen);
-                } else {
-                    sprintf(buffer, "server,verify,%zu", ssl->in_msglen);
-                }
+                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
+                    sprintf(buffer, "client,verify,%d", ssl->in_len[0]*256 + ssl->in_len[1]);
+                else
+                    sprintf(buffer, "server,verify,%d", ssl->in_len[0]*256 + ssl->in_len[1]);
 
-                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0) {
+                if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
-                }
             }
 #endif
 
@@ -7270,9 +7254,8 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
 
     measure_init(ssl->cipher_msr_ctx);
 
-    if((ret = measurement_measure_config(ssl->cipher_msr_ctx)) != 0) {
+    if((ret = measurement_measure_config(ssl->cipher_msr_ctx)) != 0)
         goto error;
-    }
 #endif
 
 #if defined(MEASURE_MD)
@@ -7286,9 +7269,8 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
 
     measure_init(ssl->md_msr_ctx);
 
-    if((ret = measurement_measure_config(ssl->md_msr_ctx)) != 0) {
+    if((ret = measurement_measure_config(ssl->md_msr_ctx)) != 0)
         goto error;
-    }
 #endif
 
 #if defined(MEASURE_KE)
@@ -7302,9 +7284,8 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
 
     measure_init(ssl->ke_msr_ctx);
 
-    if((ret = measurement_measure_config(ssl->ke_msr_ctx)) != 0) {
+    if((ret = measurement_measure_config(ssl->ke_msr_ctx)) != 0)
         goto error;
-    }
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)
@@ -7318,9 +7299,8 @@ int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
 
     measure_init(ssl->routines_msr_ctx);
 
-    if((ret = measurement_measure_config(ssl->routines_msr_ctx)) != 0) {
+    if((ret = measurement_measure_config(ssl->routines_msr_ctx)) != 0)
         goto error;
-    }
 #endif
 
     return( 0 );
@@ -8581,9 +8561,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcpy(cipher_fname, path);
             strcat(cipher_fname, CIPHER_EXTENSION);
 
-            if((ret = measure_starts(ssl->cipher_msr_ctx, cipher_fname, "endpoint,operation,data_size")) != 0) {
+            if((ret = measure_starts(ssl->cipher_msr_ctx, cipher_fname, "endpoint,operation,msglen")) != 0)
                 return(ret);
-            }
 #endif
 
 #if defined(MEASURE_MD)
@@ -8592,9 +8571,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
             strcpy(md_fname, path);
             strcat(md_fname, MD_EXTENSION);
 
-            if((ret = measure_starts(ssl->md_msr_ctx, md_fname, "endpoint,operation,data_size")) != 0) {
+            if((ret = measure_starts(ssl->md_msr_ctx, md_fname, "endpoint,operation,msglen")) != 0)
                 return(ret);
-            }
 #endif
         }
 #endif /* MEASURE_CIPHER || MEASURE_MD */

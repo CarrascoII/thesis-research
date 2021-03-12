@@ -217,11 +217,11 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH) && !defined(MEASURE_KE)
     mbedtls_x509_crt_init(&rsa_cert);
     mbedtls_pk_init(&rsa_key);
 #endif
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH) && !defined(MEASURE_KE)
     mbedtls_x509_crt_init(&ec_cert);
     mbedtls_pk_init(&ec_key);
 #endif
@@ -298,13 +298,16 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 #if defined(MEASURE_KE)
     for(key_idx = 0; key_idx < n_keys; key_idx++) {
-        printf("\n--------- CYCLE %d ---------", key_idx);
         mbedtls_ssl_config_init(&tls_conf);
 #if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
         mbedtls_x509_crt_init(&rsa_cert);
+        mbedtls_pk_init(&rsa_key);
+        memset(rsa_path, 0, CERT_KEY_PATH_LEN);
 #endif
 #if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
         mbedtls_x509_crt_init(&ec_cert);
+        mbedtls_pk_init(&ec_key);
+        memset(ec_path, 0, CERT_KEY_PATH_LEN);
 #endif
 #endif /* MEASURE_KE */
 
@@ -695,17 +698,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
-
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-    if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
-        char crt_buf[512];
-
-        mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
-        printf("\n  -Server certificate:\n%s", crt_buf);
-    }
-#endif
 #endif /* MBEDTLS_DEBUG_C */
-
     printf("\n");
 
 exit:

@@ -293,16 +293,12 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
-#if defined(MBEDTLS_RSA_C)
-#if !defined(MBDETLS_KE)
+#if defined(MBEDTLS_RSA_C) && !defined(MBDETLS_KE)
     mbedtls_x509_crt_init(&rsa_cert);
-#endif
     mbedtls_pk_init(&rsa_key);
 #endif
-#if defined(MBEDTLS_ECDSA_C)
-#if !defined(MBDETLS_KE)
+#if defined(MBEDTLS_ECDSA_C) && !defined(MBDETLS_KE)
     mbedtls_x509_crt_init(&ec_cert);
-#endif
     mbedtls_pk_init(&ec_key);
 #endif
     mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -395,14 +391,15 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 #if defined(MEASURE_KE)
     for(key_idx = 0; key_idx < n_keys; key_idx++) {
-        printf("\n--------- CYCLE %d ---------", key_idx);
         mbedtls_ssl_config_init(&tls_conf);
 #if defined(MBEDTLS_RSA_C)
         mbedtls_x509_crt_init(&rsa_cert);
+        mbedtls_pk_init(&rsa_key);
         memset(rsa_path, 0, CERT_KEY_PATH_LEN);
 #endif
 #if defined(MBEDTLS_ECDSA_C)
         mbedtls_x509_crt_init(&ec_cert);
+        mbedtls_pk_init(&ec_key);
         memset(ec_path, 0, CERT_KEY_PATH_LEN);
 #endif
 #endif
@@ -490,7 +487,6 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
-        printf("\n%s has %ld bits and is of type %d", mbedtls_pk_get_name(&rsa_key), mbedtls_pk_get_bitlen(&rsa_key), mbedtls_pk_get_type(&rsa_key));
 #endif
 #endif /* MBEDTLS_RSA_C */
 
@@ -546,7 +542,6 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
-        printf("\n%s has %ld bits and is of type %d", mbedtls_pk_get_name(&ec_key), mbedtls_pk_get_bitlen(&ec_key), mbedtls_pk_get_type(&ec_key));
 #endif
 #endif /* MBEDTLS_ECDSA_C */
 
@@ -814,16 +809,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
-
-#if defined(MUTUAL_AUTH)
-    if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
-        char crt_buf[512];
-        mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));
-        printf("\n  -Client certificate:\n%s", crt_buf);
-    }
-#endif
 #endif /* MBEDTLS_DEBUG_C */
-
     printf("\n");
 
 exit:

@@ -178,14 +178,14 @@ def parse_record_data(filename):
                 sub_keys.append(hdr + ext)
 
         for row in csv_reader:
-            data_size = row['data_size']
+            msglen = row['msglen']
             operation = row['operation']
 
-            if data_size not in data.keys():
-                data[data_size] = {}
+            if msglen not in data.keys():
+                data[msglen] = {}
                 
                 for sub in sub_keys:
-                    data[data_size][sub] = []
+                    data[msglen][sub] = []
 
             for hdr in headers:
                 val = int(row[hdr])
@@ -197,7 +197,7 @@ def parse_record_data(filename):
                     elif operation == 'decrypt' or operation == 'verify':
                         hdr += '_in'
                         
-                    data[data_size][hdr].append(val)
+                    data[msglen][hdr].append(val)
 
         return data, headers
 
@@ -233,7 +233,7 @@ def write_alg_csv(filename, labels, stats):
     for hdr in hdrs:
         line += hdr + ','
 
-    line = line.replace('keys', 'data_size')
+    line = line.replace('keys', 'msglen')
     line = line.replace('out', labels[0])
     line = line.replace('in', labels[1])
     lines.append(line[:-1] + '\n')
@@ -252,7 +252,7 @@ def write_alg_csv(filename, labels, stats):
 def write_record_cmp_csv(path, hdr, labels, all_stats):
     lines = {'out': [], 'in': []}
     keys = []
-    line = hdr + ',data_size,'
+    line = hdr + ',msglen,'
     elem = next(iter(all_stats.values()))
 
     for key in elem:
@@ -344,7 +344,7 @@ def save_fig(fig, fname):
     plt.close(fig)
     plt.cla()
 
-def custom_errorbar(x, y, e, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs={}):
+def custom_errorbar(x, y, e, ax=None, title=None, xlabel='msglen', ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
 
@@ -352,7 +352,7 @@ def custom_errorbar(x, y, e, ax=None, title=None, xlabel='data_size', ylabel=Non
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     return(ax)
 
-def custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs1={}, kwargs2={}):
+def custom_plots(x, y1, y2, ax=None, title=None, xlabel='msglen', ylabel=None, kwargs1={}, kwargs2={}):
     if ax is None:
         ax = plt.gca()
 
@@ -362,7 +362,7 @@ def custom_plots(x, y1, y2, ax=None, title=None, xlabel='data_size', ylabel=None
     ax.legend()
     return(ax)
 
-def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='data_size', ylabel=None, kwargs_lst=None):
+def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='msglen', ylabel=None, kwargs_lst=None):
     if ax is None:
         ax = plt.gca()
 
@@ -373,7 +373,7 @@ def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='data_size', yla
     ax.legend()
     return(ax)
 
-def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
     x_list = []
 
     if ax is None:
@@ -389,7 +389,7 @@ def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='data_size',
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     return(ax)
 
-def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0, xlabel='data_size', xtickslabels=None, ylabel=None):
+def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0, xlabel='msglen', xtickslabels=None, ylabel=None):
     x_list = [0]
 
     if ax is None:
@@ -413,7 +413,7 @@ def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     return(ax)
 
-def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='data_size', xtickslabels=None, ylabel=None):
+def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
     x *= (len(y_list)//2 + 1)
 
@@ -430,7 +430,7 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
     ax.legend()
     return(ax)
 
-def custom_scatter(x, y, ax=None, title=None, xlabel='data_size', xtickslabels=None, ylabel=None, kwargs={}):
+def custom_scatter(x, y, ax=None, title=None, xlabel='msglen', xtickslabels=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
 

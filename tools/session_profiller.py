@@ -143,10 +143,10 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('session_profiller.py [-c <compilation_target>] [-t <timeout>] [-i <data_size>] ' +
+            print('session_profiller.py [-c <compilation_target>] [-t <timeout>] [-i <msglen>] ' +
                 '[-n <n_tests>] [-f <weight>] <algorithms_list>')
             print('session_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] ' +
-                '[--input_size=<data_size>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
+                '[--input_size=<msglen>] [--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
 
         elif opt in ('-c', '--compile'):

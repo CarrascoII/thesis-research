@@ -218,9 +218,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_profiller.py [-c <compilation_target>] [-t <timeout>] [-i <initial_data_size>] ' +
+            print('algs_profiller.py [-c <compilation_target>] [-t <timeout>] [-i <initial_msglen>] ' +
                 '[-n <n_tests>] [-f <weight>] <algorithms_list>')
-            print('algs_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--init_size=<initial_data_size>] ' +
+            print('algs_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--init_size=<initial_msglen>] ' +
                 '[--n_tests=<n_tests>] [--filter=<weight>] <algorithms_list>')
             sys.exit(0)
 

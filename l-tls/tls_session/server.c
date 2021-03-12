@@ -645,7 +645,7 @@ int main(int argc, char **argv) {
             mkdir(path, 0777);
             strcat(path, SESSION_EXTENSION);
 
-            if((ret = measure_starts(&measure, path, "endpoint,data_size")) != 0) {
+            if((ret = measure_starts(&measure, path, "endpoint,msglen")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif

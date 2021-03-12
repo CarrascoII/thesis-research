@@ -170,7 +170,7 @@ char *ke_routines_fname;
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
+// #define MBEDTLS_DEBUG_C
 #if defined(MEASURE_KE)
 #define MBEDTLS_FS_IO
 #endif
