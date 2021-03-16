@@ -67,7 +67,7 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
 
     for suite in ciphersuites:
         path = '../docs/' + suite + '/session_data.csv'
-        data, hdr = utils.parse_handshake_data(path, index=2)
+        data, hdr = utils.parse_session_data(path)
         all_data[suite] = data
 
         if headers == []:

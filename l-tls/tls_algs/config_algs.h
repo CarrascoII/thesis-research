@@ -34,8 +34,8 @@ char *md_fname;
 #if defined(MEASURE_KE)
 #define KE_EXTENSION        "/ke_data.csv"
 #define KE_FNAME_SIZE       13 /* = len(KE_EXTENSION) + len("\0") */
-#define CERTS_PATH          "examples/"
-#define CERT_KEY_PATH_LEN   30
+#define CERTS_PATH          "../l-tls/examples/"
+#define CERT_KEY_PATH_LEN   40
 static const int psk_key_sizes[4] = {10, 16, 24, 32};           /* in bytes */
 static const int rsa_key_sizes[4] = {1024, 2048, 4096, 8192};   /* in bits */
 static const int ec_key_sizes[4] =  {192, 224, 384, 521};       /* in bits */

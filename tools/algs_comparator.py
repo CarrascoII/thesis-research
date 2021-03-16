@@ -6,14 +6,16 @@ import utils
 
 def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
-    xtickslabels = stats[next(iter(stats))]['keys']
+    xtickslabels = []
     extentions = []
 
     if alg == 'cipher' or alg == 'md':
         extentions = ['_out', '_in']
-
+        xtickslabels = stats[next(iter(stats))]['keys']
+    
     elif alg == 'ke':
-        extentions = ['']
+        extentions = ['_server', '_client']
+        xtickslabels = ['Sec Lvl 0', 'Sec Lvl 1', 'Sec Lvl 2', 'Sec Lvl 3']
 
     for stype in stats_type:
         for ext, op in zip(extentions, operations):
@@ -109,7 +111,7 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
     print('ok')
 
 def make_figs(algs_fname, ciphersuites, alg_set=['cipher', 'md', 'ke'],
-            labels={'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify'], 'ke': ['handshake']},
+            labels={'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify'], 'ke': ['server', 'client']},
             weight=1.5, strlen=40, spacing=''):
     algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
     

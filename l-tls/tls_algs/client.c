@@ -447,12 +447,21 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 
 #if defined(USE_PSK_C)
+#if !defined(MEASURE_KE)
         if((ret = mbedtls_ssl_conf_psk(&tls_conf, test_psk, sizeof(test_psk), (const unsigned char *) CLI_ID, sizeof(CLI_ID) - 1)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_ssl_conf_psk returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
+#else
+        if((ret = mbedtls_ssl_conf_psk(&tls_conf, test_psk, psk_key_sizes[key_idx], (const unsigned char *) CLI_ID, sizeof(CLI_ID) - 1)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_ssl_conf_psk returned -0x%04x\n", -ret);
+#endif
+            goto exit;
+        }
+#endif
 #endif
 
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
@@ -584,7 +593,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
                 strcpy(ke_fname, csv_path);
                 strcat(ke_fname, KE_EXTENSION);
 
-                if((ret = measure_starts(tls.ke_msr_ctx, ke_fname, "endpoint")) != 0) {
+                if((ret = measure_starts(tls.ke_msr_ctx, ke_fname, "endpoint,keylen")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                     printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif

@@ -6,14 +6,16 @@ import utils
 
 def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
-    xtickslabels = stats[next(iter(stats))]['keys']
+    xtickslabels = []
     extentions = []
 
     if serv == 'conf' or serv == 'int':
         extentions = ['_out', '_in']
+        xtickslabels = stats[next(iter(stats))]['keys']
 
     elif serv == 'auth' or serv == 'pfs':
-        extentions = ['']
+        extentions = ['_server', '_client']
+        xtickslabels = ['Sec Lvl 0', 'Sec Lvl 1', 'Sec Lvl 2', 'Sec Lvl 3']
 
     for stype in stats_type:
         for ext, op in zip(extentions, operations):
@@ -80,13 +82,6 @@ def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, labels, weight=1.5, strl
 
     print('ok')
 
-    # print('\nkey:\t\t pfs  : non-pfs')
-    # for key in all_data:
-    #     for sub in all_data[key]:
-    #         for subb in all_data[key][sub]:
-    #             print(f'{key}:\t{len(all_data[key][sub][subb])} : ', end='')
-    #             print(f'{len(all_alt_data[key][sub][subb])}')
-
     if weight != 0:
         print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
@@ -98,13 +93,6 @@ def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, labels, weight=1.5, strl
             all_alt_data[key] = alt_data
         
         print('ok')
-
-    # print('\nkey:\t\t pfs  : non-pfs')
-    # for key in all_data:
-    #     for sub in all_data[key]:
-    #         for subb in all_data[key][sub]:
-    #             print(f'{key}:\t{len(all_data[key][sub][subb])} : ', end='')
-    #             print(f'{len(all_alt_data[key][sub][subb])}')
 
     print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
@@ -203,7 +191,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     
     path = '../docs/serv_' + serv + '_'
-    write_ops[serv](path, labels, all_stats)
+    write_ops[serv](path, 'algorithms', labels, all_stats)
     
     print('ok')
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
@@ -214,8 +202,8 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     print('ok')
 
 def make_figs(servs_fname, ciphersuites, serv_set=['conf', 'int', 'auth', 'pfs'],
-            labels={'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'], 'auth': ['handshake'], 'pfs': ['handshake']},
-            weight=1.5, strlen=40, spacing=''):
+            labels={'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'], 'auth': ['server', 'client'],
+            'pfs': ['server', 'client']}, weight=1.5, strlen=40, spacing=''):
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
 
     for serv in serv_set:

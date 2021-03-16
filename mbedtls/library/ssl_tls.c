@@ -2011,10 +2011,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
 
 #if defined(MEASURE_CIPHER)
         if(ssl->in_msgtype == 23) {
-            int len = ssl->in_msglen;
-#if defined(MBEDTLS_SSL_ENCRYPT_THEN_MAC)
-            len -= ssl->transform_in->maclen;
-#endif
+            int len = ssl->in_msglen - ssl->transform_in->maclen;
 
             if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);

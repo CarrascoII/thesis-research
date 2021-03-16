@@ -201,10 +201,40 @@ def parse_record_data(filename):
 
         return data, headers
 
-def parse_handshake_data(filename, index=1):
+def parse_handshake_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[index:]
+        headers = csv_reader.fieldnames[2:]
+        data = {}
+        sub_keys = []
+
+        for hdr in headers:
+            for end in ['_server', '_client']:
+                sub_keys.append(hdr + end)
+
+        for row in csv_reader:
+            endpoint = row['endpoint']
+            keylen = row['keylen']
+
+            if keylen not in data.keys():
+                data[keylen] = {}
+                
+                for sub in sub_keys:
+                    data[keylen][sub] = []
+
+            for hdr in headers:
+                val = int(row[hdr])
+
+                if val != 0:
+                    hdr += '_' + endpoint
+                    data[keylen][hdr].append(val)
+
+        return data, headers
+
+def parse_session_data(filename):
+    with open(filename, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+        headers = csv_reader.fieldnames[2:]
         data = {}
 
         for endpoint in ['server', 'client']:
@@ -279,27 +309,35 @@ def write_record_cmp_csv(path, hdr, labels, all_stats):
         with open(path + label + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
-def write_handshake_cmp_csv(path, hdr, label, all_stats):
-    lines = []
-    line = hdr + ',endpoint,'
+def write_handshake_cmp_csv(path, hdr, labels, all_stats):
+    lines = {'server': [], 'client': []}
+    keys = []
+    line = hdr + ',keylen,'
     elem = next(iter(all_stats.values()))
 
-    for key in list(elem.keys())[1:]:
-        line += key + ','
+    for key in elem:
+        if key.find('server') != -1:
+            keys.append(key[:-7])
+            line += key[:-7] + ','
 
-    lines.append(line[:-1] + '\n')
+    for end in lines:
+        lines[end].append(line[:-1] + '\n')
 
-    for key in all_stats:
-        for i, end in enumerate(elem['keys']):
-            line = key + ',' + end + ','
+    for suite in all_stats:
+        for end in lines:
+            line = suite + ','
 
-            for sub in list(all_stats[key].keys())[1:]:
-                line += str(all_stats[key][sub][i]) + ','
+            for i in range(len(all_stats[suite]['keys'])):
+                sub = line + str(all_stats[suite]['keys'][i]) + ','
 
-            lines.append(line[:-1] + '\n')
+                for key in keys:
+                    sub += str(all_stats[suite][key + '_' + end][i]) + ','
 
-    with open(path + label[0] + '_statistics.csv', 'w') as fl:
-        fl.writelines(lines)
+                lines[end].append(sub[:-1] + '\n')
+
+    for end, label in zip(lines, labels):
+        with open(path + label + '_statistics.csv', 'w') as fl:
+            fl.writelines(lines[end])
 
 def write_session_cmp_csv(path, all_stats):
     lines = {'client': [], 'server': []}
@@ -518,20 +556,33 @@ def calc_statistics(data, stats_type):
     return stats
 
 def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
-    for key in data:
-        for sub in data[key]:
-            m = len(data[key][sub])
-            n = len(alt_data[key][sub])
+    equiv = [['10', '1024', '192'], ['16', '2048', '224'], ['24', '4096', '384'], ['32', '8192', '521']]
 
-            if n < m:
-                m = n
-                
-            elif n == m:
-                continue
+    for key1, key2 in zip(data, alt_data):
+        cont = False
 
-            data[key][sub] = data[key][sub][:m]
-            alt_data[key][sub] = alt_data[key][sub][:m]
+        for eq in equiv:
+            if key1 in eq and key2 in eq:
+                cont = True
+                break
+
+        if cont:
+            for sub in data[key1]:
+                m = len(data[key1][sub])
+                n = len(alt_data[key2][sub])
+
+                if n < m:
+                    m = n
+                    
+                elif n == m:
+                    continue
+
+                data[key1][sub] = data[key1][sub][:m]
+                alt_data[key2][sub] = alt_data[key2][sub][:m]
         
+        else:
+            return None
+
     stats = calc_statistics(data, stats_type)
     alt_stats = calc_statistics(alt_data, stats_type)
 

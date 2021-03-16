@@ -155,9 +155,9 @@ def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
     for suite in success_ciphersuites:
         print(f'\nCreating graphs for: {suite} ({current}/{n_success})')
         print('\n    Cipher algorithm:')
-        plotter.make_figs('../docs/' + suite + '/cipher_data.csv', 'cipher', weight=weight, strlen=strlen, spacing='    ')
+        plotter.make_figs('../docs/' + suite + '/', 'cipher', weight=weight, strlen=strlen, spacing='    ')
         print('\n    MAC algorithm:')
-        plotter.make_figs('../docs/' + suite + '/md_data.csv', 'md', weight=weight, strlen=strlen, spacing='    ')
+        plotter.make_figs('../docs/' + suite + '/', 'md', weight=weight, strlen=strlen, spacing='    ')
         current +=1
 
     # Step 8: Analyse data and create comparison plots for all ciphersuites that ended successfully
