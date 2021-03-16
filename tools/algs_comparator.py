@@ -1,31 +1,28 @@
 import os
 import sys, getopt
 import matplotlib.pyplot as plt
-import utils
+import utils, settings
 
 
 def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
     xtickslabels = []
-    extentions = []
 
     if alg == 'cipher' or alg == 'md':
-        extentions = ['_out', '_in']
         xtickslabels = stats[next(iter(stats))]['keys']
     
     elif alg == 'ke':
-        extentions = ['_server', '_client']
-        xtickslabels = ['Sec Lvl 0', 'Sec Lvl 1', 'Sec Lvl 2', 'Sec Lvl 3']
+        xtickslabels = ['Insecure', 'Recomended Minimum', 'Secured', 'Strongly Secured']
 
     for stype in stats_type:
-        for ext, op in zip(extentions, operations):
+        for op in operations:
             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
             y = []
             yerr = []
         
             for key in stats:
-                y.append(stats[key][stype + '_' + ylabel + ext])
-                yerr.append(stats[key]['stddev_' + ylabel + ext])
+                y.append(stats[key][stype + '_' + ylabel + '_' + op])
+                yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
@@ -34,18 +31,8 @@ def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
 def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
-
-    data_ops = {
-        'cipher': utils.parse_record_data,
-        'md': utils.parse_record_data,
-        'ke':utils.parse_handshake_data
-    }
-
-    write_ops = {
-        'cipher': utils.write_record_cmp_csv,
-        'md': utils.write_record_cmp_csv,
-        'ke':utils.write_handshake_cmp_csv
-    }
+    all_stats = {}
+    stats_type = ['mean', 'stddev']
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
@@ -54,16 +41,16 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
 
         for suite in grouped_suites[key]:
             path = '../docs/' + suite + '/' + alg + '_data.csv'
-            data, hdr = data_ops[alg](path)
+            data, hdr = utils.parse_alg_data(path, alg)
 
             if all_data[key] == {}:
                 all_data[key] = data
                 headers = hdr
             
             elif headers == hdr:
-                for key1, key2 in zip(list(all_data[key].keys()), list(data.keys())):
-                    for entry in data[key2]:
-                        all_data[key][key1][entry] += data[key2][entry]
+                for sub in list(all_data[key].keys()):
+                    for entry in data[sub]:
+                        all_data[key][sub][entry] += data[sub][entry]
 
             else:
                 print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
@@ -85,9 +72,6 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
 
     print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
-    all_stats = {}
-    stats_type = ['mean', 'stddev']
-
     for key in all_data:
         stats = utils.calc_statistics(all_data[key], stats_type)
 
@@ -97,12 +81,11 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
         all_stats[key] = stats
 
     print('ok')
+
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    
-    path = '../docs/alg_' + alg + '_'
-    write_ops[alg](path, 'algorithm', labels, all_stats)
-    
+    utils.write_alg_cmp_csv('../docs/alg_' + alg + '_', 'algorithm', alg, all_stats)
     print('ok')
+    
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
@@ -110,9 +93,11 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
 
     print('ok')
 
-def make_figs(algs_fname, ciphersuites, alg_set=['cipher', 'md', 'ke'],
-            labels={'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify'], 'ke': ['server', 'client']},
-            weight=1.5, strlen=40, spacing=''):
+def make_figs(algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing=''):
+    if alg_set == []:
+        alg_set = settings.alg_types
+
+    labels = settings.alg_labels
     algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
     
     for alg in algs:
@@ -163,6 +148,7 @@ def main(argv):
             sys.exit(2)
 
     os.system('clear')
+    settings.init()
     suites = utils.parse_ciphersuites(args[1])
     
     make_figs(args[0], suites, weight=weight, alg_set=algs)

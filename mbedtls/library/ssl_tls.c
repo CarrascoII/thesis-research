@@ -1582,9 +1582,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                     return(ret);
 
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                    sprintf(buffer, "client,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                    sprintf(buffer, "client,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
                 else
-                    sprintf(buffer, "server,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                    sprintf(buffer, "server,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
                 if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
@@ -1916,9 +1916,9 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                     return(ret);
 
                 if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                    sprintf(buffer, "client,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                    sprintf(buffer, "client,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
                 else
-                    sprintf(buffer, "server,digest,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                    sprintf(buffer, "server,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
                 if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);

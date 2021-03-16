@@ -1,12 +1,10 @@
 import os
 import sys, getopt
 import matplotlib.pyplot as plt
-import utils
+import utils, settings
 
 
 def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
-    ext = ['_out', '_in']
-
     for hdr in hdrs:
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
         
@@ -18,25 +16,28 @@ def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
             for suite in all_stats:
                 x = all_stats[suite]['keys']
                 
-                y_lst.append(all_stats[suite][hdr + '_' + ylabel + ext[i]])
+                y_lst.append(all_stats[suite][hdr + '_' + ylabel + '_' + op[i]])
                 kwargs_lst.append({'label': suite})
 
             axes[i] = utils.multiple_custom_plots(x, y_lst, ax=axes[i], title=op[i] + ' (' + hdr + ')', ylabel=ylabel, kwargs_lst=kwargs_lst)
 
         utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
-def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing='',
-                labels = {'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify']}):
+def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     all_headers = []
 
     for alg in algs:
+        all_stats = {}
+        stats_type = ['mean', 'median']
+        labels = settings.alg_labels[alg]
+
         print(f'\n{spacing}{alg.upper()} algorithm:')
         print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for suite in ciphersuites:
-            path = '../docs/' + suite + '/'            
-            data, hdr = utils.parse_record_data(path + alg + '_data.csv')
+            path = '../docs/' + suite + '/'
+            data, hdr = utils.parse_alg_data(path + alg + '_data.csv', alg)
        
             all_data[suite] = data
             all_headers.append(hdr)
@@ -60,9 +61,6 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing='',
 
         print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
-        all_stats = {}
-        stats_type = ['mean', 'median']
-
         for suite in ciphersuites:
             stats = utils.calc_statistics(all_data[suite], stats_type)
 
@@ -72,16 +70,15 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing='',
             all_stats[suite] = stats
 
         print('ok')
+
         print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-        
-        path = '../docs/cmp_' + alg + '_alg_'
-        utils.write_record_cmp_csv(path, 'ciphersuite', labels[alg], all_stats)
-        
+        utils.write_alg_cmp_csv('../docs/cmp_'  + alg + '_', 'ciphersuite', alg, all_stats)
         print('ok')
+        
         print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
         for hdr in all_headers[0]:
-            make_cmp_plot(alg, labels[alg], hdr, all_stats, ciphersuites, stats_type)
+            make_cmp_plot(alg, labels, hdr, all_stats, ciphersuites, stats_type)
         
         print('ok')
 
@@ -124,7 +121,8 @@ def main(argv):
             sys.exit(2)
 
     os.system('clear')
-    ciphersuites = utils.parse_ciphersuites(args[0]) 
+    settings.init()
+    ciphersuites = utils.parse_ciphersuites(args[0])
     make_cmp_figs(ciphersuites, algs, weight=weight)
 
 if __name__ == '__main__':

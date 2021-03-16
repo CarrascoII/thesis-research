@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import statistics
 import numpy as np
 import subprocess
+import settings
 
 ########## FILE PARSING UTILS ##########
 def parse_ciphersuites(filename):
@@ -166,70 +167,66 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 
         return serv_dict
 
-def parse_record_data(filename):
+def parse_alg_data(filename, alg):
     with open(filename, mode='r') as fl:
+        opts = settings.alg_parser_opts[alg]
         csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[3:]
+        headers = csv_reader.fieldnames[opts[0]:]
         data = {}
         sub_keys = []
 
         for hdr in headers:
-            for ext in ['_out', '_in']:
-                sub_keys.append(hdr + ext)
+            for end in settings.alg_labels[alg]:
+                sub_keys.append(hdr + '_' + end)
 
         for row in csv_reader:
-            msglen = row['msglen']
-            operation = row['operation']
+            key = row[opts[1]]
+            operation = row[opts[2]]
 
-            if msglen not in data.keys():
-                data[msglen] = {}
+            if key not in data.keys():
+                data[key] = {}
                 
                 for sub in sub_keys:
-                    data[msglen][sub] = []
+                    data[key][sub] = []
 
             for hdr in headers:
                 val = int(row[hdr])
 
                 if val != 0:
-                    if operation == 'encrypt' or operation == 'digest':
-                        hdr += '_out'
-
-                    elif operation == 'decrypt' or operation == 'verify':
-                        hdr += '_in'
-                        
-                    data[msglen][hdr].append(val)
+                    hdr += '_' + operation
+                    data[key][hdr].append(val)
 
         return data, headers
 
-def parse_handshake_data(filename):
-    with open(filename, mode='r') as fl:
-        csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[2:]
-        data = {}
-        sub_keys = []
+# def parse_handshake_data(filename):
+#     with open(filename, mode='r') as fl:
+#         csv_reader = csv.DictReader(fl)
+#         headers = csv_reader.fieldnames[2:]
+#         data = {}
+#         sub_keys = []
 
-        for hdr in headers:
-            for end in ['_server', '_client']:
-                sub_keys.append(hdr + end)
+#         for hdr in headers:
+#             for end in ['_server', '_client']:
+#                 sub_keys.append(hdr + end)
 
-        for row in csv_reader:
-            endpoint = row['endpoint']
-            keylen = row['keylen']
+#         for row in csv_reader:
+#             endpoint = row['endpoint']
+#             keylen = row['keylen']
 
-            if keylen not in data.keys():
-                data[keylen] = {}
+#             if keylen not in data.keys():
+#                 data[keylen] = {}
                 
-                for sub in sub_keys:
-                    data[keylen][sub] = []
+#                 for sub in sub_keys:
+#                     data[keylen][sub] = []
 
-            for hdr in headers:
-                val = int(row[hdr])
+#             for hdr in headers:
+#                 val = int(row[hdr])
 
-                if val != 0:
-                    hdr += '_' + endpoint
-                    data[keylen][hdr].append(val)
+#                 if val != 0:
+#                     hdr += '_' + endpoint
+#                     data[keylen][hdr].append(val)
 
-        return data, headers
+#         return data, headers
 
 def parse_session_data(filename):
     with open(filename, mode='r') as fl:
@@ -279,16 +276,21 @@ def write_alg_csv(filename, labels, stats):
     with open(filename, 'w') as fl:
         fl.writelines(lines)
 
-def write_record_cmp_csv(path, hdr, labels, all_stats):
-    lines = {'out': [], 'in': []}
+def write_alg_cmp_csv(path, hdr, alg, all_stats):
+    opts = settings.alg_parser_opts[alg]
+    lines = {}
     keys = []
-    line = hdr + ',msglen,'
+    line = hdr + ',' + opts[1] + ','
     elem = next(iter(all_stats.values()))
 
+    for end in settings.alg_labels[alg]:
+        lines[end] = []
+
     for key in elem:
-        if key.find('out') != -1:
-            keys.append(key[:-4])
-            line += key[:-4] + ','
+        if key.find(settings.alg_labels[alg][0]) != -1:
+            idx = (len(settings.alg_labels[alg][0]) + 1)
+            keys.append(key[:-idx])
+            line += key[:-idx] + ','
 
     for end in lines:
         lines[end].append(line[:-1] + '\n')
@@ -305,7 +307,7 @@ def write_record_cmp_csv(path, hdr, labels, all_stats):
 
                 lines[end].append(sub[:-1] + '\n')
 
-    for end, label in zip(lines, labels):
+    for end, label in zip(lines, settings.alg_labels[alg]):
         with open(path + label + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 

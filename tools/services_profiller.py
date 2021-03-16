@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import services_comparator, utils
+import services_comparator, utils, settings
 
 
 strlen = 50
@@ -166,6 +166,7 @@ def main(argv):
             weight = float(arg)
 
     os.system('clear')
+    settings.init()
     exec_tls(args[0], target, timeout, init_size, n_tests, weight)
 
 if __name__ == '__main__':

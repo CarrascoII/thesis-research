@@ -61,9 +61,12 @@ def make_session_cmp_bar_by_ke(ylabel, stats, labels, stats_type):
 #             utils.save_fig(fig, '../docs/' + endpoints[i] + '_session_' + stype + '_' + ylabel + '.png')
 
 def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
-    print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
     all_data = {}
     headers = []
+    all_stats = {}
+    stats_type = ['mean', 'stddev']
+
+    print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
     for suite in ciphersuites:
         path = '../docs/' + suite + '/session_data.csv'
@@ -89,9 +92,6 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         print('ok')
 
     print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    
-    all_stats = {}
-    stats_type = ['mean', 'stddev']
 
     for suite in ciphersuites:
         stats = utils.calc_statistics(all_data[suite], stats_type)
@@ -102,12 +102,11 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         all_stats[suite] = stats
 
     print('ok')
+
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-
-    path = '../docs/session_'
-    utils.write_session_cmp_csv(path, all_stats)
-
+    utils.write_session_cmp_csv('../docs/session_', all_stats)
     print('ok')
+    
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
