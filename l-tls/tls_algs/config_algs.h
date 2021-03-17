@@ -473,7 +473,13 @@ char *ke_routines_fname;
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
-#define MAX_INPUT_SIZE                  16384
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+#define MAX_INPUT_SIZE                  1048576
+#endif
+#if defined(MEASURE_KE)
+#define MIN_SEC_LVL                     0
+#define MAX_SEC_LVL                     3
+#endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define N_TESTS                         10000
 #endif

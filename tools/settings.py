@@ -16,3 +16,16 @@ def init():
 
     global serv_to_alg
     serv_to_alg = {'conf': 'cipher', 'int': 'md', 'auth': 'ke', 'pfs': 'ke'}
+
+    global security_lvls
+    security_lvls = ['Insecure', 'Recomended Minimum', 'Secure', 'Strongly Secured']
+
+    global keylen_to_sec_lvl
+    keylen_to_sec_lvl = {
+        '10': 0, '16': 1, '24': 2, '32': 3,
+        '1024': 0, '2048': 1, '4096': 2, '8192': 3,
+        '192': 0, '224': 1, '384': 2, '521': 3
+    }
+
+    global strlen
+    strlen = 55

@@ -117,7 +117,7 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:', ['help', 'filter='])
+        opts, args = getopt.getopt(argv, 'hf:', ['help', 'weight='])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -135,11 +135,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('session_comparator.py [-f <weight>] <ciphersuite_list>')
-            print('session_comparator.py [--filter=<weight>] <ciphersuite_list>')
+            print('session_comparator.py [-w <filter_weight>] <ciphersuite_list>')
+            print('session_comparator.py [--weight=<filter_weight>] <ciphersuite_list>')
             sys.exit(0)
 
-        elif opt in ('-f', '--filter'):
+        elif opt in ('-w', '--weight'):
             weight = float(arg)
 
         else:

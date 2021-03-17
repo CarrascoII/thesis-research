@@ -6,30 +6,34 @@ import time
 import services_comparator, utils, settings
 
 
-strlen = 50
+def run_cli(target, tls_opts):
+    args = ['./../l-tls/tls_' + target + '/client.out']
 
-def run_cli(target, init_size, n_tests, ciphersuite):
-    args = ['./../l-tls/tls_' + target + '/client.out', 'input_size=' + init_size,
-            'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+    for opt in tls_opts:
+        args.append(opt + '=' + tls_opts[opt])
+
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode
 
-    return utils.check_endpoint_ret(ret, 'client', ciphersuite, stdout, stderr, strlen)
+    return utils.check_endpoint_ret(ret, 'client', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
     
-def run_srv(target, init_size, n_tests, ciphersuite):
-    args = ['./../l-tls/tls_' + target + '/server.out', 'input_size=' + init_size,
-            'n_tests=' + n_tests, 'ciphersuite=' + ciphersuite]
+def run_srv(target, tls_opts):
+    args = ['./../l-tls/tls_' + target + '/server.out']
+
+    for opt in tls_opts:
+        args.append(opt + '=' + tls_opts[opt])
+
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode
 
-    return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, strlen)
+    return utils.check_endpoint_ret(ret, 'server', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
 
-def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
+def exec_tls(suites_file, target, timeout, tls_opts, weight):
     # Step 1: Parse service list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
-    print(f'\nParsing ciphersuites from {suites_file}'.ljust(strlen, '.'), end=' ', flush=True)    
+    print(f'\nParsing ciphersuites from {suites_file}'.ljust(settings.strlen, '.'), end=' ', flush=True)    
     
     total_ciphersuites = utils.parse_services(suites_file)
     n_total = len(total_ciphersuites)
@@ -40,11 +44,16 @@ def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
     
     print(f'ok\nGot {n_total} ciphersuites')
     print('\nRunning with options:')
-    print(f'    -Timeout: {timeout} sec\n    -Number of tests: {n_tests}\n    -Starting input size: {init_size} bytes')
+    print(f'    -Timeout: {timeout} sec' +
+        f'\n    -Starting input size: {tls_opts["input_size"]} bytes' +
+        f'\n    -Ending input size: {tls_opts["max_input_size"]} bytes' +
+        f'\n    -Starting security level: {tls_opts["sec_lvl"]}' +
+        f'\n    -Ending security level: {tls_opts["max_sec_lvl"]}' +
+        f'\n    -Number of tests: {tls_opts["n_tests"]}')
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
 
     # Step 2: Compile libs and programs
-    print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'\nPrepararing libraries and programs'.ljust(settings.strlen, '.'), end=' ', flush=True)
     thread = ThreadPool(processes=1)
     async_result_make = thread.apply_async(utils.make_progs, (target,))
     make_ret = async_result_make.get()
@@ -57,16 +66,17 @@ def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
     for suite in total_ciphersuites:
         print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
         current += 1
+        tls_opts['ciphersuite'] = suite
 
     # Step 3: Start server in thread 1
-        print('    Starting server'.ljust(strlen, '.'), end=' ', flush=True)
-        async_result_srv = pool.apply_async(run_srv, (target, init_size, n_tests, suite))
+        print('    Starting server'.ljust(settings.strlen, '.'), end=' ', flush=True)
+        async_result_srv = pool.apply_async(run_srv, (target, tls_opts))
         print('ok')
         time.sleep(timeout)
 
     # Step 4: Start client in thread 2
-        print('    Starting client'.ljust(strlen, '.'), end=' ', flush=True)
-        async_result_cli = pool.apply_async(run_cli, (target, init_size, n_tests, suite))
+        print('    Starting client'.ljust(settings.strlen, '.'), end=' ', flush=True)
+        async_result_cli = pool.apply_async(run_cli, (target, tls_opts))
         print('ok')
 
     # Step 5: Verify result from server and client
@@ -90,7 +100,7 @@ def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
     # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     print(f'\nCreating comparison graphs from all ciphersuites:')
-    services_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=strlen, spacing='    ')
+    services_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='    ')
 
     # Step 7: For each target, save successful ciphersuites in a file
     utils.write_ciphersuites('services', success_ciphersuites)
@@ -122,7 +132,8 @@ def exec_tls(suites_file, target, timeout, init_size, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hc:t:i:n:f:', ['help', 'compile=', 'timeout=', 'init_size=', 'n_tests=', 'filter='])
+        opts, args = getopt.getopt(argv, 'hc:t:w:i:s:n:', ['help', 'compile=', 'timeout=', 'weight=', 'input_size=',
+                                                        'sec_lvl=', 'n_tests='])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "services_profiller.py -h" for help')
@@ -138,16 +149,15 @@ def main(argv):
 
     target = 'algs'
     timeout = 2
-    init_size = '256'
-    n_tests = '500'
+    tls_opts = {'input_size': '256', 'max_input_size': '16384', 'sec_lvl': '0', 'max_sec_lvl': '3', 'n_tests': '500'}
     weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_profiller.py [-c <compilation_target>] [-t <timeout>] [-i <initial_msglen>] ' +
-                '[-n <n_tests>] [-f <weight>] <services_list>')
-            print('services_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--init_size=<initial_msglen>] ' +
-                '[--n_tests=<n_tests>] [--filter=<weight>] <services_list>')
+            print('services_profiller.py [-c <compilation_target>] [-t <timeout>] [-w <filter_weight>] ' +
+                '[-i <initial_size>,<final_size>] [-s <initial_lvl>,<final_lvl>] [-n <n_tests>] <algorithms_list>')
+            print('services_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--weight=<filter_weight>]  ' +
+                '[--input_size=<initial_size>,<final_size>] [--sec_lvl=<initial_lvl>,<final_lvl] [--n_tests=<n_tests>] <algorithms_list>')
             sys.exit(0)
 
         elif opt in ('-c', '--compile'):
@@ -156,18 +166,33 @@ def main(argv):
         elif opt in ('-t', '--timeout'):
             timeout = int(arg)
 
-        elif opt in ('-i', '--init_size'):
-            init_size = arg
+        elif opt in ('-i', '--input_size'):
+            lst = arg.split(',')
+
+            if lst[0] != '':
+                tls_opts['input_size'] = lst[0]
+
+            if lst[1] != '':
+                tls_opts['max_input_size'] = lst[1]
+
+        elif opt in ('-s', '--sec_lvl'):
+            lst = arg.split(',')
+
+            if lst[0] != '':
+                tls_opts['sec_lvl'] = lst[0]
+
+            if lst[1] != '':
+                tls_opts['max_sec_lvl'] = lst[1]
 
         elif opt in ('-n', '--n_tests'):
-            n_tests = arg
+            tls_opts['n_tests'] = arg
 
-        elif opt in ('-f', '--filter'):
+        elif opt in ('-w', '--weight'):
             weight = float(arg)
 
     os.system('clear')
     settings.init()
-    exec_tls(args[0], target, timeout, init_size, n_tests, weight)
+    exec_tls(args[0], target, timeout, tls_opts, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

@@ -6,13 +6,11 @@ import utils, settings
 
 def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
-    xtickslabels = []
-
-    if alg == 'cipher' or alg == 'md':
-        xtickslabels = stats[next(iter(stats))]['keys']
+    xtickslabels = stats[next(iter(stats))]['keys']
     
-    elif alg == 'ke':
-        xtickslabels = ['Insecure', 'Recomended Minimum', 'Secured', 'Strongly Secured']
+    if alg == 'ke':
+        for i, val in enumerate(xtickslabels):
+            xtickslabels[i] = settings.security_lvls[settings.keylen_to_sec_lvl[val]]
 
     for stype in stats_type:
         for op in operations:
@@ -107,7 +105,7 @@ def make_figs(algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spaci
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:cmk', ['help', 'filter=', 'cipher', 'md', 'ke'])
+        opts, args = getopt.getopt(argv, 'hw:cmk', ['help', 'weight=', 'cipher', 'md', 'ke'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -127,11 +125,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_comparator.py [-f <weight>] [-c] [-m] [-k] <algorithm_list> <ciphersuite_list>')
-            print('algs_comparator.py [--filter=<weight>] [--cipher] [--md] [--ke] <algorithm_list> <ciphersuite_list>')
+            print('algs_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <algorithm_list> <ciphersuite_list>')
+            print('algs_comparator.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <algorithm_list> <ciphersuite_list>')
             sys.exit(0)
 
-        elif opt in ('-f', '--filter'):
+        elif opt in ('-w', '--weight'):
             weight = float(arg)
 
         elif opt in ('-c', '--cipher'):

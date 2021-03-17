@@ -81,7 +81,7 @@ def make_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
+        opts, args = getopt.getopt(argv, 'hw:cm', ['help', 'weight=', 'cipher', 'md'])
     
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "plotter.py -h" for help')
@@ -100,11 +100,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('plotter.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
-            print('plotter.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
+            print('plotter.py [-w <filter_weight>] [-c] [-m] <ciphersuite_list>')
+            print('plotter.py [--weight=<filter_weight>] [--cipher] [--md] <ciphersuite_list>')
             sys.exit(0)
 
-        elif opt in ('-f', '--nfilter'):
+        elif opt in ('-w', '--weight'):
             weight = float(arg)
         
         elif opt in ('-c', '--cipher'):

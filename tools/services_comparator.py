@@ -6,13 +6,11 @@ import utils, settings
 
 def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
-    xtickslabels = []
-
-    if serv == 'conf' or serv == 'int':
-        xtickslabels = stats[next(iter(stats))]['keys']
-
-    elif serv == 'auth' or serv == 'pfs':
-        xtickslabels = ['Insecure', 'Recomended Minimum', 'Secured', 'Strongly Secured']
+    xtickslabels = stats[next(iter(stats))]['keys']
+    
+    if serv == 'auth' or serv == 'pfs':
+        for i, val in enumerate(xtickslabels):
+            xtickslabels[i] = settings.security_lvls[settings.keylen_to_sec_lvl[val]]
 
     for stype in stats_type:
         for op in operations:
@@ -199,7 +197,7 @@ def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spa
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:caip', ['help', 'filter=', 'conf', 'int', 'auth', 'pfs'])
+        opts, args = getopt.getopt(argv, 'hw:caip', ['help', 'weight=', 'conf', 'int', 'auth', 'pfs'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -219,11 +217,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_comparator.py [-f <weight>] [-c] [-i] [-a] [-p] <services_list> <ciphersuite_list>')
-            print('services_comparator.py [--filter=<weight>] [--conf] [--int] [--auth] [--pfs] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-p] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--pfs] <services_list> <ciphersuite_list>')
             sys.exit(0)
 
-        elif opt in ('-f', '--filter'):
+        elif opt in ('-w', '--weight'):
             weight = float(arg)
 
         elif opt in ('-c', '--conf'):

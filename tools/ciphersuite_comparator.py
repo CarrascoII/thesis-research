@@ -84,7 +84,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hf:cm', ['help', 'filter=', 'cipher', 'md'])
+        opts, args = getopt.getopt(argv, 'hw:cm', ['help', 'weight=', 'cipher', 'md'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -103,11 +103,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('ciphersuite_comparator.py [-f <weight>] [-c] [-m] <ciphersuite_list>')
-            print('ciphersuite_comparator.py [--filter=<weight>] [--cipher] [--md] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [-w <filter_weight>] [-c] [-m] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [--weight=<filter_weight>] [--cipher] [--md] <ciphersuite_list>')
             sys.exit(0)
 
-        if opt in ('-f', '--filter'):
+        if opt in ('-w', '--weight'):
             weight = float(arg)
 
         elif opt in ('-c', '--cipher'):
