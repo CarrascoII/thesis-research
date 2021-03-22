@@ -2846,6 +2846,8 @@ static int ssl_write_certificate_request( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,write_certificate_request")) != 0) {
             return(ret);
         }
+
+        printf("\n write_certificate_request");
 #endif
 
     ret = mbedtls_ssl_write_handshake_msg( ssl );
@@ -3021,6 +3023,8 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return(ret);
         }
 
+        printf("\n dhm_set_group");
+
         if(ret != 0)
 #endif
         {
@@ -3050,6 +3054,8 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,dhm_make_params")) != 0) {
             return(ret);
         }
+
+        printf("\n dhm_make_params");
 
         if(ret != 0)
 #endif
@@ -3123,6 +3129,8 @@ curve_matching_done:
             return(ret);
         }
 
+        printf("\n ecdh_setup");
+
         if(ret != 0)
 #endif
         {
@@ -3151,6 +3159,8 @@ curve_matching_done:
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,ecdh_make_params")) != 0) {
             return(ret);
         }
+
+        printf("\n ecdh_make_params");
 
         if(ret != 0)
 #endif
@@ -3184,12 +3194,6 @@ curve_matching_done:
         unsigned char hash[MBEDTLS_MD_MAX_SIZE];
         int ret;
 
-#if defined(MEASURE_KE_ROUTINES)
-        if((ret = measure_get_vals(ssl->routines_msr_ctx, MEASURE_START)) != 0) {
-            return(ret);
-        }
-#endif
-
         /*
          * 2.1: Choose hash algorithm:
          * A: For TLS 1.2, obey signature-hash-algorithm extension
@@ -3204,6 +3208,13 @@ curve_matching_done:
 #if defined(MBEDTLS_SSL_PROTO_TLS1_2)
         mbedtls_pk_type_t sig_alg =
             mbedtls_ssl_get_ciphersuite_sig_pk_alg( ciphersuite_info );
+
+#if defined(MEASURE_KE_ROUTINES)
+        if((ret = measure_get_vals(ssl->routines_msr_ctx, MEASURE_START)) != 0) {
+            return(ret);
+        }
+#endif
+
         if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_3 )
         {
             /* A: For TLS 1.2, obey signature-hash-algorithm extension
@@ -3358,6 +3369,8 @@ curve_matching_done:
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,ciphersuite_uses_server_signature")) != 0) {
             return(ret);
         }
+
+        printf("\n ciphersuite_uses_server_signature");
 #endif
     }
 #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
@@ -3406,6 +3419,8 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
             if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,get_ecdh_params_from_cert")) != 0) {
                 return(ret);
             }
+
+            printf("\n get_ecdh_params_from_cert");
 #endif
         }
 #endif /* MBEDTLS_KEY_EXCHANGE__SOME__ECDH_ENABLED */
@@ -3896,6 +3911,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
+        printf("\n parse_client_dh_public");
+
         if(ret != 0)
 #endif
         {
@@ -3931,6 +3948,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,dhm_calc_secret")) != 0) {
             return(ret);
         }
+
+        printf("\n dhm_calc_secret");
 
         if(ret != 0)
 #endif
@@ -3970,6 +3989,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
 
+        printf("\n ecdh_read_public");
+
         if(ret != 0)
 #endif
         {
@@ -4001,6 +4022,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,ecdh_calc_secret")) != 0) {
             return(ret);
         }
+
+        printf("\n ecdh_calc_secret");
 
         if(ret != 0)
 #endif
@@ -4037,6 +4060,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n parse_client_psk_identity");
+
         if(ret != 0)
 #endif
         {
@@ -4091,6 +4116,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,parse_client_psk_identity")) != 0) {
             return(ret);
         }
+
+        printf("\n parse_client_psk_identity");
         
         if(ret != 0)
 #endif
@@ -4116,6 +4143,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n parse_encrypted_pms");
+
         if(ret != 0)
 #endif
         {
@@ -4152,6 +4181,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n parse_client_psk_identity");
+
         if(ret != 0)
 #endif
         {
@@ -4176,6 +4207,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n parse_client_dh_public");
+
         if(ret != 0)
 #endif
         {
@@ -4217,6 +4250,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,parse_client_psk_identity")) != 0) {
             return(ret);
         }
+
+        printf("\n parse_client_psk_identity");
         
         if(ret != 0)
 #endif
@@ -4243,6 +4278,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n ecdh_read_public");
         if(ret != 0)
 #endif
         {
@@ -4282,6 +4318,8 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n parse_encrypted_pms");
+
         if(ret != 0)
 #endif
         {
@@ -4524,6 +4562,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,hash_cert_verify")) != 0) {
         return(ret);
     }
+    
+    printf("\n hash_cert_verify");
 #endif
 
 #if !defined(MEASURE_KE_ROUTINES)
@@ -4546,6 +4586,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "server,verify_cert_verify")) != 0) {
         return(ret);
     }
+
+    printf("\n verify_cert_verify");
 
     if(ret != 0)
 #endif

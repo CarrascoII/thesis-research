@@ -1333,6 +1333,8 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             }
         }
 
+        printf("\n dhm_calc_secret");
+
         if(ret != 0)
 #endif
         {
@@ -1380,6 +1382,8 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
                 return(ret2);
             }
         }
+
+        printf("\n ecdh_calc_secret");
 
         if(ret != 0)
 #endif
@@ -5734,6 +5738,8 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
             return(ret);
         }
     }
+
+    printf("\n write_certificate");
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) && defined(MBEDTLS_SSL_CLI_C)
@@ -6183,6 +6189,8 @@ crt_verify:
             return(ret);
         }
     }
+
+    printf("\n parse_certificate");
 #endif
 
 #if defined(MBEDTLS_DEBUG_C)

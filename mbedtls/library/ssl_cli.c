@@ -2372,6 +2372,8 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
             return(ret);
         }
         
+        printf("\n get_ecdh_params_from_cert");
+
         if(ret != 0)
 #endif
         {
@@ -2469,6 +2471,8 @@ start_processing:
             return(ret);
         }
         
+        printf("\n parse_server_psk_hint");
+
         if(ret2 != 0)
 #endif
         {
@@ -2511,6 +2515,8 @@ start_processing:
             return(ret);
         }
         
+        printf("\n parse_server_dh_params");
+
         if(ret2 != 0)
 #endif
         {
@@ -2548,6 +2554,8 @@ start_processing:
             return(ret);
         }
         
+        printf("\n parse_server_ecdh_params");
+
         if(ret2 != 0)
 #endif
         {
@@ -2748,6 +2756,8 @@ start_processing:
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ciphersuite_uses_server_signature")) != 0) {
             return(ret);
         }
+
+        printf("\n ciphersuite_uses_server_signature");
 #endif
     }
 #endif /* MBEDTLS_KEY_EXCHANGE__WITH_SERVER_SIGNATURE__ENABLED */
@@ -2950,6 +2960,8 @@ static int ssl_parse_certificate_request( mbedtls_ssl_context *ssl )
     if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,parse_certificate_request")) != 0) {
         return(ret);
     }
+
+    printf("\n parse_certificate_request");
 #endif
 
 exit:
@@ -3038,6 +3050,8 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,dhm_make_public")) != 0) {
             return(ret);
         }
+
+    printf("\n dhm_make_public");
 #endif
 
         if( ret != 0 )
@@ -3071,6 +3085,8 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,dhm_calc_secret")) != 0) {
             return(ret);
         }
+
+        printf("\n dhm_calc_secret");
 
         if(ret != 0)
 #endif
@@ -3126,6 +3142,9 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_make_public")) != 0) {
             return(ret);
         }
+
+        printf("\n ecdh_make_public");
+
 #endif
 
         if( ret != 0 )
@@ -3175,6 +3194,8 @@ ecdh_calc_secret:
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_calc_secret")) != 0) {
             return(ret);
         }
+
+        printf("\n ecdh_calc_secret");
 
         if(ret != 0)
 #endif
@@ -3250,6 +3271,8 @@ ecdh_calc_secret:
                 return(ret);
             }
 
+            printf("\n write_encrypted_pms");
+
             if(ret != 0)
 #endif
                 return( ret );
@@ -3293,6 +3316,9 @@ ecdh_calc_secret:
             if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,dhm_make_public")) != 0) {
                 return(ret);
             }
+
+            printf("\n dhm_make_public");
+
 #endif
 
             if( ret != 0 )
@@ -3327,6 +3353,8 @@ ecdh_calc_secret:
             if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_make_public")) != 0) {
                 return(ret);
             }
+
+            printf("\n ecdh_make_public");
 #endif
 
             if( ret != 0 )
@@ -3374,6 +3402,8 @@ ecdh_calc_secret:
         if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,write_encrypted_pms")) != 0) {
             return(ret);
         }
+
+        printf("\n write_encrypted_pms");
 
         if(ret != 0)
 #endif
@@ -3542,6 +3572,9 @@ sign:
     if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,hash_cert_verify")) != 0) {
         return(ret);
     }
+
+    printf("\n hash_cert_verify");
+
 #endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) || defined(MBEDTLS_SSL_PROTO_TLS1) || \
@@ -3645,6 +3678,8 @@ sign:
     if((measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,sign_cert_verify")) != 0) {
         return(ret);
     }
+
+    printf("\n sign_cert_verify");
 
     if(ret != 0)
 #endif

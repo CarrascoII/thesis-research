@@ -183,7 +183,9 @@ char *ke_routines_fname;
  */
 // #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
 // #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
+#endif
 // #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
 
 /**
@@ -473,9 +475,7 @@ char *ke_routines_fname;
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define MAX_INPUT_SIZE                  1048576
-#endif
 #if defined(MEASURE_KE)
 #define MIN_SEC_LVL                     0
 #define MAX_SEC_LVL                     3
@@ -493,7 +493,7 @@ static const unsigned char test_psk[] = {
 };
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-// #define MUTUAL_AUTH
+#define MUTUAL_AUTH
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
