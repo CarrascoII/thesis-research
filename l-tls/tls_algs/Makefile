@@ -4,6 +4,7 @@ MEASUREMENT_LIB_DIR = ../../l-tls/measurement/library
 MY_AES_MODULE_DIR = ../../l-tls/my_mbedtls/aes_module
 MBEDTLS_INC_DIR = ../../mbedtls/include
 MBEDTLS_LIB_DIR = ../../mbedtls/library
+MBEDTLS_PROG_DIR = ../../mbedtls/programs
 PAPI_INC_DIR = ../../papi/src/install/include
 PAPI_LIB_DIR = ../../papi/src/install/lib
 
@@ -14,9 +15,11 @@ MY_SHA256 = $(MY_MBEDTLS_DIR)/sha256/sha256_alt
 MEASUREMENT_LIB_MAKE = $(MAKE) -C $(MEASUREMENT_LIB_DIR)
 MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
+MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
 
 ALL_CFLAGS = -Wall -W -Wdeclaration-after-statement -g3 -D_FILE_OFFSET_BITS=64
 MEASUREMENT_CFLAGS = -I$(MEASUREMENT_INC_DIR) -L$(MEASUREMENT_LIB_DIR) -lmeasurement
+PROGS_MEASUREMENT_CFLAGS = -I../$(MEASUREMENT_INC_DIR) -L../$(MEASUREMENT_LIB_DIR) -lmeasurement
 MBEDTLS_CFLAGS = -I$(MBEDTLS_INC_DIR) -L$(MBEDTLS_LIB_DIR) -lmbedx509 -lmbedtls -lmbedcrypto
 MEASUREMENT_PAPI_CFLAGS = -I../$(PAPI_INC_DIR) -L../$(PAPI_LIB_DIR) -lpapi
 PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
@@ -66,7 +69,11 @@ client: lib
 	gcc $(ALL_CFLAGS) client.c $(LOCAL_CFLAGS) -o client.out
 	echo "ok"
 
-local: clean server client
+progs: lib
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(CONFIG) -I$(MEASUREMENT_INC_DIR)" pkey/gen_key
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(CONFIG) -I$(MEASUREMENT_INC_DIR)" x509/cert_write
+
+local: clean server client progs
 
 ### MAKE LOCAL PAPI ###
 server_papi: lib_papi

@@ -18,13 +18,13 @@ def init():
     serv_to_alg = {'conf': 'cipher', 'int': 'md', 'auth': 'ke', 'pfs': 'ke'}
 
     global security_lvls
-    security_lvls = ['Insecure', 'Recomended Minimum', 'Secure', 'Strongly Secured']
+    security_lvls = ['80', '112', '128', '192', '256']
 
     global keylen_to_sec_lvl
     keylen_to_sec_lvl = {
-        '10': 0, '16': 1, '24': 2, '32': 3,
-        '1024': 0, '2048': 1, '4096': 2, '8192': 3,
-        '192': 0, '224': 1, '384': 2, '521': 3
+        '10': 0, '14': 1, '16': 2,'24': 3, '32': 4,
+        '1024': 0, '2048': 1, '3072': 2, '4096': 3, '8192': 4,
+        '192': 0, '224': 1, '256': 2, '384': 3, '521': 4
     }
 
     global strlen

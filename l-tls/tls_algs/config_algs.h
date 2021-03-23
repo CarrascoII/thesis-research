@@ -36,9 +36,9 @@ char *md_fname;
 #define KE_FNAME_SIZE       13 /* = len(KE_EXTENSION) + len("\0") */
 #define CERTS_PATH          "../l-tls/examples/"
 #define CERT_KEY_PATH_LEN   40
-static const int psk_key_sizes[4] = {10, 16, 24, 32};           /* in bytes */
-static const int rsa_key_sizes[4] = {1024, 2048, 4096, 8192};   /* in bits */
-static const int ec_key_sizes[4] =  {192, 224, 384, 521};       /* in bits */
+static const int psk_key_sizes[5] = {10, 14, 16, 24, 32};               /* in bytes */
+static const int rsa_key_sizes[5] = {1024, 2048, 3072, 7680, 15360};    /* in bits */
+static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bits */
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)
@@ -95,9 +95,8 @@ char *ke_routines_fname;
 #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP224R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-#else
-#define MBEDTLS_ECP_DP_SECP256R1_ENABLED    /* srv/cli curve */
 #endif
+#define MBEDTLS_ECP_DP_SECP256R1_ENABLED    /* srv/cli curve */
 #define MBEDTLS_ECP_DP_SECP384R1_ENABLED    /* ca curve */
 #endif
 
@@ -124,6 +123,13 @@ char *ke_routines_fname;
 #define MBEDTLS_BASE64_C
 #endif
 
+#if defined(MEASURE_KE)
+#define MBEDTLS_PK_WRITE_C
+#define MBEDTLS_PEM_WRITE_C
+#define MBEDTLS_X509_CRT_WRITE_C
+#define MBEDTLS_X509_CREATE_C
+#define MBEDTLS_GENPRIME
+#endif
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CIPHER_NULL_CIPHER
@@ -170,9 +176,10 @@ char *ke_routines_fname;
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-// #define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 #if defined(MEASURE_KE)
 #define MBEDTLS_FS_IO
+#define MBEDTLS_ERROR_C
 #endif
 
 /* Aditional features */
@@ -187,6 +194,9 @@ char *ke_routines_fname;
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #endif
 // #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
+#if defined(MEASURE_KE)
+#define MBEDTLS_MPI_MAX_SIZE            1920     /**< Maximum number of bytes for usable MPIs. */
+#endif
 
 /**
  * mbed TLS ciphersuites
@@ -478,7 +488,7 @@ char *ke_routines_fname;
 #define MAX_INPUT_SIZE                  1048576
 #if defined(MEASURE_KE)
 #define MIN_SEC_LVL                     0
-#define MAX_SEC_LVL                     3
+#define MAX_SEC_LVL                     4
 #endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
 #define N_TESTS                         10000

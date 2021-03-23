@@ -149,7 +149,7 @@ def main(argv):
 
     target = 'algs'
     timeout = 2
-    tls_opts = {'input_size': '256', 'max_input_size': '16384', 'sec_lvl': '0', 'max_sec_lvl': '3', 'n_tests': '500'}
+    tls_opts = {'input_size': '256', 'max_input_size': '16384', 'sec_lvl': '0', 'max_sec_lvl': '4', 'n_tests': '500'}
     weight = 1.5
 
     for opt, arg in opts:

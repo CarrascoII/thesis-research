@@ -435,6 +435,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
         if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
+            printf("\n %s", ca_cert_path);
             printf(" failed! mbedtls_x509_crt_parse_file returned -0x%04x\n", -ret);
 #endif
             goto exit;
@@ -444,6 +445,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
         if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
+            printf("\n %s", ca_cert_path);
             printf(" failed! mbedtls_x509_crt_parse_file returned -0x%04x\n", -ret);
 #endif
             goto exit;
