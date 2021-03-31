@@ -7,14 +7,13 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-#define MEASURE_CIPHER
-#define MEASURE_MD
-#define MEASURE_KE
-// #define MEASURE_KE_ROUTINES
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
+// #define MEASURE_KE
+#define MEASURE_KE_ROUTINES
 #endif
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
-    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#if defined(MEASUREMENT_MEASURE_C)
 #define FILE_PATH           "../docs/"
 #define PATH_SIZE           100
 #endif
@@ -34,17 +33,21 @@ char *md_fname;
 #if defined(MEASURE_KE)
 #define KE_EXTENSION        "/ke_data.csv"
 #define KE_FNAME_SIZE       13 /* = len(KE_EXTENSION) + len("\0") */
-#define CERTS_PATH          "../l-tls/examples/"
-#define CERT_KEY_PATH_LEN   40
-static const int psk_key_sizes[5] = {10, 14, 16, 24, 32};               /* in bytes */
-static const int rsa_key_sizes[5] = {1024, 2048, 3072, 7680, 15360};    /* in bits */
-static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bits */
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)
 #define KE_ROUTINES_EXTENTION   "/ke_routines.csv"
 #define KE_ROUTINES_FNAME_SIZE  17 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
 char *ke_routines_fname;
+#endif
+
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#define CERTS_PATH          "../l-tls/examples/"
+#define CERT_KEY_PATH_LEN   40
+#define BUFFER_LEN          15
+static const int psk_key_sizes[5] = {10, 14, 16, 24, 32};               /* in bytes */
+static const int rsa_key_sizes[5] = {1024, 2048, 3072, 7680, 15360};    /* in bits */
+static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bits */
 #endif
 
 /**
@@ -91,7 +94,7 @@ char *ke_routines_fname;
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECP_C
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP224R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
@@ -123,7 +126,7 @@ char *ke_routines_fname;
 #define MBEDTLS_BASE64_C
 #endif
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #define MBEDTLS_PK_WRITE_C
 #define MBEDTLS_PEM_WRITE_C
 #define MBEDTLS_X509_CRT_WRITE_C
@@ -176,8 +179,8 @@ char *ke_routines_fname;
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
-#define MBEDTLS_DEBUG_C
-#if defined(MEASURE_KE)
+// #define MBEDTLS_DEBUG_C
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #define MBEDTLS_FS_IO
 #define MBEDTLS_ERROR_C
 #endif
@@ -192,9 +195,11 @@ char *ke_routines_fname;
 // #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
+#elif defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#define MBEDTLS_CTR_DRBG_MAX_REQUEST    MBEDTLS_MPI_MAX_SIZE
 #endif
 // #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #define MBEDTLS_MPI_MAX_SIZE            1920     /**< Maximum number of bytes for usable MPIs. */
 #endif
 
@@ -208,7 +213,7 @@ char *ke_routines_fname;
 // #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
 #define MBEDTLS_SSL_CIPHERSUITES \
-            MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA
+            MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA
 
             /* Regular PSK ciphersuites - 10 */
             // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
@@ -486,11 +491,11 @@ char *ke_routines_fname;
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  1048576
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #define MIN_SEC_LVL                     0
 #define MAX_SEC_LVL                     4
 #endif
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASUREMENT_MEASURE_C)
 #define N_TESTS                         10000
 #endif
 #if defined(USE_PSK_C)

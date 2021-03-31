@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
 #include <sys/stat.h>
 #endif
 
@@ -131,7 +131,7 @@ int psk_callback(void *p_info, mbedtls_ssl_context *ssl, const unsigned char *na
 int sprintf_custom(char *buf, int suite_id, int sec_lvl) {
     const mbedtls_ssl_ciphersuite_t *suite = mbedtls_ssl_ciphersuite_from_id(suite_id);
 
-    memset(buf, 0, KE_FNAME_SIZE);
+    memset(buf, 0, BUFFER_LEN);
 
     switch(suite->key_exchange) {
         case MBEDTLS_KEY_EXCHANGE_PSK:
@@ -188,12 +188,12 @@ int main(int argc, char **argv) {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         max_input_size = MAX_INPUT_SIZE,
 #endif
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         starting_lvl,
         sec_lvl = MIN_SEC_LVL,
         max_sec_lvl = MAX_SEC_LVL,
 #endif
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASUREMENT_MEASURE_C)
         n_tests = N_TESTS,
 #endif
 #if defined(MBEDTLS_DEBUG_C)
@@ -207,17 +207,21 @@ int main(int argc, char **argv) {
     uint32_t flags;
 #endif
 #if defined(MEASURE_KE)
-    char csv_path[PATH_SIZE] = FILE_PATH, *ke_fname,
+    char *ke_fname,
+         csv_path[PATH_SIZE] = FILE_PATH;
+#endif
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+    char out_buf[BUFFER_LEN]
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-         ca_cert_path[CERT_KEY_PATH_LEN],
+        , ca_cert_path[CERT_KEY_PATH_LEN]
 #endif
 #if defined(MBEDTLS_RSA_C)
-         rsa_path[CERT_KEY_PATH_LEN],
+        , rsa_path[CERT_KEY_PATH_LEN]
 #endif
 #if defined(MBEDTLS_ECDSA_C)
-         ec_path[CERT_KEY_PATH_LEN],
+        , ec_path[CERT_KEY_PATH_LEN]
 #endif
-         out_buf[KE_FNAME_SIZE];
+    ;
 
 const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     /* Only SHA-2 hashes */
@@ -229,7 +233,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     0xFFFFFFF,  /* Any curve      */
     1024        /* Min RSA keylen */
 };
-#endif /* MEASURE_KE */
+#endif /* MEASURE_KE || MEASURE_KE_ROUTINES */
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
@@ -266,11 +270,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
             printf("Option not available. Enable MEASURE_CIPHER or MEASURE_MD\n");
 #endif
-            return(1);
 #endif
 		}
         else if(strcmp(p, "sec_lvl") == 0) {
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
             sec_lvl = atoi(q);
 
             if(sec_lvl < MIN_SEC_LVL || sec_lvl > MAX_SEC_LVL) {
@@ -279,15 +282,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
                 return(1);
             }
-#else /* MEASURE_KE */
+#else /* MEASURE_KE || MEASURE_KE_ROUTINES */
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_KE\n");
+            printf("Option not available. Enable MEASURE_KE or MEASURE_KE_ROUTINES\n");
 #endif
-            return(1);
 #endif
 		}
         else if(strcmp(p, "max_sec_lvl") == 0) {
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
             max_sec_lvl = atoi(q);
 
             if(max_sec_lvl < MIN_SEC_LVL || max_sec_lvl > MAX_SEC_LVL) {
@@ -296,15 +298,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
                 return(1);
             }
-#else /* MEASURE_KE */
+#else /* MEASURE_KE || MEASURE_KE_ROUTINES */
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_KE\n");
+            printf("Option not available. Enable MEASURE_KE or MEASURE_KE_ROUTINES\n");
 #endif
-            return(1);
 #endif
 		}
         else if(strcmp(p, "n_tests") == 0) {
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASUREMENT_MEASURE_C)
             n_tests = atoi(q);
 
             if(n_tests < 1 || n_tests > N_TESTS) {
@@ -313,9 +314,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
                 return(1);
             }
-#else /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
+#else /* MEASUREMENT_MEASURE_C */
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_CIPHER, MEASURE_MD or MEASURE_KE\n");
+            printf("Option not available. Enable MEASURE_CIPHER, MEASURE_MD, MEASURE_KE or MEASURE_KE_ROUTINES\n");
 #endif
             return(1);
 #endif
@@ -344,10 +345,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
             printf("max_input_size, ");
 #endif
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
             printf("sec_lvl, max_sec_lvl, ");
 #endif
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASUREMENT_MEASURE_C)
             printf("n_tests, ");
 #endif
             printf("debug_level and ciphersuite\n");
@@ -420,7 +421,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     fflush(stdout);
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_KE_ROUTINES)
     for(i = 0; mbedtls_test_cas[i] != NULL; i++) {
         if((ret = mbedtls_x509_crt_parse(&ca_cert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -429,7 +430,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
     }
-#else /* MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
     for(i = sec_lvl; i <= max_sec_lvl; i++) {
         sprintf(ca_cert_path, "%sca_rsa_%d.crt", CERTS_PATH, rsa_key_sizes[i]);
 
@@ -451,14 +452,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
     }
-#endif /* MEASURE_KE */
+#endif /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
 
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
 #endif /* MBEDTLS_RSA_C || MBEDTLS_ECP_C */
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
     starting_lvl = sec_lvl;
 
     for(; sec_lvl <= max_sec_lvl; sec_lvl++) {
@@ -482,7 +483,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         fflush(stdout);
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_KE_ROUTINES)
         if((psk_info = psk_parse(test_psk, sizeof(test_psk))) == NULL) {
 #if defined(MBEDTLS_DEBUG_C)
             printf("psk_list invalid");
@@ -490,7 +491,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             ret = -1;
             goto exit;
         }
-#else /* MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
         if((psk_info = psk_parse(test_psk, psk_key_sizes[sec_lvl])) == NULL) {
 #if defined(MBEDTLS_DEBUG_C)
             printf("psk_list invalid");
@@ -498,7 +499,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             ret = -1;
             goto exit;
         }
-#endif /* MEASURE_KE */
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -512,14 +513,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         fflush(stdout);
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_KE_ROUTINES)
         if((ret = mbedtls_x509_crt_parse(&rsa_cert, (const unsigned char *) mbedtls_test_srv_crt_rsa, mbedtls_test_srv_crt_rsa_len)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
-#else /* MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
         sprintf(rsa_path, "%ssrv_rsa_%d.crt", CERTS_PATH, rsa_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_x509_crt_parse_file(&rsa_cert, rsa_path))) {
@@ -528,7 +529,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
             goto exit;
         }
-#endif /* MEASURE_KE */
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -537,14 +538,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         fflush(stdout);
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_KE_ROUTINES)
         if((ret = mbedtls_pk_parse_key(&rsa_key, (const unsigned char *) mbedtls_test_srv_key_rsa, mbedtls_test_srv_key_rsa_len, NULL, 0)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
-#else /* MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
         sprintf(rsa_path, "%ssrv_rsa_%d.key", CERTS_PATH, rsa_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_pk_parse_keyfile(&rsa_key, rsa_path, NULL))) {
@@ -553,7 +554,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
             goto exit;
         }
-#endif /* MEASURE_KE */
+#endif
 
 
 #if defined(MBEDTLS_DEBUG_C)
@@ -568,14 +569,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         fflush(stdout);
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_KE_ROUTINES)
         if((ret = mbedtls_x509_crt_parse(&ec_cert, (const unsigned char *) mbedtls_test_srv_crt_ec, mbedtls_test_srv_crt_ec_len)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_x509_crt_parse returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
-#else /* MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
         sprintf(ec_path, "%ssrv_ec_%d.crt", CERTS_PATH, ec_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_x509_crt_parse_file(&ec_cert, ec_path))) {
@@ -584,7 +585,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
             goto exit;
         }
-#endif /* MEASURE_KE */
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -593,14 +594,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         fflush(stdout);
 #endif
 
-#if !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_KE_ROUTINES)
         if((ret = mbedtls_pk_parse_key(&ec_key, (const unsigned char *) mbedtls_test_srv_key_ec, mbedtls_test_srv_key_ec_len, NULL, 0)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_pk_parse_key returned -0x%04x\n", -ret);
 #endif
             goto exit;
         }
-#else /* MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
         sprintf(ec_path, "%ssrv_ec_%d.key", CERTS_PATH, ec_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_pk_parse_keyfile(&ec_key, ec_path, NULL))) {
@@ -609,7 +610,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
             goto exit;
         }
-#endif /* MEASURE_KE */
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -649,13 +650,13 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
         mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         mbedtls_ssl_conf_cert_profile(&tls_conf, &mbedtls_x509_crt_profile_custom);
 #endif
 #endif
 
-#if defined(MBEDTLS_RSA_C)
-        if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+#if defined(MBEDTLS_ECDSA_C)
+        if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
 #endif
@@ -663,8 +664,8 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 #endif
 
-#if defined(MBEDTLS_ECDSA_C)
-        if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
+#if defined(MBEDTLS_RSA_C)
+        if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
 #endif
@@ -685,7 +686,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         printf(" ok");
 #endif
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         for(i = 0; i < n_tests; i++) {
             // Reset the connection
 #if defined(MBEDTLS_DEBUG_C)
@@ -702,7 +703,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" ok");
 #endif
-#endif  /* MEASURE_KE */
+#endif  /* MEASURE_KE || MEASURE_KE_ROUTINES */
 
             // Listen and accept client
 #if defined(MBEDTLS_DEBUG_C)
@@ -723,6 +724,13 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             // Handshake
             printf("\nPerforming TLS handshake..................");
             fflush(stdout);
+#endif
+
+#if defined(MEASURE_KE_ROUTINES)
+            memset(out_buf, 0, BUFFER_LEN);
+            sprintf(out_buf, "%d,%d", sec_lvl, i);
+            strcpy(tls.test_and_sec_lvl, out_buf);
+            tls.starting_lvl = starting_lvl;
 #endif
 
             while((ret = mbedtls_ssl_handshake(&tls)) != 0) {
@@ -782,9 +790,11 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, out_buf)) != 0) {
                 return(ret);
             }
+#endif /* MEASURE_KE */
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         }
     }
-#endif /* MEASURE_KE */
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nPerforming TLS record:");

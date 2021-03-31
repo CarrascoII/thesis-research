@@ -558,15 +558,19 @@ def calc_statistics(data, stats_type):
     return stats
 
 def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
-    equiv = [['10', '1024', '192'], ['16', '2048', '224'], ['24', '4096', '384'], ['32', '8192', '521']]
+    # equiv = [['10', '1024', '192'], ['16', '2048', '224'], ['24', '4096', '384'], ['32', '8192', '521']]
 
     for key1, key2 in zip(data, alt_data):
         cont = False
 
-        for eq in equiv:
-            if key1 in eq and key2 in eq:
-                cont = True
-                break
+        # for eq in equiv:
+        #     if key1 in eq and key2 in eq:
+        #         cont = True
+        #         break
+
+        if settings.keylen_to_sec_lvl[key1] == settings.keylen_to_sec_lvl[key2]:
+            cont = True
+            break
 
         if cont:
             for sub in data[key1]:

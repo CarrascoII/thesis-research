@@ -22,9 +22,18 @@ def init():
 
     global keylen_to_sec_lvl
     keylen_to_sec_lvl = {
-        '10': 0, '14': 1, '16': 2,'24': 3, '32': 4,
+        '10': 0, '14': 1, '16': 2, '24': 3, '32': 4,
         '1024': 0, '2048': 1, '3072': 2, '4096': 3, '8192': 4,
         '192': 0, '224': 1, '256': 2, '384': 3, '521': 4
+    }
+
+    global ke_alg_operations
+    ke_alg_operations = {
+        'PSK': ['parse_client_psk_identity', 'parse_server_psk_hint', 'psk_derive_premaster'],
+        'RSA': ['rsa_sign_with_sha512', 'rsa_verify_with_sha512', 'rsa_verify_with_sha256'],
+        'ECDSA': ['ecdsa_sign_with_sha256', 'ecdsa_verify_with_sha256'],
+        'DHE': ['dhm_set_group', 'dhm_make_params', 'parse_server_dh_params',
+                'parse_client_dh_public', 'dhm_make_public', 'dhm_calc_secret']
     }
 
     global strlen

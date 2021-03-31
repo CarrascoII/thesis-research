@@ -97,6 +97,7 @@ def make_pfs_cmp_figs(pfs_suites, non_pfs_suites, serv, labels, weight=1.5, strl
         stats = utils.calc_pfs_statistics(all_data[key], all_alt_data[key], stats_type, headers)
 
         if stats == None:
+            print('error')
             return None
 
         all_stats[key] = stats

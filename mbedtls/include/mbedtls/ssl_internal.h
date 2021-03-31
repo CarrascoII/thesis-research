@@ -510,6 +510,57 @@ static inline void mbedtls_ssl_sig_hash_set_init( mbedtls_ssl_sig_hash_set_t *se
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2) &&
           MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
+#if defined(MEASURE_KE_ROUTINES)
+static inline const char* pk_to_str(mbedtls_pk_type_t sig_alg) {
+    switch(sig_alg) {
+        case MBEDTLS_PK_RSA:
+            return("rsa");
+
+        case MBEDTLS_PK_ECKEY:
+        case MBEDTLS_PK_ECDSA:
+            return("ecdsa");
+
+        default:
+            return(NULL);
+    }
+}
+
+static inline const char* md_to_str(mbedtls_md_type_t hash_alg) {
+    switch(hash_alg) {
+        case MBEDTLS_MD_MD2:
+            return("md2");
+
+        case MBEDTLS_MD_MD4:
+            return("md4");
+
+        case MBEDTLS_MD_MD5:
+            return("md5");
+
+        case MBEDTLS_MD_SHA1:
+            return("sha");
+
+        case MBEDTLS_MD_SHA224:
+            return("sha224");
+
+        case MBEDTLS_MD_SHA256:
+            return("sha256");
+
+        case MBEDTLS_MD_SHA384:
+            return("sha384");
+
+        case MBEDTLS_MD_SHA512:
+            return("sha512");
+
+        case MBEDTLS_MD_RIPEMD160:
+            return("ripemd160");
+        
+        default:
+            return(NULL);
+    }
+}
+#endif
+
+
 /**
  * \brief           Free referenced items in an SSL transform context and clear
  *                  memory

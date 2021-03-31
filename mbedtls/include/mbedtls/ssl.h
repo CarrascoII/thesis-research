@@ -1193,6 +1193,8 @@ struct mbedtls_ssl_context
 #endif
 #if defined(MEASURE_KE_ROUTINES)
     measure_context_t *routines_msr_ctx;
+    char test_and_sec_lvl[BUFFER_LEN];
+    int starting_lvl;
 #endif
 };
 
