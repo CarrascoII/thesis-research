@@ -1398,7 +1398,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             sprintf(buff, "server,%s,ecdh_calc_secret", ssl->test_and_sec_lvl);
         }
 
-        if((ret2 = measure_finish(ssl->routines_msr_ctx, ke_routines_fname, "client,ecdh_calc_secret")) != 0) {
+        if((ret2 = measure_finish(ssl->routines_msr_ctx, ke_routines_fname, buff)) != 0) {
             return(ret2);
         }
 
@@ -5670,9 +5670,6 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
     size_t i, n;
     const mbedtls_x509_crt *crt;
     const mbedtls_ssl_ciphersuite_t *ciphersuite_info = ssl->transform_negotiate->ciphersuite_info;
-#if defined(MEASURE_KE_ROUTINES)
-    char buff[PATH_SIZE];
-#endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write certificate" ) );
 
@@ -5685,12 +5682,6 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
         ssl->state++;
         return( 0 );
     }
-
-#if defined(MEASURE_KE_ROUTINES)
-    if((ret = measure_get_vals(ssl->routines_msr_ctx, MEASURE_START)) != 0) {
-        return(ret);
-    }
-#endif
 
 #if defined(MBEDTLS_SSL_CLI_C)
     if( ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT )
@@ -5771,24 +5762,6 @@ int mbedtls_ssl_write_certificate( mbedtls_ssl_context *ssl )
     ssl->out_msglen  = i;
     ssl->out_msgtype = MBEDTLS_SSL_MSG_HANDSHAKE;
     ssl->out_msg[0]  = MBEDTLS_SSL_HS_CERTIFICATE;
-
-#if defined(MEASURE_KE_ROUTINES)
-    if((ret = measure_get_vals(ssl->routines_msr_ctx, MEASURE_END)) != 0) {
-        return(ret);
-    }
-
-    if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-        sprintf(buff, "client,%s,write_certificate", ssl->test_and_sec_lvl);
-    } else {
-        sprintf(buff, "server,%s,write_certificate", ssl->test_and_sec_lvl);
-    }
-
-    if((ret = measure_finish(ssl->routines_msr_ctx, ke_routines_fname, buff)) != 0) {
-        return(ret);
-    }
-
-    // printf("\n write_certificate");
-#endif
 
 #if defined(MBEDTLS_SSL_PROTO_SSL3) && defined(MBEDTLS_SSL_CLI_C)
 write_msg:
