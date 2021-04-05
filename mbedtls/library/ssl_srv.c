@@ -44,7 +44,7 @@
 #if defined(MEASURE_KE_ROUTINES)
 #include <sys/stat.h>
 #endif
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
 #include <stdio.h>
 #endif
 
@@ -3034,7 +3034,9 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return(ret2);
         }
 
-        // printf("\n dhm_set_group");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n dhm_set_group");
+#endif
 
         if(ret != 0)
 #endif
@@ -3069,7 +3071,9 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return(ret2);
         }
 
-        // printf("\n dhm_make_params");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n dhm_make_params");
+#endif
 
         if(ret != 0)
 #endif
@@ -3149,7 +3153,9 @@ curve_matching_done:
             return(ret2);
         }
 
-        // printf("\n ecdh_setup");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n ecdh_setup");
+#endif
 
         if(ret != 0)
 #endif
@@ -3183,7 +3189,9 @@ curve_matching_done:
             return(ret2);
         }
 
-        // printf("\n ecdh_make_params");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n ecdh_make_params");
+#endif
 
         if(ret != 0)
 #endif
@@ -3398,7 +3406,9 @@ curve_matching_done:
             return(ret2);
         }
 
-        // printf("\n %s_sign_with_%s", pk_to_str(mbedtls_pk_get_type(mbedtls_ssl_own_key(ssl))), md_to_str(md_alg);
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n %s_sign_with_%s", pk_to_str(mbedtls_pk_get_type(mbedtls_ssl_own_key(ssl))), md_to_str(md_alg));
+#endif
 
         if(ret != 0)
 #endif
@@ -3459,7 +3469,9 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
                 return(ret);
             }
 
-            // printf("\n get_ecdh_params_from_cert");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+            printf("\n get_ecdh_params_from_cert");
+#endif
 #endif
         }
 #endif /* MBEDTLS_KEY_EXCHANGE__SOME__ECDH_ENABLED */
@@ -3957,7 +3969,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
 
-        // printf("\n parse_client_dh_public");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n parse_client_dh_public");
+#endif
 
         if(ret != 0)
 #endif
@@ -3998,7 +4012,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
 
-        // printf("\n dhm_calc_secret");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n dhm_calc_secret");
+#endif
 
         if(ret != 0)
 #endif
@@ -4041,7 +4057,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
 
-        // printf("\n ecdh_read_public");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n ecdh_read_public");
+#endif
 
         if(ret != 0)
 #endif
@@ -4078,7 +4096,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
 
-        // printf("\n ecdh_calc_secret");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n ecdh_calc_secret");
+#endif
 
         if(ret != 0)
 #endif
@@ -4118,7 +4138,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
         
-        // printf("\n parse_client_psk_identity");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n parse_client_psk_identity");
+#endif
 
         if(ret != 0)
 #endif
@@ -4178,7 +4200,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
 
-        // printf("\n parse_client_psk_identity");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n parse_client_psk_identity");
+#endif
         
         if(ret != 0)
 #endif
@@ -4207,7 +4231,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
         
-        // printf("\n rsa_decrypt");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n rsa_decrypt");
+#endif
 
         if(ret != 0)
 #endif
@@ -4247,8 +4273,10 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         if((ret2 = measure_finish(ssl->routines_msr_ctx, ke_routines_fname, buff)) != 0) {
             return(ret2);
         }
-        
-        // printf("\n parse_client_psk_identity");
+
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n parse_client_psk_identity");
+#endif
 
         if(ret != 0)
 #endif
@@ -4278,7 +4306,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
         
-        // printf("\n parse_client_dh_public");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n parse_client_dh_public");
+#endif
 
         if(ret != 0)
 #endif
@@ -4325,7 +4355,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
 
-        // printf("\n parse_client_psk_identity");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n parse_client_psk_identity");
+#endif
         
         if(ret != 0)
 #endif
@@ -4355,7 +4387,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
         
-        // printf("\n ecdh_read_public");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n ecdh_read_public");
+#endif
         
         if(ret != 0)
 #endif
@@ -4399,7 +4433,9 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
             return(ret2);
         }
         
-        // printf("\n rsa_decrypt");
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+        printf("\n rsa_decrypt");
+#endif
 
         if(ret != 0)
 #endif
@@ -4650,7 +4686,9 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
 //         return(ret2);
 //     }
     
-//     // printf("\n hash_cert_verify");
+// #if defined(PRINT_HANDSHAKE_OPERATIONS)
+//     printf("\n hash_cert_verify");
+// #endif
 // #endif
 
 #if !defined(MEASURE_KE_ROUTINES)
@@ -4679,7 +4717,9 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
         return(ret2);
     }
 
-    // printf("\n %s_verify_with_%s", pk_to_str(mbedtls_pk_get_type(&ssl->session_negotiate->peer_cert->pk)), md_to_str(md_alg));
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
+    printf("\n %s_verify_with_%s", pk_to_str(mbedtls_pk_get_type(&ssl->session_negotiate->peer_cert->pk)), md_to_str(md_alg));
+#endif
 
     if(ret != 0)
 #endif
@@ -4789,7 +4829,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
     switch( ssl->state )
     {
         case MBEDTLS_SSL_HELLO_REQUEST:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nHELLO REQUEST");
 #endif
             ssl->state = MBEDTLS_SSL_CLIENT_HELLO;
@@ -4799,7 +4839,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *  <==   ClientHello
          */
         case MBEDTLS_SSL_CLIENT_HELLO:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCLIENT HELLO");
 #endif
             ret = ssl_parse_client_hello( ssl );
@@ -4807,7 +4847,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
 
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
         case MBEDTLS_SSL_SERVER_HELLO_VERIFY_REQUEST_SENT:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER HELLO VERIFY REQUEST SENT");
 #endif
             return( MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED );
@@ -4821,35 +4861,35 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *        ServerHelloDone
          */
         case MBEDTLS_SSL_SERVER_HELLO:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER HELLO");
 #endif
             ret = ssl_write_server_hello( ssl );
             break;
 
         case MBEDTLS_SSL_SERVER_CERTIFICATE:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER CERTIFICATE");
 #endif
             ret = mbedtls_ssl_write_certificate( ssl );
             break;
 
         case MBEDTLS_SSL_SERVER_KEY_EXCHANGE:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER KEY EXCHANGE");
 #endif
             ret = ssl_write_server_key_exchange( ssl );
             break;
 
         case MBEDTLS_SSL_CERTIFICATE_REQUEST:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCERTIFICATE REQUEST");
 #endif
             ret = ssl_write_certificate_request( ssl );
             break;
 
         case MBEDTLS_SSL_SERVER_HELLO_DONE:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER HELLO DONE");
 #endif
             ret = ssl_write_server_hello_done( ssl );
@@ -4863,35 +4903,35 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *        Finished
          */
         case MBEDTLS_SSL_CLIENT_CERTIFICATE:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCLIENT CERTIFICATE");
 #endif
             ret = mbedtls_ssl_parse_certificate( ssl );
             break;
 
         case MBEDTLS_SSL_CLIENT_KEY_EXCHANGE:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCLIENT KEY EXCHANGE");
 #endif
             ret = ssl_parse_client_key_exchange( ssl );
             break;
 
         case MBEDTLS_SSL_CERTIFICATE_VERIFY:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCERTIFICATE VERIFY");
 #endif
             ret = ssl_parse_certificate_verify( ssl );
             break;
 
         case MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCLIENT CHANGE CIPHER SPEC");
 #endif
             ret = mbedtls_ssl_parse_change_cipher_spec( ssl );
             break;
 
         case MBEDTLS_SSL_CLIENT_FINISHED:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nCLIENT FINISHED");
 #endif
             ret = mbedtls_ssl_parse_finished( ssl );
@@ -4903,7 +4943,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
          *        Finished
          */
         case MBEDTLS_SSL_SERVER_CHANGE_CIPHER_SPEC:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER CHANGE CIPHER SPEC");
 #endif
 #if defined(MBEDTLS_SSL_SESSION_TICKETS)
@@ -4915,14 +4955,14 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             break;
 
         case MBEDTLS_SSL_SERVER_FINISHED:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nSERVER FINISHED");
 #endif
             ret = mbedtls_ssl_write_finished( ssl );
             break;
 
         case MBEDTLS_SSL_FLUSH_BUFFERS:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nFLUSH BUFFERS");
 #endif
             MBEDTLS_SSL_DEBUG_MSG( 2, ( "handshake: done" ) );
@@ -4930,7 +4970,7 @@ int mbedtls_ssl_handshake_server_step( mbedtls_ssl_context *ssl )
             break;
 
         case MBEDTLS_SSL_HANDSHAKE_WRAPUP:
-#if defined(PRINT_HANDSHAKE_STEPS)
+#if defined(PRINT_HANDSHAKE_OPERATIONS)
             printf("\nHANDSHAKE WRAPUP");
 #endif
             mbedtls_ssl_handshake_wrapup( ssl );

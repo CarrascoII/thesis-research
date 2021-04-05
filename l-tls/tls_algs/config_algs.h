@@ -106,7 +106,6 @@ static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bi
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
     defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
 #define MBEDTLS_ECDSA_C
-#define MBEDTLS_ASN1_WRITE_C
 #endif
 
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_DHM_C) || defined(MBEDTLS_ECP_C)
@@ -131,6 +130,7 @@ static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_PEM_WRITE_C
 #define MBEDTLS_X509_CRT_WRITE_C
 #define MBEDTLS_X509_CREATE_C
+#define MBEDTLS_ASN1_WRITE_C
 #define MBEDTLS_GENPRIME
 #endif
 /* Cipher algorithm */
@@ -212,8 +212,7 @@ static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bi
 // #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 // #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
-#define MBEDTLS_SSL_CIPHERSUITES \
-            MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA
+// #define MBEDTLS_SSL_CIPHERSUITES
 
             /* Regular PSK ciphersuites - 10 */
             // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
@@ -512,9 +511,9 @@ static const unsigned char test_psk[] = {
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-// #define PRINT_HANDSHAKE_STEPS
 // #define PRINT_MSG_HEX
 #endif
+#define PRINT_HANDSHAKE_STEPS
 
 /**
  * New alternative implementation flags

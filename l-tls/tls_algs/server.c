@@ -5,7 +5,7 @@
 #endif
 
 #include "mbedtls/net_sockets.h"
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
 #include "mbedtls/certs.h"
 #endif
 #if defined(MBEDTLS_DEBUG_C)
@@ -164,7 +164,7 @@ int sprintf_custom(char *buf, int suite_id, int sec_lvl) {
 int main(int argc, char **argv) {
     // Initial setup
     mbedtls_net_context server, client;
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt ca_cert;
 #endif
 #if defined(MBEDTLS_RSA_C)
@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 #endif
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
     char out_buf[BUFFER_LEN]
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
         , ca_cert_path[CERT_KEY_PATH_LEN]
 #endif
 #if defined(MBEDTLS_RSA_C)
@@ -360,7 +360,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
     mbedtls_net_init(&server);
     mbedtls_net_init(&client);
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
 #if defined(MBEDTLS_RSA_C) && !defined(MBDETLS_KE)
@@ -415,8 +415,8 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 
     // Load CA certificate(s)
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-#if defined(MBEDTLS_DEBUG_C)
+#if (defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)) && \
+    defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the ca certificate(s).............");
     fflush(stdout);
 #endif
@@ -432,6 +432,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     }
 #else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
     for(i = sec_lvl; i <= max_sec_lvl; i++) {
+#if defined(MBEDTLS_RSA_C)
         sprintf(ca_cert_path, "%sca_rsa_%d.crt", CERTS_PATH, rsa_key_sizes[i]);
 
         if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
@@ -441,7 +442,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
             goto exit;
         }
+#endif
 
+#if defined(MBEDTLS_ECDSA_C)
         sprintf(ca_cert_path, "%sca_ec_%d.crt", CERTS_PATH, ec_key_sizes[i]);
 
         if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
@@ -451,13 +454,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
             goto exit;
         }
+#endif
     }
 #endif /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
 
-#if defined(MBEDTLS_DEBUG_C)
+#if (defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)) && \
+    defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* MBEDTLS_RSA_C || MBEDTLS_ECP_C */
 
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
     starting_lvl = sec_lvl;
@@ -556,7 +560,6 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 #endif
 
-
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
@@ -648,7 +651,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(USE_PSK_C)
         mbedtls_ssl_conf_psk_cb(&tls_conf, psk_callback, psk_info);
 #endif
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
         mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         mbedtls_ssl_conf_cert_profile(&tls_conf, &mbedtls_x509_crt_profile_custom);
@@ -913,7 +916,7 @@ exit:
     mbedtls_pk_free(&rsa_key);
     mbedtls_x509_crt_free(&rsa_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
+#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt_free(&ca_cert);
 #endif
     mbedtls_net_free(&client);
