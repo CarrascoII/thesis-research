@@ -14,36 +14,6 @@ def write_ciphersuites(target, ciphersuites):
     with open('examples/' + target + '_suites.txt', 'w') as fl:
         fl.writelines([f'{suite}\n' for suite in ciphersuites])
 
-# def assign_target(ciphersuites, filename):
-#     with open(filename, 'r') as fl:
-#         exec_dict = {}
-#         rem_lst = []        
-
-#         for line in fl.readlines():
-#             line = line.split(',')
-#             target = line[0].strip()
-#             tls = 'TLS-' + line[1].strip() + '-WITH'
-#             tmp = ciphersuites.copy()
-
-#             if target not in exec_dict.keys():
-#                 exec_dict[target] = []
-
-#             for suite in ciphersuites:
-#                 if suite.find(tls) != -1:
-#                     exec_dict[target].append(suite)
-#                     tmp.remove(suite)
-
-#             ciphersuites = tmp.copy()
-
-#         for key in exec_dict:
-#             if len(exec_dict[key]) == 0:
-#                 rem_lst.append(key)
-
-#         for key in rem_lst:
-#             exec_dict.pop(key)
-
-#         return exec_dict
-
 def parse_algorithms(filename):
     with open(filename, 'r') as fl:
         algs = {'CIPHER': [], 'MD': [], 'KE': []}
@@ -95,7 +65,7 @@ def parse_algorithms_grouped(filename, alg_set, ciphersuites):
 
 def parse_services(filename):
     with open(filename, 'r') as fl:
-        algs = {'CONF': [], 'INT': [], 'AUTH': [], 'PFS': []}
+        algs = {'CONF': [], 'INT': [], 'AUTH': [], 'KE': [], 'PFS': []}
 
         for line in fl.readlines():
             line = line.split(',')
@@ -106,27 +76,35 @@ def parse_services(filename):
         for conf in algs['CONF']:
             for inte in algs['INT']:
                 for auth in algs['AUTH']:
-                    ciphersuites.append('TLS-' + auth + '-WITH-' + conf + '-' + inte)
+                    suite = 'TLS-' + auth + '-WITH-' + conf + '-' + inte
+                    
+                    if suite not in ciphersuites:
+                        ciphersuites.append(suite)
 
-                for pfs in algs['PFS']:
-                    ciphersuites.append('TLS-' + pfs + '-WITH-' + conf + '-' + inte)
+                    for ke in algs['KE']:
+                        if ke == 'PSK':
+                            suite = 'TLS-' + auth + '-PSK-WITH-' + conf + '-' + inte
+                        else:
+                            suite = 'TLS-' + ke + '-' + auth + '-WITH-' + conf + '-' + inte
+
+                        if suite not in ciphersuites:
+                            ciphersuites.append(suite)
+
+                    for pfs in algs['PFS']:
+                        suite = 'TLS-' + pfs + '-' + auth + '-WITH-' + conf + '-' + inte
+
+                        if suite not in ciphersuites:
+                            ciphersuites.append(suite)
 
         return ciphersuites
 
 def parse_services_grouped(filename, serv_set, ciphersuites):
     serv_dict = {}
     alg_conv = {}
-    eq = {
-        'DHE-PSK': 'PSK', 'DHE-RSA': 'RSA',
-        'ECDHE-RSA': 'ECDH-RSA', 'ECDHE-ECDSA': 'ECDH-ECDSA'
-    }
 
     for serv in serv_set:
         serv_dict[serv] = {}
         alg_conv[serv.upper()] = []
-
-        if serv == 'pfs':
-            serv_dict['non-' + serv] = {}
          
     with open(filename, 'r') as fl:
         for line in fl.readlines():
@@ -136,38 +114,20 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
             
             if serv in list(alg_conv.keys()):
                 serv_dict[serv.lower()][alg] = []
-
-                if serv == 'PFS':
-                    serv_dict['non-pfs'][alg] = []
-
                 alg_conv[serv] += [alg]
 
         for suite in ciphersuites:
-            for key in alg_conv:
-                for alg in alg_conv[key]:
-                    if key == 'CONF' and suite.find(alg) != -1:
-                        serv_dict['conf'][alg].append(suite)
-                        break
-                    
-                    elif key == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
-                        serv_dict['int'][alg].append(suite)
-                        break
-
-                    elif key == 'AUTH' and suite.find('TLS-' + alg + '-WITH') != -1:
-                        serv_dict['auth'][alg].append(suite)
-                        break
-
-                    elif key == 'PFS' and suite.find('TLS-' + alg + '-WITH') != -1:
-                        serv_dict['pfs'][alg].append(suite)
-                        break
-
-                    elif key == 'PFS' and suite.find('TLS-' + eq[alg] + '-WITH') != -1:
-                        serv_dict['non-pfs'][alg].append(suite)
-                        break
+            for serv in alg_conv:
+                for alg in alg_conv[serv]:
+                    if suite.find(alg) != -1:
+                        serv_dict[serv.lower()][alg].append(suite)
 
         return serv_dict
 
-def parse_alg_data(filename, alg):
+def parse_alg_data(filename, alg, serv=None):
+    if serv != None:
+        alg = settings.serv_to_alg[serv]
+
     with open(filename, mode='r') as fl:
         opts = settings.alg_parser_opts[alg]
         csv_reader = csv.DictReader(fl)
@@ -198,36 +158,6 @@ def parse_alg_data(filename, alg):
 
         return data, headers
 
-# def parse_handshake_data(filename):
-#     with open(filename, mode='r') as fl:
-#         csv_reader = csv.DictReader(fl)
-#         headers = csv_reader.fieldnames[2:]
-#         data = {}
-#         sub_keys = []
-
-#         for hdr in headers:
-#             for end in ['_server', '_client']:
-#                 sub_keys.append(hdr + end)
-
-#         for row in csv_reader:
-#             endpoint = row['endpoint']
-#             keylen = row['keylen']
-
-#             if keylen not in data.keys():
-#                 data[keylen] = {}
-                
-#                 for sub in sub_keys:
-#                     data[keylen][sub] = []
-
-#             for hdr in headers:
-#                 val = int(row[hdr])
-
-#                 if val != 0:
-#                     hdr += '_' + endpoint
-#                     data[keylen][hdr].append(val)
-
-#         return data, headers
-
 def parse_session_data(filename):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
@@ -249,6 +179,61 @@ def parse_session_data(filename):
                 if val != 0:
                     data[endpoint][hdr].append(val)
         
+        return data, headers
+
+def parse_ke_routines(filename, alg, serv):
+    with open(filename, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+        headers = csv_reader.fieldnames[4:]
+        avail_op = settings.ke_operations_per_service[serv]
+        data = {}
+        sub_keys = []
+        row_lst = []
+        curr_test = 0
+
+        for hdr in headers:
+            for end in settings.serv_labels[serv]:
+                sub_keys.append(hdr + '_' + end)
+
+        for row in csv_reader:
+            test_id = int(row['test_id'])
+
+            if test_id == curr_test:
+                row_lst.append(row)
+                key = row['keylen']
+
+                if key not in data.keys():
+                    data[key] = {}
+                
+                    for sub in sub_keys:
+                        data[key][sub] = []
+
+            else:
+                curr_test = test_id
+                all_val = {}
+
+                for sub in sub_keys:
+                    all_val[sub] = 0
+
+                for elem in row_lst:
+                    operation = elem['operation']
+
+                    if operation in avail_op[alg]:
+                        for hdr in headers:
+                            val = int(elem[hdr])
+
+                            if serv == 'auth':
+                                hdr += '_' + elem['endpoint']
+                            else:
+                                hdr += '_' + settings.serv_labels[serv][0]
+
+                            all_val[hdr] += val
+
+                for sub in all_val:
+                    data[row_lst[0]['keylen']][sub].append(all_val[sub])
+
+                row_lst = []
+
         return data, headers
 
 def write_alg_csv(filename, labels, stats):
@@ -277,18 +262,18 @@ def write_alg_csv(filename, labels, stats):
         fl.writelines(lines)
 
 def write_alg_cmp_csv(path, hdr, alg, all_stats):
-    opts = settings.alg_parser_opts[alg]
+    labels = settings.alg_labels[alg]
     lines = {}
     keys = []
-    line = hdr + ',' + opts[1] + ','
+    line = hdr + ',' + settings.alg_parser_opts[alg][1] + ','
     elem = next(iter(all_stats.values()))
 
-    for end in settings.alg_labels[alg]:
+    for end in labels:
         lines[end] = []
 
     for key in elem:
-        if key.find(settings.alg_labels[alg][0]) != -1:
-            idx = (len(settings.alg_labels[alg][0]) + 1)
+        if key.find(labels[0]) != -1:
+            idx = len(labels[0]) + 1
             keys.append(key[:-idx])
             line += key[:-idx] + ','
 
@@ -307,7 +292,43 @@ def write_alg_cmp_csv(path, hdr, alg, all_stats):
 
                 lines[end].append(sub[:-1] + '\n')
 
-    for end, label in zip(lines, settings.alg_labels[alg]):
+    for end, label in zip(lines, labels):
+        with open(path + label + '_statistics.csv', 'w') as fl:
+            fl.writelines(lines[end])
+
+def write_serv_cmp_csv(path, hdr, serv, all_stats):
+    labels = settings.serv_labels[serv]
+    alg = settings.serv_to_alg[serv]
+    lines = {}
+    keys = []
+    line = hdr + ',' + settings.alg_parser_opts[alg][1] + ','
+    elem = next(iter(all_stats.values()))
+
+    for end in labels:
+        lines[end] = []
+
+    for key in elem:
+        if key.find(labels[0]) != -1:
+            idx = len(labels[0]) + 1
+            keys.append(key[:-idx])
+            line += key[:-idx] + ','
+
+    for end in lines:
+        lines[end].append(line[:-1] + '\n')
+
+    for suite in all_stats:
+        for end in lines:
+            line = suite + ','
+
+            for i in range(len(all_stats[suite]['keys'])):
+                sub = line + str(all_stats[suite]['keys'][i]) + ','
+
+                for key in keys:
+                    sub += str(all_stats[suite][key + '_' + end][i]) + ','
+
+                lines[end].append(sub[:-1] + '\n')
+
+    for end, label in zip(lines, labels):
         with open(path + label + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
@@ -558,17 +579,10 @@ def calc_statistics(data, stats_type):
     return stats
 
 def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
-    # equiv = [['10', '1024', '192'], ['16', '2048', '224'], ['24', '4096', '384'], ['32', '8192', '521']]
-
     for key1, key2 in zip(data, alt_data):
         cont = False
 
-        # for eq in equiv:
-        #     if key1 in eq and key2 in eq:
-        #         cont = True
-        #         break
-
-        if settings.keylen_to_sec_lvl[key1] == settings.keylen_to_sec_lvl[key2]:
+        if settings.keylen_to_sec_str[key1] == settings.keylen_to_sec_str[key2]:
             cont = True
             break
 

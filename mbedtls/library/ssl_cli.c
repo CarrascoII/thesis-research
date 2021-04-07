@@ -2401,7 +2401,7 @@ static int ssl_parse_server_key_exchange( mbedtls_ssl_context *ssl )
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n get_ecdh_params_from_cert");
+        printf("\n  get_ecdh_params_from_cert");
 #endif
 
         if(ret != 0)
@@ -2506,7 +2506,7 @@ start_processing:
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n parse_server_psk_hint");
+        printf("\n  parse_server_psk_hint");
 #endif
 
         if(ret != 0)
@@ -2556,7 +2556,7 @@ start_processing:
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n parse_server_dh_params");
+        printf("\n  parse_server_dh_params");
 #endif
 
         if(ret != 0)
@@ -2601,7 +2601,7 @@ start_processing:
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n parse_server_ecdh_params");
+        printf("\n  parse_server_ecdh_params");
 #endif
 
         if(ret != 0)
@@ -2814,7 +2814,7 @@ start_processing:
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n %s_verify_with_%s", pk_to_str(mbedtls_pk_get_type(&ssl->session_negotiate->peer_cert->pk)), md_to_str(md_alg));
+        printf("\n  %s_verify_with_%s", pk_to_str(mbedtls_pk_get_type(&ssl->session_negotiate->peer_cert->pk)), md_to_str(md_alg));
 #endif
 #endif
     }
@@ -3099,7 +3099,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-    printf("\n dhm_make_public");
+    printf("\n  dhm_make_public");
 #endif
 #endif
 
@@ -3139,7 +3139,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n dhm_calc_secret");
+        printf("\n  dhm_calc_secret");
 #endif
 
         if(ret != 0)
@@ -3204,7 +3204,7 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n ecdh_make_public");
+        printf("\n  ecdh_make_public");
 #endif
 #endif
 
@@ -3260,7 +3260,7 @@ ecdh_calc_secret:
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n ecdh_calc_secret");
+        printf("\n  ecdh_calc_secret");
 #endif
 
         if(ret != 0)
@@ -3343,7 +3343,7 @@ ecdh_calc_secret:
             }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-            printf("\n rsa_encrypt");
+            printf("\n  rsa_encrypt");
 #endif
 
             if(ret != 0)
@@ -3397,7 +3397,7 @@ ecdh_calc_secret:
             }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-            printf("\n dhm_make_public");
+            printf("\n  dhm_make_public");
 #endif
 #endif
 
@@ -3440,7 +3440,7 @@ ecdh_calc_secret:
             }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-            printf("\n ecdh_make_public");
+            printf("\n  ecdh_make_public");
 #endif
 #endif
 
@@ -3498,7 +3498,7 @@ ecdh_calc_secret:
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n rsa_encrypt");
+        printf("\n  rsa_encrypt");
 #endif
 
         if(ret != 0)
@@ -3677,7 +3677,7 @@ sign:
 //     }
 
 // #if defined(PRINT_HANDSHAKE_OPERATIONS)
-//     printf("\n hash_cert_verify");
+//     printf("\n  hash_cert_verify");
 // #endif
 // #endif
 
@@ -3789,7 +3789,7 @@ sign:
     }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-    printf("\n %s_sign_with_%s", pk_to_str(mbedtls_pk_get_type(mbedtls_ssl_own_key(ssl))), md_to_str(md_alg));
+    printf("\n  %s_sign_with_%s", pk_to_str(mbedtls_pk_get_type(mbedtls_ssl_own_key(ssl))), md_to_str(md_alg));
 #endif
 
     if(ret != 0)

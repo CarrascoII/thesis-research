@@ -30,53 +30,6 @@ def run_srv(target, tls_opts):
 
     return utils.check_endpoint_ret(ret, 'server', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
 
-# def exec_target(target, ciphersuites, timeout, init_size, n_tests, n_total, current):
-#     successful = []
-#     non_existent = []
-#     error = []
-
-#     # Step 3: Compile libs and programs
-#     print(f'\nPrepararing libraries and programs'.ljust(strlen, '.'), end=' ', flush=True)
-#     thread = ThreadPool(processes=1)
-#     async_result_make = thread.apply_async(utils.make_progs, (target,))
-#     make_ret = async_result_make.get()
-    
-#     if make_ret != 0:
-#         sys.exit(2)
-
-#     pool = ThreadPool(processes=2)
-
-#     for suite in ciphersuites:
-#         print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
-#         current += 1
-
-#     # Step 4: Start server in thread 1
-#         print('    Starting server'.ljust(strlen, '.'), end=' ', flush=True)
-#         async_result_srv = pool.apply_async(run_srv, (target, init_size, n_tests, suite))
-#         print('ok')
-#         time.sleep(timeout)
-
-#     # Step 5: Start client in thread 2
-#         print('    Starting client'.ljust(strlen, '.'), end=' ', flush=True)
-#         async_result_cli = pool.apply_async(run_cli, (target, init_size, n_tests, suite))
-#         print('ok')
-
-#     # Step 6: Verify result from server and client
-#         srv_ret = async_result_srv.get()
-#         cli_ret = async_result_cli.get()
-
-#         if srv_ret == 1 and cli_ret == 1:
-#             non_existent.append(suite)
-
-#         elif srv_ret != 0 or cli_ret != 0:
-#             error.append(suite)
-
-#         else:
-#             print('\n    Data successfully obtained!!!')
-#             successful.append(suite)
-
-#     return successful, error, non_existent, current
-
 def exec_tls(suites_file, target, timeout, tls_opts, weight):
     # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
@@ -90,12 +43,6 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
     current = 1
     
     print(f'ok\nGot {n_total} ciphersuites')
-
-    # # Step 2: Parse target list
-    # print(f'\nParsing compilation targets from {targets}'.ljust(strlen, '.'), end=' ', flush=True)    
-    # exec_dict = utils.assign_target(total_ciphersuites, targets)
-    # print(f'ok')
-
     print('\nRunning with options:')
     print(f'    -Timeout: {timeout} sec' +
         f'\n    -Starting input size: {tls_opts["input_size"]} bytes' +
@@ -104,14 +51,6 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
         f'\n    -Ending security level: {tls_opts["max_sec_lvl"]}' +
         f'\n    -Number of tests: {tls_opts["n_tests"]}')
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
-    
-    # for key in exec_dict:
-    #     successful, error, non_existent, end = exec_target(key, exec_dict[key], timeout, init_size, n_tests, n_total, current)
-    #     exec_dict[key] = successful
-    #     success_ciphersuites += successful
-    #     error_ciphersuites += error
-    #     not_ciphersuites += non_existent
-    #     current = end
 
     # Step 3: Compile libs and programs
     print(f'\nPrepararing libraries and programs'.ljust(settings.strlen, '.'), end=' ', flush=True)
@@ -175,8 +114,6 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
     algs_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='    ')
 
     # Step 9: For each target, save successful ciphersuites in a file
-    # for key in exec_dict:
-    #     utils.write_ciphersuites(key, exec_dict[key])
     utils.write_ciphersuites(target, success_ciphersuites)
 
     # Step 10: Report final status

@@ -36,8 +36,8 @@ char *md_fname;
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)
-#define KE_ROUTINES_EXTENTION   "/ke_routines.csv"
-#define KE_ROUTINES_FNAME_SIZE  17 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
+#define KE_ROUTINES_EXTENTION   "/ke_data.csv"
+#define KE_ROUTINES_FNAME_SIZE  13 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
 char *ke_routines_fname;
 #endif
 

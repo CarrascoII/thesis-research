@@ -44,22 +44,6 @@ def make_session_cmp_bar_by_ke(ylabel, stats, labels, stats_type):
                                         xlabel='ciphersuites', xtickslabels=ke, ylabel=ylabel)
             utils.save_fig(fig, '../docs/session_' + endpoints[i] + '_' + stype + '_' + ylabel + '.png')
 
-# def make_session_cmp_bar(ylabel, stats, labels, stats_type):
-#     endpoints = stats[labels[0]]['keys']
-
-#     for stype in stats_type:
-#         for i in range(len(endpoints)):
-#             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-#             y = []
-#             yerr = []
-
-#             for suite in stats:
-#                 y.append([stats[suite][stype + '_' + ylabel][i]])
-#                 yerr.append([stats[suite]['stddev_' + ylabel][i]])
-
-#             ax = utils.custom_bar(y, yerr, ax=ax, xlabel='ciphersuites', xtickslabels=labels, title=endpoints[i], ylabel=ylabel)
-#             utils.save_fig(fig, '../docs/' + endpoints[i] + '_session_' + stype + '_' + ylabel + '.png')
-
 def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
@@ -111,7 +95,6 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
 
     for hdr in headers:
         make_session_cmp_bar_by_ke(hdr, all_stats, ciphersuites, stats_type[:-1])
-        # make_session_cmp_bar(ylabel, stats, labels, stats_type[:-1])
 
     print('ok')
 

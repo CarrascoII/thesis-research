@@ -1348,7 +1348,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n dhm_calc_secret");
+        printf("\n  dhm_calc_secret");
 #endif
 
         if(ret != 0)
@@ -1405,7 +1405,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
         }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-        printf("\n ecdh_calc_secret");
+        printf("\n  ecdh_calc_secret");
 #endif
 
         if(ret != 0)
@@ -1468,7 +1468,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
     }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-    printf("\n psk_derive_premaster");
+    printf("\n  psk_derive_premaster");
 #endif
 #endif
 
@@ -6225,7 +6225,7 @@ crt_verify:
     }
 
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-    printf("\n %s_verify_with_%s", pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
+    printf("\n  %s_verify_with_%s", pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
                                     md_to_str(ssl->session_negotiate->peer_cert->sig_md));
 #endif
 #endif

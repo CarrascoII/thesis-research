@@ -10,7 +10,7 @@ def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
     
     if alg == 'ke':
         for i, val in enumerate(xtickslabels):
-            xtickslabels[i] = settings.security_lvls[settings.keylen_to_sec_lvl[val]]
+            xtickslabels[i] = settings.sec_str[settings.keylen_to_sec_str[val]]
 
     for stype in stats_type:
         for op in operations:
