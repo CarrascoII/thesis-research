@@ -143,14 +143,14 @@ int sprintf_custom(char *buf, int suite_id, int sec_lvl) {
         case MBEDTLS_KEY_EXCHANGE_RSA_PSK:
         case MBEDTLS_KEY_EXCHANGE_DHE_RSA:
         case MBEDTLS_KEY_EXCHANGE_ECDHE_RSA:
-            sprintf(buf, "server,%d", rsa_key_sizes[sec_lvl]);
+            sprintf(buf, "server,%d", asm_key_sizes[sec_lvl]);
             break;
 
         case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
         case MBEDTLS_KEY_EXCHANGE_ECDH_RSA:
         case MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA:
         case MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA:
-            sprintf(buf, "server,%d", ec_key_sizes[sec_lvl]);
+            sprintf(buf, "server,%d", ecc_key_sizes[sec_lvl]);
             break;
 
         default:
@@ -158,6 +158,67 @@ int sprintf_custom(char *buf, int suite_id, int sec_lvl) {
     }
 
     return(0);
+}
+#endif
+
+#if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
+int prepare_dhm_primes(char *p_buff, char *g_buff, int sec_lvl) {
+    FILE *dh_prime;
+    char fname[CERT_KEY_PATH_LEN];
+    long p_size;
+    int ret = 1;
+
+    sprintf(fname, "%sdh_prime_%d.txt", CERTS_PATH, asm_key_sizes[sec_lvl]);
+    dh_prime = fopen(fname, "r");
+
+    fseek(dh_prime, 0, SEEK_END);
+    p_size = ftell(dh_prime);
+    fseek(dh_prime, 0, SEEK_SET);
+        
+    if((ret = fread(p_buff, 1, p_size, dh_prime)) != 0) {
+        if((g_buff = (char *) strstr(p_buff, "G =")) != NULL) {
+            ret = 0;
+        }
+    }
+
+    fclose(dh_prime);
+    return(ret);
+}
+#endif
+
+#if defined(MBEDTLS_ECP_C) && defined(MEASURE_KE_ROUTINES)
+mbedtls_ecp_group_id *prepare_ecdh_curve(int sec_lvl) {
+    mbedtls_ecp_group_id *ret = (mbedtls_ecp_group_id *) malloc(sizeof(mbedtls_ecp_group_id));
+
+    switch(sec_lvl) {
+        case 0:
+            ret[0] = MBEDTLS_ECP_DP_SECP192R1;
+            break;
+
+        case 1:
+            ret[0] = MBEDTLS_ECP_DP_SECP224R1;
+            break;
+
+        case 2:
+            ret[0] = MBEDTLS_ECP_DP_SECP256R1;
+            break;
+
+        case 3:
+            ret[0] = MBEDTLS_ECP_DP_SECP384R1;
+            break;
+
+        case 4:
+            ret[0] = MBEDTLS_ECP_DP_SECP521R1;
+            break;
+
+        default:
+            ret[0] = MBEDTLS_ECP_DP_NONE;
+            break;
+    }
+
+    ret[1] = MBEDTLS_ECP_DP_NONE;
+
+    return(ret);
 }
 #endif
 
@@ -220,6 +281,9 @@ int main(int argc, char **argv) {
 #endif
 #if defined(MBEDTLS_ECDSA_C)
         , ec_path[CERT_KEY_PATH_LEN]
+#endif
+#if defined(MBEDTLS_DHM_C)
+        , *p_buff, *g_buff
 #endif
     ;
 
@@ -433,7 +497,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
     for(i = sec_lvl; i <= max_sec_lvl; i++) {
 #if defined(MBEDTLS_RSA_C)
-        sprintf(ca_cert_path, "%sca_rsa_%d.crt", CERTS_PATH, rsa_key_sizes[i]);
+        sprintf(ca_cert_path, "%sca_rsa_%d.crt", CERTS_PATH, asm_key_sizes[i]);
 
         if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -445,7 +509,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
-        sprintf(ca_cert_path, "%sca_ec_%d.crt", CERTS_PATH, ec_key_sizes[i]);
+        sprintf(ca_cert_path, "%sca_ec_%d.crt", CERTS_PATH, ecc_key_sizes[i]);
 
         if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -525,7 +589,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
 #else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
-        sprintf(rsa_path, "%ssrv_rsa_%d.crt", CERTS_PATH, rsa_key_sizes[sec_lvl]);
+        sprintf(rsa_path, "%ssrv_rsa_%d.crt", CERTS_PATH, asm_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_x509_crt_parse_file(&rsa_cert, rsa_path))) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -550,7 +614,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
 #else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
-        sprintf(rsa_path, "%ssrv_rsa_%d.key", CERTS_PATH, rsa_key_sizes[sec_lvl]);
+        sprintf(rsa_path, "%ssrv_rsa_%d.key", CERTS_PATH, asm_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_pk_parse_keyfile(&rsa_key, rsa_path, NULL))) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -580,7 +644,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
 #else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
-        sprintf(ec_path, "%ssrv_ec_%d.crt", CERTS_PATH, ec_key_sizes[sec_lvl]);
+        sprintf(ec_path, "%ssrv_ec_%d.crt", CERTS_PATH, ecc_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_x509_crt_parse_file(&ec_cert, ec_path))) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -605,7 +669,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
 #else /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
-        sprintf(ec_path, "%ssrv_ec_%d.key", CERTS_PATH, ec_key_sizes[sec_lvl]);
+        sprintf(ec_path, "%ssrv_ec_%d.key", CERTS_PATH, ecc_key_sizes[sec_lvl]);
 
         if((ret = mbedtls_pk_parse_keyfile(&ec_key, ec_path, NULL))) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -658,6 +722,15 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 #endif
 
+#if defined(MBEDTLS_RSA_C)
+        if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+#endif
+            goto exit;
+        }
+#endif
+
 #if defined(MBEDTLS_ECDSA_C)
         if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -667,13 +740,28 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 #endif
 
-#if defined(MBEDTLS_RSA_C)
-        if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
+#if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
+        p_buff = (char *) malloc((asm_key_sizes[sec_lvl]/4 + 14)*sizeof(char));
+        g_buff = (char *) malloc(8*sizeof(char));
+        
+        if((ret = prepare_dhm_primes(p_buff, g_buff, sec_lvl)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
-            printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
+            printf(" failed! prepare_dhm_primes returned %d\n", ret);
 #endif
             goto exit;
         }
+        
+        if((ret = mbedtls_ssl_conf_dh_param_bin(&tls_conf, (const unsigned char *) p_buff + 4,
+                                asm_key_sizes[sec_lvl]/8, (const unsigned char *) g_buff + 4, 1)) != 0) {
+#if defined(MBEDTLS_DEBUG_C)
+            printf(" failed! mbedtls_ssl_conf_dh_param_bin returned -0x%04x\n", -ret);
+#endif
+            goto exit;
+        }  
+#endif
+
+#if defined(MBEDTLS_ECP_C) && defined(MEASURE_KE_ROUTINES)
+        mbedtls_ssl_conf_curves(&tls_conf, (const mbedtls_ecp_group_id *) prepare_ecdh_curve(sec_lvl));
 #endif
 
         if((ret = mbedtls_ssl_setup(&tls, &tls_conf)) != 0) {
@@ -796,6 +884,11 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif /* MEASURE_KE */
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         }
+
+#if defined(MBEDTLS_DHM_C)
+        free(p_buff);
+        free(g_buff);
+#endif
     }
 #endif
 

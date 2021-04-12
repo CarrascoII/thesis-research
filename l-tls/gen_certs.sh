@@ -35,13 +35,10 @@ declare -n curve end
 # done
 
 for size in "${RSA_KEY_SIZES[@]}"; do
-    echo "Creating CA cert (${size}):"
     openssl req -new -newkey rsa:${size} -x509 -sha256 -subj "/CN=myca/O=myorganization/C=PT" \
     -days 365 -nodes -out ${OUTPUT_PATH}/ca_rsa_${size}.crt -keyout ${OUTPUT_PATH}/ca_rsa_${size}.key
 
     for end in "${ENDPOINTS[@]}"; do
-        echo "Creating ${end[0]} cert (${size}):"
-
         openssl genrsa -out ${OUTPUT_PATH}/${end[0]}_rsa_${size}.key ${size}
         openssl req -new -key ${OUTPUT_PATH}/${end[0]}_rsa_${size}.key -subj "/CN=${end[1]}/O=myorganization/C=PT" \
         -out ${OUTPUT_PATH}/${end[0]}_reqout_${size}.txt
@@ -60,5 +57,9 @@ for curve in "${EC_CURVES[@]}"; do
         ${WRITE_CERT} issuer_crt=${OUTPUT_PATH}/ca_ec_${curve[0]}.crt issuer_key=${OUTPUT_PATH}/ca_ec_${curve[0]}.key \
                     subject_key=${OUTPUT_PATH}/${end[0]}_ec_${curve[0]}.key subject_name=CN=${end[1]},O=myorganization,C=PT \
                     not_after=${DEADLINE} output_file=${OUTPUT_PATH}/${end[0]}_ec_${curve[0]}.crt
+        
+        # ../mbedtls/programs/x509/cert_write issuer_crt=examples/ca_rsa_1024.crt issuer_key=examples/ca_rsa_1024.key
+        #             subject_key=examples/srv_ec_192.key subject_name=CN=localhost,O=myorganization,C=PT
+        #             not_after=20221231235959 output_file=examples/test.crt
     done
 done

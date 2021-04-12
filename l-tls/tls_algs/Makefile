@@ -71,6 +71,7 @@ client: lib
 
 progs: lib
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(CONFIG) -I$(MEASUREMENT_INC_DIR)" pkey/gen_key
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(CONFIG) -I$(MEASUREMENT_INC_DIR)" pkey/dh_genprime
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="$(CONFIG) -I$(MEASUREMENT_INC_DIR)" x509/cert_write
 
 local: clean server client progs

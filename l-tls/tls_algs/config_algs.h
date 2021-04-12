@@ -46,8 +46,8 @@ char *ke_routines_fname;
 #define CERT_KEY_PATH_LEN   40
 #define BUFFER_LEN          15
 static const int psk_key_sizes[5] = {10, 14, 16, 24, 32};               /* in bytes */
-static const int rsa_key_sizes[5] = {1024, 2048, 3072, 7680, 15360};    /* in bits */
-static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bits */
+static const int asm_key_sizes[5] = {1024, 2048, 3072, 7680, 15360};    /* in bits */
+static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bits */
 #endif
 
 /**
@@ -130,9 +130,12 @@ static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_PEM_WRITE_C
 #define MBEDTLS_X509_CRT_WRITE_C
 #define MBEDTLS_X509_CREATE_C
-#define MBEDTLS_ASN1_WRITE_C
 #define MBEDTLS_GENPRIME
 #endif
+#if defined(MBEDTLS_ECDSA_C) || defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#define MBEDTLS_ASN1_WRITE_C
+#endif
+
 /* Cipher algorithm */
 #define MBEDTLS_CIPHER_C
 #define MBEDTLS_CIPHER_NULL_CIPHER
@@ -212,7 +215,8 @@ static const int ec_key_sizes[5] =  {192, 224, 256, 384, 521};          /* in bi
 // #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 // #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
-// #define MBEDTLS_SSL_CIPHERSUITES
+#define MBEDTLS_SSL_CIPHERSUITES \
+            MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA
 
             /* Regular PSK ciphersuites - 10 */
             // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
@@ -512,8 +516,10 @@ static const unsigned char test_psk[] = {
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
 // #define PRINT_MSG_HEX
+#else
+#define PRINT_HANDSHAKE_OPERATIONS
+#define PRINT_KEYS_OPERATIONS
 #endif
-#define PRINT_HANDSHAKE_STEPS
 
 /**
  * New alternative implementation flags

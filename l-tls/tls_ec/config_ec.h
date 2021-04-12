@@ -192,7 +192,7 @@
 // #define MUTUAL_AUTH
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-// #define PRINT_HANDSHAKE_STEPS
+// #define PRINT_HANDSHAKE_OPERATIONS
 // #define PRINT_MSG_HEX
 #endif
 
