@@ -90,30 +90,30 @@ int sprintf_custom(char *buf, int suite_id, int sec_lvl) {
 }
 #endif
 
-#if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
-int prepare_dhm_primes(char *p_buff, char *g_buff, int sec_lvl) {
-    FILE *dh_prime;
-    char fname[CERT_KEY_PATH_LEN];
-    long p_size;
-    int ret = 1;
+// #if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
+// int prepare_dhm_primes(char *p_buff, char *g_buff, int sec_lvl) {
+//     FILE *dh_prime;
+//     char fname[CERT_KEY_PATH_LEN];
+//     long p_size;
+//     int ret = 1;
 
-    sprintf(fname, "%sdh_prime_%d.txt", CERTS_PATH, asm_key_sizes[sec_lvl]);
-    dh_prime = fopen(fname, "r");
+//     sprintf(fname, "%sdh_prime_%d.txt", CERTS_PATH, asm_key_sizes[sec_lvl]);
+//     dh_prime = fopen(fname, "r");
 
-    fseek(dh_prime, 0, SEEK_END);
-    p_size = ftell(dh_prime);
-    fseek(dh_prime, 0, SEEK_SET);
+//     fseek(dh_prime, 0, SEEK_END);
+//     p_size = ftell(dh_prime);
+//     fseek(dh_prime, 0, SEEK_SET);
         
-    if((ret = fread(p_buff, 1, p_size, dh_prime)) != 0) {
-        if((g_buff = (char *) strstr(p_buff, "G =")) != NULL) {
-            ret = 0;
-        }
-    }
+//     if((ret = fread(p_buff, 1, p_size, dh_prime)) != 0) {
+//         if((g_buff = (char *) strstr(p_buff, "G =")) != NULL) {
+//             ret = 0;
+//         }
+//     }
 
-    fclose(dh_prime);
-    return(ret);
-}
-#endif
+//     fclose(dh_prime);
+//     return(ret);
+// }
+// #endif
 
 #if defined(MBEDTLS_ECP_C) && defined(MEASURE_KE_ROUTINES)
 mbedtls_ecp_group_id *prepare_ecdh_curve(int sec_lvl) {
@@ -208,9 +208,9 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
         , ec_path[CERT_KEY_PATH_LEN]
 #endif
-#if defined(MBEDTLS_DHM_C)
-        , *p_buff, *g_buff
-#endif
+// #if defined(MBEDTLS_DHM_C)
+//         , *p_buff, *g_buff
+// #endif
     ;
 
 const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
@@ -634,25 +634,25 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 #endif
 
-#if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
-        p_buff = (char *) malloc((asm_key_sizes[sec_lvl]/4 + 14)*sizeof(char));
-        g_buff = (char *) malloc(8*sizeof(char));
+// #if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
+//         p_buff = (char *) malloc((asm_key_sizes[sec_lvl]/4 + 14)*sizeof(char));
+//         g_buff = (char *) malloc(8*sizeof(char));
 
-        if((ret = prepare_dhm_primes(p_buff, g_buff, sec_lvl)) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-            printf(" failed! prepare_dhm_primes returned %d\n", ret);
-#endif
-            goto exit;
-        }
+//         if((ret = prepare_dhm_primes(p_buff, g_buff, sec_lvl)) != 0) {
+// #if defined(MBEDTLS_DEBUG_C)
+//             printf(" failed! prepare_dhm_primes returned %d\n", ret);
+// #endif
+//             goto exit;
+//         }
 
-        if((ret = mbedtls_ssl_conf_dh_param_bin(&tls_conf, (const unsigned char *) p_buff + 4,
-                                asm_key_sizes[sec_lvl]/8, (const unsigned char *) g_buff + 4, 1)) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-            printf(" failed! mbedtls_ssl_conf_dh_param_bin returned -0x%04x\n", -ret);
-#endif
-            goto exit;
-        }  
-#endif
+//         if((ret = mbedtls_ssl_conf_dh_param_bin(&tls_conf, (const unsigned char *) p_buff + 4,
+//                                 asm_key_sizes[sec_lvl]/8, (const unsigned char *) g_buff + 4, 1)) != 0) {
+// #if defined(MBEDTLS_DEBUG_C)
+//             printf(" failed! mbedtls_ssl_conf_dh_param_bin returned -0x%04x\n", -ret);
+// #endif
+//             goto exit;
+//         }  
+// #endif
 
 #if defined(MBEDTLS_ECP_C) && defined(MEASURE_KE_ROUTINES)
         mbedtls_ssl_conf_curves(&tls_conf, (const mbedtls_ecp_group_id *) prepare_ecdh_curve(sec_lvl));
@@ -788,10 +788,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         }
 
-#if defined(MBEDTLS_DHM_C)
-        free(p_buff);
-        free(g_buff);
-#endif
+// #if defined(MBEDTLS_DHM_C)
+//         free(p_buff);
+//         free(g_buff);
+// #endif
     }
 #endif
 

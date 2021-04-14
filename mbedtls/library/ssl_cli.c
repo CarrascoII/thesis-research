@@ -3150,12 +3150,12 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
 #if defined(PRINT_KEYS_OPERATIONS)
-        // printf("\nlen(P) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.P));
-        // printf("\nlen(G) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.G));
-        // printf("\nlen(X) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.X));
-        // printf("\nlen(GX) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.GX));
-        // printf("\nlen(GY) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.GY));
-        // printf("\nlen(K) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.K));
+        printf("\nlen(P) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.P));
+        printf("\nlen(G) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.G));
+        printf("\nlen(X) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.X));
+        printf("\nlen(GX) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.GX));
+        printf("\nlen(GY) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.GY));
+        printf("\nlen(K) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.K));
 #endif
 
         MBEDTLS_SSL_DEBUG_MPI( 3, "DHM: K ", &ssl->handshake->dhm_ctx.K  );
@@ -3284,9 +3284,9 @@ ecdh_calc_secret:
         }
 
 #if defined(PRINT_KEYS_OPERATIONS)
-        // printf("\ngrp_id = %d", ssl->handshake->ecdh_ctx.grp.id);
-        // printf("\nlen(d) = %zu B", mbedtls_mpi_size(&ssl->handshake->ecdh_ctx.d));
-        // printf("\nlen(z) = %zu B", mbedtls_mpi_size(&ssl->handshake->ecdh_ctx.z));
+        printf("\ngrp_id = %d", ssl->handshake->ecdh_ctx.grp.id);
+        printf("\nlen(d) = %zu B", mbedtls_mpi_size(&ssl->handshake->ecdh_ctx.d));
+        printf("\nlen(z) = %zu B", mbedtls_mpi_size(&ssl->handshake->ecdh_ctx.z));
 #endif
 
         MBEDTLS_SSL_DEBUG_ECDH( 3, &ssl->handshake->ecdh_ctx,
