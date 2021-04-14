@@ -516,8 +516,8 @@ static const unsigned char test_psk[] = {
 #define DEBUG_LEVEL                     1
 // #define PRINT_MSG_HEX
 #else
-// #define PRINT_HANDSHAKE_OPERATIONS
-// #define PRINT_KEYS_OPERATIONS
+#define PRINT_HANDSHAKE_OPERATIONS
+#define PRINT_KEYS_OPERATIONS
 #endif
 
 /**
