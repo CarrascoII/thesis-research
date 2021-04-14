@@ -1358,6 +1358,11 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             return( ret );
         }
 
+#if defined(PRINT_KEYS_OPERATIONS)
+        printf("\nlen(P) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.P));
+        printf("\nlen(G) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.G));
+#endif
+
 #if defined(MEASURE_KE_ROUTINES)
         if((ret2 = measure_get_vals(ssl->routines_msr_ctx, MEASURE_START)) != 0) {
             return(ret2);
@@ -1414,6 +1419,12 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             MBEDTLS_SSL_DEBUG_RET( 1, "mbedtls_ecdh_calc_secret", ret );
             return( ret );
         }
+
+#if defined(PRINT_KEYS_OPERATIONS)
+        printf("\ngrp_id = %d", ssl->handshake->ecdh_ctx.grp.id);
+        printf("\nlen(d) = %zu B", mbedtls_mpi_size(&ssl->handshake->ecdh_ctx.d));
+        printf("\nlen(z) = %zu B", mbedtls_mpi_size(&ssl->handshake->ecdh_ctx.z));
+#endif
 
 #if defined(MEASURE_KE_ROUTINES)
         if((ret2 = measure_get_vals(ssl->routines_msr_ctx, MEASURE_START)) != 0) {

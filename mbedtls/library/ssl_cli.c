@@ -3152,10 +3152,6 @@ static int ssl_write_client_key_exchange( mbedtls_ssl_context *ssl )
 #if defined(PRINT_KEYS_OPERATIONS)
         printf("\nlen(P) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.P));
         printf("\nlen(G) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.G));
-        printf("\nlen(X) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.X));
-        printf("\nlen(GX) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.GX));
-        printf("\nlen(GY) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.GY));
-        printf("\nlen(K) = %zu B", mbedtls_mpi_size(&ssl->handshake->dhm_ctx.K));
 #endif
 
         MBEDTLS_SSL_DEBUG_MPI( 3, "DHM: K ", &ssl->handshake->dhm_ctx.K  );
@@ -4125,7 +4121,7 @@ int mbedtls_ssl_handshake_client_step( mbedtls_ssl_context *ssl )
 
        case MBEDTLS_SSL_HANDSHAKE_WRAPUP:
 #if defined(PRINT_HANDSHAKE_OPERATIONS)
-            printf("\nHANDSHAKE WRAPUP");
+            printf("\nHANDSHAKE WRAPUP\n");
 #endif
            mbedtls_ssl_handshake_wrapup( ssl );
            break;

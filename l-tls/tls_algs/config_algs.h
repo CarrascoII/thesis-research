@@ -215,8 +215,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 // #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 // #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
-#define MBEDTLS_SSL_CIPHERSUITES \
-            MBEDTLS_TLS_DHE_RSA_WITH_AES_256_CBC_SHA
+// #define MBEDTLS_SSL_CIPHERSUITES
 
             /* Regular PSK ciphersuites - 10 */
             // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
@@ -517,8 +516,8 @@ static const unsigned char test_psk[] = {
 #define DEBUG_LEVEL                     1
 // #define PRINT_MSG_HEX
 #else
-#define PRINT_HANDSHAKE_OPERATIONS
-#define PRINT_KEYS_OPERATIONS
+// #define PRINT_HANDSHAKE_OPERATIONS
+// #define PRINT_KEYS_OPERATIONS
 #endif
 
 /**
