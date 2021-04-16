@@ -13,8 +13,7 @@
 #endif
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
-
-#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#if defined(MEASURE_KE_ROUTINES)
 #include "dh_prime.h"
 
 #include <sys/stat.h>
@@ -129,40 +128,6 @@ int psk_callback(void *p_info, mbedtls_ssl_context *ssl, const unsigned char *na
 }
 #endif /* USE_PSK_C */
 
-#if defined(MEASURE_KE)
-int sprintf_custom(char *buf, int suite_id, int sec_lvl) {
-    const mbedtls_ssl_ciphersuite_t *suite = mbedtls_ssl_ciphersuite_from_id(suite_id);
-
-    memset(buf, 0, BUFFER_LEN);
-
-    switch(suite->key_exchange) {
-        case MBEDTLS_KEY_EXCHANGE_PSK:
-        case MBEDTLS_KEY_EXCHANGE_DHE_PSK:
-            sprintf(buf, "server,%d", psk_key_sizes[sec_lvl]);
-            break;
-
-        case MBEDTLS_KEY_EXCHANGE_RSA:
-        case MBEDTLS_KEY_EXCHANGE_RSA_PSK:
-        case MBEDTLS_KEY_EXCHANGE_DHE_RSA:
-        case MBEDTLS_KEY_EXCHANGE_ECDHE_RSA:
-            sprintf(buf, "server,%d", asm_key_sizes[sec_lvl]);
-            break;
-
-        case MBEDTLS_KEY_EXCHANGE_ECDHE_PSK:
-        case MBEDTLS_KEY_EXCHANGE_ECDH_RSA:
-        case MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA:
-        case MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA:
-            sprintf(buf, "server,%d", ecc_key_sizes[sec_lvl]);
-            break;
-
-        default:
-            return(-1);
-    }
-
-    return(0);
-}
-#endif
-
 #if defined(MEASURE_KE_ROUTINES)
 #if defined(MBEDTLS_DHM_C)
 const unsigned char *prepare_dhm_primes(int sec_lvl) {
@@ -270,9 +235,8 @@ int main(int argc, char **argv) {
 #if defined(MUTUAL_AUTH)
     uint32_t flags;
 #endif
-#if defined(MEASURE_KE)
-    char *ke_fname,
-         csv_path[PATH_SIZE] = FILE_PATH;
+#if defined(MBEDTLS_DHM_C) && defined(MEASURE_KE_ROUTINES)
+    const unsigned char dhm_g[] = MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
 #endif
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
     char out_buf[BUFFER_LEN]
@@ -286,10 +250,6 @@ int main(int argc, char **argv) {
         , ec_path[CERT_KEY_PATH_LEN]
 #endif
     ;
-
-#if defined(MBEDTLS_DHM_C)
-    const unsigned char dhm_g[] = MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
-#endif
 
 const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     /* Only SHA-2 hashes */
@@ -809,7 +769,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             fflush(stdout);
 #endif
 
-#if defined(MEASURE_KE_ROUTINES)
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
             memset(out_buf, 0, BUFFER_LEN);
             sprintf(out_buf, "%d,%d", sec_lvl, i);
             strcpy(tls.test_and_sec_lvl, out_buf);
@@ -848,32 +808,6 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             printf(" ok");
 #endif
 #endif /* MUTUAL_AUTH */
-
-#if defined(MEASURE_KE)
-            if(sec_lvl == starting_lvl && i == 0) {
-                strcat(csv_path, mbedtls_ssl_get_ciphersuite(&tls));
-                mkdir(csv_path, 0777);
-
-                ke_fname = (char *) malloc((strlen(csv_path) + KE_FNAME_SIZE)*sizeof(char));
-                strcpy(ke_fname, csv_path);
-                strcat(ke_fname, KE_EXTENSION);
-
-                if((ret = measure_starts(tls.ke_msr_ctx, ke_fname, "endpoint,keylen")) != 0) {
-#if defined(MBEDTLS_DEBUG_C)
-                    printf(" failed! measure_starts returned -0x%04x\n", -ret);
-#endif
-                    goto exit;
-                }
-            }
-
-            if((ret = sprintf_custom(out_buf, tls.session->ciphersuite, sec_lvl)) != 0) {
-                return(ret);
-            }
-
-            if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, out_buf)) != 0) {
-                return(ret);
-            }
-#endif /* MEASURE_KE */
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         }
     }

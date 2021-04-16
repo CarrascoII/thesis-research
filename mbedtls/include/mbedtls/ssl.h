@@ -65,8 +65,7 @@
 #include "platform_time.h"
 #endif
 
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
-    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#if defined(MEASUREMENT_MEASURE_C)
 #include "measurement/measure.h"
 #endif
 
@@ -1190,9 +1189,12 @@ struct mbedtls_ssl_context
 #endif
 #if defined(MEASURE_KE)
     measure_context_t *ke_msr_ctx;
+    int ctx_counter;
 #endif
 #if defined(MEASURE_KE_ROUTINES)
     measure_context_t *routines_msr_ctx;
+#endif
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
     char test_and_sec_lvl[BUFFER_LEN];
     int starting_lvl;
 #endif

@@ -91,7 +91,7 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
                         (ctx->end_time.tv_usec - ctx->start_time.tv_usec));
 
 #if defined(PRINT_MEASUREMENTS)
-    printf("%s, %ld", file_output, final_time);
+    printf("\nfinish: %s,%ld", file_output, final_time);
 #endif
 
     if((csv = fopen(file_name, "a+")) == NULL) {

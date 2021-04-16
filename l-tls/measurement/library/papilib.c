@@ -116,7 +116,7 @@ int measure_papi_finish(measure_papi_context *ctx, const char *file_name, const 
     final_time = ctx->end_time - ctx->start_time;
 
 #if defined(PRINT_MEASUREMENTS)
-    printf("%s, %lld, %lld", file_output, final_cycles, final_time);
+    printf("\nfinish: %s, %lld, %lld", file_output, final_cycles, final_time);
 #endif
 
     if((csv = fopen(file_name, "a+")) == NULL) {

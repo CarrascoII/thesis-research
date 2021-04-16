@@ -9,8 +9,8 @@
 #if defined(MEASUREMENT_MEASURE_C)
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
-// #define MEASURE_KE
-#define MEASURE_KE_ROUTINES
+#define MEASURE_KE
+// #define MEASURE_KE_ROUTINES
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
@@ -31,8 +31,11 @@ char *md_fname;
 #endif
 
 #if defined(MEASURE_KE)
-#define KE_EXTENSION        "/ke_data.csv"
-#define KE_FNAME_SIZE       13 /* = len(KE_EXTENSION) + len("\0") */
+#define KE_EXTENSION        "/handshake_data.csv"
+#define KE_FNAME_SIZE       20 /* = len(KE_EXTENSION) + len("\0") */
+#define MAX_SERVER_CTX      11
+#define MAX_CLIENT_CTX      9
+char *ke_fname;
 #endif
 
 #if defined(MEASURE_KE_ROUTINES)
@@ -215,7 +218,8 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 // #define MBEDTLS_REMOVE_ARC4_CIPHERSUITES
 // #define MBEDTLS_REMOVE_3DES_CIPHERSUITES
 
-// #define MBEDTLS_SSL_CIPHERSUITES
+#define MBEDTLS_SSL_CIPHERSUITES \
+            MBEDTLS_TLS_RSA_WITH_AES_256_CBC_SHA
 
             /* Regular PSK ciphersuites - 10 */
             // MBEDTLS_TLS_PSK_WITH_RC4_128_SHA,
@@ -516,8 +520,8 @@ static const unsigned char test_psk[] = {
 #define DEBUG_LEVEL                     1
 // #define PRINT_MSG_HEX
 #else
-#define PRINT_HANDSHAKE_OPERATIONS
-#define PRINT_KEYS_OPERATIONS
+// #define PRINT_HANDSHAKE_OPERATIONS
+// #define PRINT_KEYS_OPERATIONS
 #endif
 
 /**
