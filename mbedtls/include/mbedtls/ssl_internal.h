@@ -510,7 +510,7 @@ static inline void mbedtls_ssl_sig_hash_set_init( mbedtls_ssl_sig_hash_set_t *se
 #endif /* MBEDTLS_SSL_PROTO_TLS1_2) &&
           MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED */
 
-#if defined(MEASURE_KE_ROUTINES)
+#if defined(MEASURE_KE)
 static inline const char* pk_to_str(mbedtls_pk_type_t sig_alg) {
     switch(sig_alg) {
         case MBEDTLS_PK_RSA:

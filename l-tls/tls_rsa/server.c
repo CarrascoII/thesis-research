@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_DEPRECATED)
 #include <sys/stat.h>
 #endif
 
@@ -64,14 +64,14 @@ int main(int argc, char **argv) {
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_DEPRECATED)
     char path[PATH_SIZE] = FILE_PATH;
-    char *ke_fname;
+    char *ke_fname_deprecated;
 #endif
 
     int ret, i,
         input_size = MIN_INPUT_SIZE,
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE_DEPRECATED)
         n_tests = N_TESTS,
 #endif
 #if defined(MBEDTLS_DEBUG_C)
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
                 return(1);
             }
         }
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE_DEPRECATED)
         else if(strcmp(p, "n_tests") == 0) {
             n_tests = atoi(q);
 
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
                 return(1);
             }
 		}
-#endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE */
+#endif /* MEASURE_CIPHER || MEASURE_MD || MEASURE_KE_DEPRECATED */
 #if defined(MBEDTLS_DEBUG_C)
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
         else {
 #if defined(MBEDTLS_DEBUG_C)
             printf("Available options are input_size, ");
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE)
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_KE_DEPRECATED)
             printf("n_tests, ");
 #endif
             printf("debug_level and ciphersuite\n");
@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
     printf(" ok");
 #endif
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_DEPRECATED)
     for(i = 0; i < n_tests; i++) {
         // Reset the connection
 #if defined(MBEDTLS_DEBUG_C)
@@ -303,7 +303,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
-#endif  /* MEASURE_KE */
+#endif  /* MEASURE_KE_DEPRECATED */
 
         // Listen and accept client
 #if defined(MBEDTLS_DEBUG_C)
@@ -359,16 +359,16 @@ int main(int argc, char **argv) {
 #endif
 #endif /* MUTUAL_AUTH */
 
-#if defined(MEASURE_KE)
+#if defined(MEASURE_KE_DEPRECATED)
         if(i == 0) {
             strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
             mkdir(path, 0777);
 
-            ke_fname = (char *) malloc((strlen(path) + KE_FNAME_SIZE)*sizeof(char));
-            strcpy(ke_fname, path);
-            strcat(ke_fname, KE_EXTENSION);
+            ke_fname_deprecated = (char *) malloc((strlen(path) + KE_FNAME_SIZE_DEPRECATED)*sizeof(char));
+            strcpy(ke_fname_deprecated, path);
+            strcat(ke_fname_deprecated, KE_EXTENSION_DEPRECATED);
 
-            if((ret = measure_starts(tls.ke_msr_ctx, ke_fname, "endpoint")) != 0) {
+            if((ret = measure_starts(tls.ke_msr_ctx, ke_fname_deprecated, "endpoint")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
@@ -376,11 +376,11 @@ int main(int argc, char **argv) {
             }
         }
 
-        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname, "server")) != 0) {
+        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname_deprecated, "server")) != 0) {
             return(ret);
         }
     }
-#endif /* MEASURE_KE */
+#endif /* MEASURE_KE_DEPRECATED */
 
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nPerforming TLS record:");
@@ -511,15 +511,15 @@ exit:
     }
 #endif
 
-#if defined(MEASURE_KE)
-    if(ke_fname != NULL) {
-        free(ke_fname);
+#if defined(MEASURE_KE_DEPRECATED)
+    if(ke_fname_deprecated != NULL) {
+        free(ke_fname_deprecated);
     }
 #endif
 
-#if defined(MEASURE_KE_ROUTINES)
-    if(ke_routines_fname != NULL) {
-        free(ke_routines_fname);
+#if defined(MEASURE_KE_ROUTINES_DEPRECATED)
+    if(ke_routines_fname_deprecated != NULL) {
+        free(ke_routines_fname_deprecated);
     }
 #endif
 

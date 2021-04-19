@@ -221,12 +221,12 @@
 #if defined(MEASUREMENT_MEASURE_C)
 #define MEASURE_CIPHER
 #define MEASURE_MD
-#define MEASURE_KE
-// #define MEASURE_KE_ROUTINES
+#define MEASURE_KE_DEPRECATED
+// #define MEASURE_KE_ROUTINES_DEPRECATED
 #endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
-    defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+    defined(MEASURE_KE_DEPRECATED) || defined(MEASURE_KE_ROUTINES_DEPRECATED)
 #define FILE_PATH               "../docs/"
 #define PATH_SIZE               100
 #endif
@@ -243,15 +243,15 @@ char *cipher_fname;
 char *md_fname;
 #endif
 
-#if defined(MEASURE_KE)
-#define KE_EXTENSION            "/ke_data.csv"
-#define KE_FNAME_SIZE           13 /* = len(KE_EXTENSION) + len("\0") */
+#if defined(MEASURE_KE_DEPRECATED)
+#define KE_EXTENSION_DEPRECATED            "/ke_data.csv"
+#define KE_FNAME_SIZE_DEPRECATED           13 /* = len(KE_EXTENSION_DEPRECATED) + len("\0") */
 #endif
 
-#if defined(MEASURE_KE_ROUTINES)
-#define KE_ROUTINES_EXTENTION   "/ke_routines.csv"
-#define KE_ROUTINES_FNAME_SIZE  17 /* = len(KE_ROUTINES_EXTENTION) + len("\0") */
-char *ke_routines_fname;
+#if defined(MEASURE_KE_ROUTINES_DEPRECATED)
+#define KE_ROUTINES_EXTENTION_DEPRECATED   "/ke_routines.csv"
+#define KE_ROUTINES_FNAME_SIZE_DEPRECATED  17 /* = len(KE_ROUTINES_EXTENTION_DEPRECATED) + len("\0") */
+char *ke_routines_fname_deprecated;
 #endif
 
 /**

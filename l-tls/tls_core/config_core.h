@@ -332,11 +332,11 @@
 #if defined(MEASUREMENT_MEASURE_C)
 #define MEASURE_CIPHER
 #define MEASURE_MD
-// #define MEASURE_KE
+// #define MEASURE_KE_DEPRECATED
 #endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || \
-    defined(MEASURE_KE)
+    defined(MEASURE_KE_DEPRECATED)
 #define FILE_PATH               "../docs/"
 #define PATH_SIZE               100
 #endif
@@ -353,9 +353,9 @@ char *cipher_fname;
 char *md_fname;
 #endif
 
-#if defined(MEASURE_KE)
-#define KE_EXTENSION            "/ke_data.csv"
-#define KE_FNAME_SIZE           13 /* = len(KE_EXTENSION) + len("\0") */
+#if defined(MEASURE_KE_DEPRECATED)
+#define KE_EXTENSION_DEPRECATED            "/ke_data.csv"
+#define KE_FNAME_SIZE_DEPRECATED           13 /* = len(KE_EXTENSION_DEPRECATED) + len("\0") */
 #endif
 
 #endif /* MBEDTLS_CONFIG_H */

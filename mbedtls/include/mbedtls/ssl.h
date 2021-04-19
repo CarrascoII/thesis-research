@@ -1187,14 +1187,14 @@ struct mbedtls_ssl_context
 #if defined(MEASURE_MD)
     measure_context_t *md_msr_ctx;
 #endif
-#if defined(MEASURE_KE)
+#if defined(MEASURE_HANDSHAKE)
     measure_context_t *ke_msr_ctx;
     int ctx_counter;
 #endif
-#if defined(MEASURE_KE_ROUTINES)
+#if defined(MEASURE_KE)
     measure_context_t *routines_msr_ctx;
 #endif
-#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
     char test_and_sec_lvl[BUFFER_LEN];
     int starting_lvl;
 #endif
