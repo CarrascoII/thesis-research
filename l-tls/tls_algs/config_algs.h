@@ -9,8 +9,8 @@
 #if defined(MEASUREMENT_MEASURE_C)
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
-#define MEASURE_KE
-// #define MEASURE_KE_ROUTINES
+// #define MEASURE_KE
+#define MEASURE_KE_ROUTINES
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
@@ -502,7 +502,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define MAX_SEC_LVL                     4
 #endif
 #if defined(MEASUREMENT_MEASURE_C)
-#define N_TESTS                         10000
+#define N_TESTS                         20000
 #endif
 #if defined(USE_PSK_C)
 #define CLI_ID                          "Client_identity"

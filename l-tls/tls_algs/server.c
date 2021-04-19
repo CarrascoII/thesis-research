@@ -144,8 +144,8 @@ const unsigned char *prepare_dhm_primes(int sec_lvl) {
         case 3:
             return(dhp_7680);
 
-        // case 4:
-        //     return(dhp_15360);
+        case 4:
+            return(dhp_15360);
 
         default:
             return(NULL);

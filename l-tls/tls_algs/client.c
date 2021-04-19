@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+#include <time.h>
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
 #if defined(PRINT_MSG_HEX)
@@ -130,6 +133,9 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_client generate request";
     char *p, *q;
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+    struct timespec tim, tim2;
+#endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     uint32_t flags;
 #endif
@@ -481,6 +487,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 #endif /* MBEDTLS_ECDSA_C */
 #endif /* !MEASURE_KE && !MEASURE_KE_ROUTINES */
+
+#if defined(MBEDTLS_DEBUG_C)
+        printf(" ok");
+#endif
 #endif /* MUTUAL_AUTH */
 
         // Setup ssl session
@@ -614,8 +624,20 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             printf("\nConnecting client to tcp/%s/%s...", SERVER_IP, SERVER_PORT);
             fflush(stdout);
 #endif
-        
+
+#if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
+            tim.tv_sec = 0; tim.tv_nsec = 3000000;
+            
+            if((ret = nanosleep(&tim, &tim2)) < 0) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf(" failed! nanosleep returned %d\n", ret);
+#endif
+                goto exit;
+            }
+#endif
+
             if((ret = mbedtls_net_connect(&server, SERVER_IP, SERVER_PORT, MBEDTLS_NET_PROTO_TCP)) != 0) {
+                printf("\nsec_lvl = %d, n_test = %d\n", sec_lvl, i);
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_net_connect returned -0x%04x\n", -ret);
 #endif
@@ -672,7 +694,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASURE_KE) || defined(MEASURE_KE_ROUTINES)
         }
     }
-#endif
+#endif /* MEASURE_KE || MEASURE_KE_ROUTINES */
 
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nPerforming TLS record:");
@@ -777,22 +799,24 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     printf("\n");
 
 exit:
-    mbedtls_ssl_free(&tls);
     mbedtls_ssl_config_free(&tls_conf);
-    mbedtls_entropy_free(&entropy);
-    mbedtls_ctr_drbg_free(&ctr_drbg);
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C)
     mbedtls_pk_free(&ec_key);
     mbedtls_x509_crt_free(&ec_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C)
     mbedtls_pk_free(&rsa_key);
     mbedtls_x509_crt_free(&rsa_cert);
 #endif
+#endif /* MUTUAL_AUTH */
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt_free(&ca_cert);
 #endif
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
     mbedtls_net_free(&server);
+    mbedtls_ssl_free(&tls);
 
 #if defined(MEASURE_CIPHER)
     if(cipher_fname != NULL) {

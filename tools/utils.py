@@ -635,7 +635,7 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     print(f'    Checking {endpoint} return code'.ljust(strlen, '.'), end=' ', flush=True)
 
     if return_code != 0:
-        print(f'error\n    Got an unexpected return code!!!\n    Details: {return_code}')
+        print(f'error\n    Got an unexpected return code!!!\n    Details: {hex(-return_code)}')
         return return_code
 
     if last_err[0] != '':
