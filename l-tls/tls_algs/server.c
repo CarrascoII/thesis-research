@@ -903,15 +903,21 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 
     // Final connection status
-    printf("\n\nFinal status:");
-#if defined(MBEDTLS_DEBUG_C)
-    printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
+    printf("\n\nFinal status:");    
+#if !defined(MBEDTLS_DEBUG_C)
+    if(ret == 0) {
+#else
+        printf("\n  -TLS version being used:    %s", mbedtls_ssl_get_version(&tls));
 #endif
-    printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
+        printf("\n  -Suite being used:          %s", mbedtls_ssl_get_ciphersuite(&tls));
 #if defined(MBEDTLS_DEBUG_C)
-    printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
-    printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
-#endif /* MBEDTLS_DEBUG_C */
+        printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
+        printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
+#else
+    } else {
+        printf("\n  -Return code:          -0x%04x", ret);
+    }
+#endif
     printf("\n");
 
 exit:

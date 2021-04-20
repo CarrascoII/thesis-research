@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
             strcpy(ke_fname_deprecated, path);
             strcat(ke_fname_deprecated, KE_EXTENSION_DEPRECATED);
 
-            if((ret = measure_starts(tls.ke_msr_ctx, ke_fname_deprecated, "endpoint")) != 0) {
+            if((ret = measure_starts(tls.ke_msr_ctx_deprecated, ke_fname_deprecated, "endpoint")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
@@ -376,7 +376,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        if((ret = measure_finish(tls.ke_msr_ctx, ke_fname_deprecated, "server")) != 0) {
+        if((ret = measure_finish(tls.ke_msr_ctx_deprecated, ke_fname_deprecated, "server")) != 0) {
             return(ret);
         }
     }

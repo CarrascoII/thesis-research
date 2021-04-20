@@ -9,8 +9,8 @@
 #if defined(MEASUREMENT_MEASURE_C)
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
-#define MEASURE_KE
-// #define MEASURE_HANDSHAKE
+// #define MEASURE_KE
+#define MEASURE_HANDSHAKE
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
