@@ -33,12 +33,12 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     stats_type = ['mean', 'stddev']
     data_ops_params = {'serv': serv}
     data_ops_func = {
-        'conf': utils.parse_alg_data,
-        'int': utils.parse_alg_data,
-        'auth': utils.parse_ke_routines,
-        'ke': utils.parse_ke_routines,
-        'pfs': utils.parse_ke_routines,
-        'hs': utils.parse_handshake_data
+        'conf': utils.parse_record_data,
+        'int': utils.parse_record_data,
+        'auth': utils.parse_handshake_data,
+        'ke': utils.parse_handshake_data,
+        'pfs': utils.parse_handshake_data,
+        'hs': utils.parse_overhead_data
     }
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)

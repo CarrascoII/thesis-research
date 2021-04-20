@@ -54,7 +54,7 @@ def make_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
     labels = settings.alg_labels[alg]
 
     print(f'{spacing}Parsing obtained data'.ljust(strlen, '.'), end=' ', flush=True)
-    data, headers = utils.parse_alg_data(filename, alg)
+    data, headers = utils.parse_record_data(filename, alg)
     print('ok')
 
     if weight != 0:

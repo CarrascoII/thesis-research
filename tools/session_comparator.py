@@ -6,7 +6,7 @@ import utils
 
 def make_session_cmp_bar_by_ke(ylabel, stats, labels, stats_type):
     endpoints = stats[labels[0]]['keys']
-    ke = utils.parse_ke(labels)
+    ke = utils.get_ke_algs(labels)
 
     for stype in stats_type:
         for i in range(len(endpoints)):

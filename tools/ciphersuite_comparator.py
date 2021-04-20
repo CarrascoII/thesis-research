@@ -37,7 +37,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
         
         for suite in ciphersuites:
             path = '../docs/' + suite + '/'
-            data, hdr = utils.parse_alg_data(path + alg + '_data.csv', alg)
+            data, hdr = utils.parse_record_data(path + alg + '_data.csv', alg)
        
             all_data[suite] = data
             all_headers.append(hdr)

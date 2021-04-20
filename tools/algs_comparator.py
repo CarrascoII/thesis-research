@@ -39,7 +39,7 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
 
         for suite in grouped_suites[key]:
             path = '../docs/' + suite + '/' + alg + '_data.csv'
-            data, hdr = utils.parse_alg_data(path, alg)
+            data, hdr = utils.parse_record_data(path, alg)
 
             if all_data[key] == {}:
                 all_data[key] = data

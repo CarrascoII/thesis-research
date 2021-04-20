@@ -139,7 +139,7 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 
         return serv_dict
 
-def parse_alg_data(filename, alg, serv=None):
+def parse_record_data(filename, alg, serv=None):
     if serv != None:
         alg = settings.serv_to_alg[serv]
 
@@ -173,30 +173,7 @@ def parse_alg_data(filename, alg, serv=None):
 
         return data, headers
 
-def parse_session_data(filename):
-    with open(filename, mode='r') as fl:
-        csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[2:]
-        data = {}
-
-        for endpoint in ['server', 'client']:
-            data[endpoint] = {}
-
-            for hdr in headers:
-                data[endpoint][hdr] = []
-
-        for row in csv_reader:
-            endpoint = row['endpoint']
-
-            for hdr in headers:
-                val = int(row[hdr])
-
-                if val != 0:
-                    data[endpoint][hdr].append(val)
-        
-        return data, headers
-
-def parse_ke_routines(filename, alg, serv):
+def parse_handshake_data(filename, alg, serv):
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
         headers = csv_reader.fieldnames[4:]
@@ -252,7 +229,7 @@ def parse_ke_routines(filename, alg, serv):
 
         return data, headers
 
-def parse_handshake_data(filename, alg, serv):
+def parse_overhead_data(filename, alg, serv):
     hs_fname = None
     hs_data = None
     hs_hdrs = None
@@ -260,7 +237,7 @@ def parse_handshake_data(filename, alg, serv):
 
     if filename.find('/ke_data.csv') != -1:
         hs_fname = filename.replace('/ke', '/handshake')
-        hs_data, hs_hdrs = parse_handshake_data(hs_fname, alg, serv)
+        hs_data, hs_hdrs = parse_overhead_data(hs_fname, alg, serv)
 
     with open(filename, mode='r') as fl:
         csv_reader = csv.DictReader(fl)
@@ -309,6 +286,29 @@ def parse_handshake_data(filename, alg, serv):
                     for i in range(len(data[keylen][sub])):
                         hs_data[keylen][sub][i] -= data[keylen][sub][i]
 
+        return data, headers
+
+def parse_session_data(filename):
+    with open(filename, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+        headers = csv_reader.fieldnames[2:]
+        data = {}
+
+        for endpoint in ['server', 'client']:
+            data[endpoint] = {}
+
+            for hdr in headers:
+                data[endpoint][hdr] = []
+
+        for row in csv_reader:
+            endpoint = row['endpoint']
+
+            for hdr in headers:
+                val = int(row[hdr])
+
+                if val != 0:
+                    data[endpoint][hdr].append(val)
+        
         return data, headers
 
 def write_alg_csv(filename, labels, stats):
@@ -407,36 +407,6 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
         with open(path + label + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
-def write_handshake_cmp_csv(path, hdr, labels, all_stats):
-    lines = {'server': [], 'client': []}
-    keys = []
-    line = hdr + ',keylen,'
-    elem = next(iter(all_stats.values()))
-
-    for key in elem:
-        if key.find('server') != -1:
-            keys.append(key[:-7])
-            line += key[:-7] + ','
-
-    for end in lines:
-        lines[end].append(line[:-1] + '\n')
-
-    for suite in all_stats:
-        for end in lines:
-            line = suite + ','
-
-            for i in range(len(all_stats[suite]['keys'])):
-                sub = line + str(all_stats[suite]['keys'][i]) + ','
-
-                for key in keys:
-                    sub += str(all_stats[suite][key + '_' + end][i]) + ','
-
-                lines[end].append(sub[:-1] + '\n')
-
-    for end, label in zip(lines, labels):
-        with open(path + label + '_statistics.csv', 'w') as fl:
-            fl.writelines(lines[end])
-
 def write_session_cmp_csv(path, all_stats):
     lines = {'client': [], 'server': []}
     line = 'ciphersuite,'
@@ -461,7 +431,7 @@ def write_session_cmp_csv(path, all_stats):
         with open(path + key + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[key])
 
-def parse_ke(ciphersuites):
+def get_ke_algs(ciphersuites):
     ke = []
 
     for suite in ciphersuites:
@@ -653,49 +623,6 @@ def calc_statistics(data, stats_type):
 
     return stats
 
-def calc_pfs_statistics(data, alt_data, stats_type, hdrs):
-    for key1, key2 in zip(data, alt_data):
-        cont = False
-
-        if settings.keylen_to_sec_str[key1] == settings.keylen_to_sec_str[key2]:
-            cont = True
-            break
-
-        if cont:
-            for sub in data[key1]:
-                m = len(data[key1][sub])
-                n = len(alt_data[key2][sub])
-
-                if n < m:
-                    m = n
-                    
-                elif n == m:
-                    continue
-
-                data[key1][sub] = data[key1][sub][:m]
-                alt_data[key2][sub] = alt_data[key2][sub][:m]
-        
-        else:
-            return None
-
-    stats = calc_statistics(data, stats_type)
-    alt_stats = calc_statistics(alt_data, stats_type)
-
-    for key in list(stats.keys())[1:]:
-        for hdr in hdrs:
-            if key == 'mean_' + hdr:
-                for i in range(len(stats['keys'])):
-                    stats[key][i] = stats[key][i] - alt_stats[key][i]
-            
-            elif key == 'stddev_' + hdr:
-                for end in stats['keys']:
-                    idx = stats['keys'].index(end) 
-                    cov = np.cov([data[end][hdr], alt_data[end][hdr]])
-                    v = np.square(stats[key][idx]) + np.square(alt_stats[key][idx]) - 2*cov[0][1]
-                    stats[key][idx] = np.sqrt(v)
-
-    return stats
-
 ########## PROFILLER UTILS ##########
 def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strlen):
     last_msg = [
@@ -732,25 +659,21 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     print('ok')
     return return_code
 
-def check_make_ret(return_code, stdout, stderr):
+def make_progs(target):
+    args = ['make', '-C', '../l-tls', target]
+    p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    ret = p.returncode
     strerr = stderr.decode('utf-8').strip('\n')
     last_err = strerr.split('\n')
 
-    if return_code != 0:
-        print(f'error\n    Compilation failed!!!\n    Details: {return_code}')
-        return return_code
+    if ret != 0:
+        print(f'error\n    Compilation failed!!!\n    Details: {ret}')
+        return ret
 
     if last_err[0] != '':
         print(f'error\n    An unexpected error occured!!!\n    Details:\n        {last_err}')
         return -1
 
     print('ok')
-    return return_code
-
-def make_progs(target):
-    args = ['make', '-C', '../l-tls', target]
-    p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    ret = p.returncode
-
-    return check_make_ret(ret, stdout, stderr)
+    return ret
