@@ -37,7 +37,8 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
         'int': utils.parse_alg_data,
         'auth': utils.parse_ke_routines,
         'ke': utils.parse_ke_routines,
-        'pfs': utils.parse_ke_routines
+        'pfs': utils.parse_ke_routines,
+        'hs': utils.parse_handshake_data
     }
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
@@ -108,12 +109,12 @@ def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spa
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
 
     for serv in serv_set:
-        print(f'{spacing}\n{serv.upper()} data:')
+        print(f'\n{serv.upper()} data:')
         make_serv_cmp_figs(servs[serv], serv, labels[serv], weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:ciakp', ['help', 'weight=', 'conf', 'int', 'auth', 'ke', 'pfs'])
+        opts, args = getopt.getopt(argv, 'hw:ciakps', ['help', 'weight=', 'conf', 'int', 'auth', 'ke', 'pfs', 'hshake'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -133,9 +134,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] [-s] <services_list> <ciphersuite_list>')
             print('services_comparator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--ke]' +
-                    ' [--pfs] <services_list> <ciphersuite_list>')
+                    ' [--pfs] [--hshake] <services_list> <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -155,6 +156,9 @@ def main(argv):
 
         elif opt in ('-p', '--pfs'):
             servs.append('pfs')
+
+        elif opt in ('-s', '--hshake'):
+            servs.append('hs')
 
         else:
             print(f'Option "{opt}" does not exist')

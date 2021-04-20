@@ -104,23 +104,38 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 
     for serv in serv_set:
         serv_dict[serv] = {}
-        alg_conv[serv.upper()] = []
-         
+
     with open(filename, 'r') as fl:
         for line in fl.readlines():
             line = line.split(',')
             serv = line[0].strip()
             alg = line[1].strip()
-            
-            if serv in list(alg_conv.keys()):
-                serv_dict[serv.lower()][alg] = []
-                alg_conv[serv] += [alg]
+
+            if serv.lower() not in list(serv_dict.keys()):
+                continue
+
+            elif serv not in list(alg_conv.keys()):
+                alg_conv[serv.upper()] = []
+
+            serv_dict[serv.lower()][alg] = []
+            alg_conv[serv] += [alg]
 
         for suite in ciphersuites:
             for serv in alg_conv:
                 for alg in alg_conv[serv]:
-                    if suite.find(alg) != -1:
+                    if suite.find('-' + alg + '-') != -1:
                         serv_dict[serv.lower()][alg].append(suite)
+                    
+                    elif serv == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
+                        serv_dict[serv.lower()][alg].append(suite)
+
+            if 'hs' in serv_dict:
+                alg = suite[4:suite.find('-WITH')]
+
+                if alg not in list(serv_dict['hs'].keys()):
+                    serv_dict['hs'][alg] = []
+                
+                serv_dict['hs'][alg].append(suite)
 
         return serv_dict
 
@@ -230,9 +245,69 @@ def parse_ke_routines(filename, alg, serv):
                             all_val[hdr] += val
 
                 for sub in all_val:
+                    if all_val[sub] != 0:
+                        data[row_lst[0]['keylen']][sub].append(all_val[sub])
+
+                row_lst = []
+
+        return data, headers
+
+def parse_handshake_data(filename, alg, serv):
+    hs_fname = None
+    hs_data = None
+    hs_hdrs = None
+    idx = 4 if filename.find('ke_data.csv') != -1 else 3
+
+    if filename.find('/ke_data.csv') != -1:
+        hs_fname = filename.replace('/ke', '/handshake')
+        hs_data, hs_hdrs = parse_handshake_data(hs_fname, alg, serv)
+
+    with open(filename, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+        headers = csv_reader.fieldnames[idx:]
+        data = {}
+        sub_keys = []
+        row_lst = []
+        curr_test = 0
+
+        for hdr in headers:
+            for end in settings.serv_labels[serv]:
+                sub_keys.append(hdr + '_' + end)
+
+        for row in csv_reader:
+            test_id = int(row['test_id'])
+
+            if test_id == curr_test:
+                row_lst.append(row)
+                key = row['keylen']
+
+                if key not in data.keys():
+                    data[key] = {}
+                
+                    for sub in sub_keys:
+                        data[key][sub] = []
+
+            else:
+                curr_test = test_id
+                all_val = {}
+
+                for sub in sub_keys:
+                    all_val[sub] = 0
+
+                for elem in row_lst:
+                    for hdr in headers:
+                        all_val[hdr + '_' + settings.serv_labels[serv][0]] += int(elem[hdr])
+
+                for sub in all_val:
                     data[row_lst[0]['keylen']][sub].append(all_val[sub])
 
                 row_lst = []
+
+        if hs_fname != None and list(data.keys()) == list(hs_data.keys()) and headers == hs_hdrs:
+            for keylen in data:
+                for sub in sub_keys:
+                    for i in range(len(data[keylen][sub])):
+                        hs_data[keylen][sub][i] -= data[keylen][sub][i]
 
         return data, headers
 
@@ -635,18 +710,23 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     print(f'    Checking {endpoint} return code'.ljust(strlen, '.'), end=' ', flush=True)
 
     if return_code != 0:
-        print(f'error\n    Got an unexpected return code!!!\n    Details: {hex(-return_code)}')
+        print(f'error\n    Got an unexpected return code!!!\n    Details: {return_code}')
         return return_code
 
     if last_err[0] != '':
         print(f'error\n    An unexpected error occured!!!\n    Details:\n        {last_err}')
         return -1
 
-    for i in range(0, len(last_msg)):
+    for i in range(0, len(last_out)):
         if last_msg[i] != last_out[i]:
-            print('error\n    Last message was not the expected one!!!' +
-                 f'\n        Expected:\n        {last_msg[0]}\n        {last_msg[1]}' +
-                 f'\n\n        Obtained:\n        {last_out[0]}\n        {last_out[1]}')
+            print('error\n    Last message was not the expected one!!!\n      Expected:')
+            for j in range(len(last_out)):
+                print(f'\n        {last_msg[j]}')
+
+            print(f'\n      Obtained:')
+            for j in range(len(last_out)):
+                print(f'\n        {last_out[j]}')
+
             return -1
 
     print('ok')
