@@ -2600,11 +2600,12 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
         strcat(path, mbedtls_ssl_get_ciphersuite_name(ssl->session_negotiate->ciphersuite));
         mkdir(path, 0777);
 
-        ke_fname = (char *) malloc((strlen(path) + KE_FNAME_SIZE)*sizeof(char));
+        ke_fname = (char *) malloc((strlen(path) + END_FNAME_SIZE + KE_FNAME_SIZE)*sizeof(char));
         strcpy(ke_fname, path);
+        strcat(ke_fname, SRV_FNAME);
         strcat(ke_fname, KE_EXTENTION);
 
-        if((ret = measure_starts(ssl->ke_msr_ctx, ke_fname, "endpoint,keylen,test_id,operation")) != 0) {
+        if((ret = measure_starts(ssl->ke_msr_ctx, ke_fname, "keylen,test_id,operation")) != 0) {
             return(ret);
         }
     }
@@ -3076,7 +3077,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
             return(ret2);
         }
 
-        sprintf(buff, "server,%s,dhm_set_group", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,dhm_set_group", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -3113,7 +3114,7 @@ static int ssl_prepare_server_key_exchange( mbedtls_ssl_context *ssl,
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,dhm_make_params", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,dhm_make_params", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -3195,7 +3196,7 @@ curve_matching_done:
             return(ret2);
         }
 
-        sprintf(buff, "server,%s,ecdh_setup", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,ecdh_setup", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -3231,7 +3232,7 @@ curve_matching_done:
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,ecdh_make_params", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,ecdh_make_params", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -3447,8 +3448,8 @@ curve_matching_done:
             return(ret2);
         }
 
-        sprintf(buff, "server,%s,%s_sign_with_%s", ssl->test_and_sec_lvl,
-                                    pk_to_str(mbedtls_pk_get_type(mbedtls_ssl_own_key(ssl))), md_to_str(md_alg));
+        sprintf(buff, "%s,%s_sign_with_%s", ssl->test_and_sec_lvl,
+                            pk_to_str(mbedtls_pk_get_type(mbedtls_ssl_own_key(ssl))), md_to_str(md_alg));
       
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -3511,7 +3512,7 @@ static int ssl_write_server_key_exchange( mbedtls_ssl_context *ssl )
                 return(ret);
             }
 
-            sprintf(buff, "server,%s,get_ecdh_params_from_cert", ssl->test_and_sec_lvl);
+            sprintf(buff, "%s,get_ecdh_params_from_cert", ssl->test_and_sec_lvl);
 
             if((ret = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
                 return(ret);
@@ -4049,7 +4050,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,parse_client_dh_public", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,parse_client_dh_public", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4092,7 +4093,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,dhm_calc_secret", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,dhm_calc_secret", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4142,7 +4143,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,ecdh_read_public", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,ecdh_read_public", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4181,7 +4182,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,ecdh_calc_secret", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,ecdh_calc_secret", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4229,7 +4230,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4291,7 +4292,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4322,7 +4323,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,rsa_decrypt", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,rsa_decrypt", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4365,7 +4366,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4397,7 +4398,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,parse_client_dh_public", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,parse_client_dh_public", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4446,7 +4447,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,parse_client_psk_identity", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4478,7 +4479,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,ecdh_read_public", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,ecdh_read_public", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4524,7 +4525,7 @@ static int ssl_parse_client_key_exchange( mbedtls_ssl_context *ssl )
         }
 
         memset(buff, 0, PATH_SIZE);
-        sprintf(buff, "server,%s,rsa_decrypt", ssl->test_and_sec_lvl);
+        sprintf(buff, "%s,rsa_decrypt", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -4799,8 +4800,8 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     }
 
     memset(buff, 0, PATH_SIZE);
-    sprintf(buff, "server,%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
-                                pk_to_str(mbedtls_pk_get_type(&ssl->session_negotiate->peer_cert->pk)), md_to_str(md_alg));
+    sprintf(buff, "%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
+                        pk_to_str(mbedtls_pk_get_type(&ssl->session_negotiate->peer_cert->pk)), md_to_str(md_alg));
 
     if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
         return(ret2);
@@ -4820,7 +4821,7 @@ static int ssl_parse_certificate_verify( mbedtls_ssl_context *ssl )
     mbedtls_ssl_update_handshake_status( ssl );
 
 #if defined(MEASURE_HANDSHAKE)
-    if((ret = measure_get_vals(&ssl->hs_msr_ctx[ssl->ctx_counter], MEASURE_END)) != 0) {
+    if((ret = measure_get_vals(&ssl->hs_msr_ctx[ssl->ctx_counter++], MEASURE_END)) != 0) {
         return(ret);
     }
 #endif

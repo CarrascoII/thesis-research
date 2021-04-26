@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #include <time.h>
 #endif
 
@@ -56,7 +56,8 @@ static void my_debug(void *ctx, int level, const char *file, int line, const cha
 }
 #endif /* MBEDTLS_DEBUG_C */
 
-#if defined(MBEDTLS_ECP_C) && defined(MEASURE_KE)
+#if defined(MBEDTLS_ECP_C) && \
+    (defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE))
 mbedtls_ecp_group_id *prepare_ecdh_curve(int sec_lvl) {
     mbedtls_ecp_group_id *ret = (mbedtls_ecp_group_id *) malloc(2*sizeof(mbedtls_ecp_group_id));
 
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         max_input_size = MAX_INPUT_SIZE,
 #endif
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         starting_lvl,
         sec_lvl = MIN_SEC_LVL,
         max_sec_lvl = MAX_SEC_LVL,
@@ -133,13 +134,13 @@ int main(int argc, char **argv) {
     unsigned char *request, *response;
     const char *pers = "tls_client generate request";
     char *p, *q;
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
     struct timespec tim, tim2;
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     uint32_t flags;
 #endif
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
     char out_buf[BUFFER_LEN]
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
         , ca_cert_path[CERT_KEY_PATH_LEN]
@@ -204,7 +205,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 		}
         else if(strcmp(p, "sec_lvl") == 0) {
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             sec_lvl = atoi(q);
 
             if(sec_lvl < MIN_SEC_LVL || sec_lvl > MAX_SEC_LVL) {
@@ -220,7 +221,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 		}
         else if(strcmp(p, "max_sec_lvl") == 0) {
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             max_sec_lvl = atoi(q);
 
             if(max_sec_lvl < MIN_SEC_LVL || max_sec_lvl > MAX_SEC_LVL) {
@@ -276,7 +277,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
             printf("max_input_size, ");
 #endif
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             printf("sec_lvl, max_sec_lvl, ");
 #endif
 #if defined(MEASUREMENT_MEASURE_C)
@@ -384,7 +385,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     printf(" ok");
 #endif
 
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
     starting_lvl = sec_lvl;
 
     for(; sec_lvl <= max_sec_lvl; sec_lvl++) {
@@ -542,7 +543,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL ||
             strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "ECDSA") != NULL) {
             mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             mbedtls_ssl_conf_cert_profile(&tls_conf, &mbedtls_x509_crt_profile_custom);
 #endif
         }
@@ -572,7 +573,8 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 #endif /* MUTUAL_AUTH */
 
-#if defined(MBEDTLS_ECP_C) && defined(MEASURE_KE)
+#if defined(MBEDTLS_ECP_C) && \
+    (defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE))
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "ECDHE") != NULL) {
             mbedtls_ssl_conf_curves(&tls_conf, (const mbedtls_ecp_group_id *) prepare_ecdh_curve(sec_lvl));
         }
@@ -600,7 +602,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         printf(" ok");
 #endif
 
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         for(i = 0; i < n_tests; i++) {
             // Reset the connection
 #if defined(MBEDTLS_DEBUG_C)
@@ -625,7 +627,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             fflush(stdout);
 #endif
 
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             tim.tv_sec = 0; tim.tv_nsec = 3000000;
             
             if((ret = nanosleep(&tim, &tim2)) < 0) {
@@ -651,7 +653,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             fflush(stdout);
 #endif
 
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             memset(out_buf, 0, BUFFER_LEN);
             sprintf(out_buf, "%d,%d", sec_lvl, i);
             strcpy(tls.test_and_sec_lvl, out_buf);
@@ -690,10 +692,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             printf(" ok");
 #endif
 #endif /* MBEDTLS_RSA_C || MBEDTLS_ECDSA_C */
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         }
     }
-#endif /* MEASURE_HANDSHAKE || MEASURE_KE */
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nPerforming TLS record:");
@@ -835,15 +837,15 @@ exit:
     }
 #endif
 
-#if defined(MEASURE_HANDSHAKE)
-    if(handshake_fname != NULL) {
-        free(handshake_fname);
-    }
-#endif
-
 #if defined(MEASURE_KE)
     if(ke_fname != NULL) {
         free(ke_fname);
+    }
+#endif
+
+#if defined(MEASURE_HANDSHAKE)
+    if(handshake_fname != NULL) {
+        free(handshake_fname);
     }
 #endif
 

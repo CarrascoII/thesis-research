@@ -7,44 +7,47 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
-#define MEASURE_KE
+#define MEASURE_CIPHER
+#define MEASURE_MD
+// #define MEASURE_KE
 #define MEASURE_HANDSHAKE
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
 #define FILE_PATH               "../docs/"
 #define PATH_SIZE               100
+#define SRV_FNAME               "/srv_"
+#define CLI_FNAME               "/cli_"
+#define END_FNAME_SIZE          5
 #endif
 
 #if defined(MEASURE_CIPHER)
-#define CIPHER_EXTENSION        "/cipher_data.csv"
-#define CIPHER_FNAME_SIZE       17 /* = len(CIPHER_EXTENSION) + len("\0") */
+#define CIPHER_EXTENSION        "cipher_data.csv"
+#define CIPHER_FNAME_SIZE       16 /* = len(CIPHER_EXTENSION) + len("\0") */
 char *cipher_fname;
 #endif
 
 #if defined(MEASURE_MD)
-#define MD_EXTENSION            "/md_data.csv"
-#define MD_FNAME_SIZE           13 /* = len(MD_EXTENSION) + len("\0") */
+#define MD_EXTENSION            "md_data.csv"
+#define MD_FNAME_SIZE           12 /* = len(MD_EXTENSION) + len("\0") */
 char *md_fname;
 #endif
 
 #if defined(MEASURE_KE)
-#define KE_EXTENTION            "/ke_data.csv"
-#define KE_FNAME_SIZE           13 /* = len(KE_EXTENTION) + len("\0") */
+#define KE_EXTENTION            "ke_data.csv"
+#define KE_FNAME_SIZE           12 /* = len(KE_EXTENTION) + len("\0") */
 char *ke_fname;
 #endif
 
 #if defined(MEASURE_HANDSHAKE)
-#define HANDSHAKE_EXTENSION     "/handshake_data.csv"
-#define HANDSHAKE_FNAME_SIZE    20 /* = len(HANDSHAKE_EXTENSION) + len("\0") */
+#define HANDSHAKE_EXTENSION     "handshake_data.csv"
+#define HANDSHAKE_FNAME_SIZE    19 /* = len(HANDSHAKE_EXTENSION) + len("\0") */
 #define MAX_SERVER_CTX          11
 #define MAX_CLIENT_CTX          9
 char *handshake_fname;
 #endif
 
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define CERTS_PATH          "../l-tls/examples/"
 #define CERT_KEY_PATH_LEN   40
 #define BUFFER_LEN          15
@@ -97,7 +100,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECP_C
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP224R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
@@ -128,14 +131,14 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_BASE64_C
 #endif
 
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_PK_WRITE_C
 #define MBEDTLS_PEM_WRITE_C
 #define MBEDTLS_X509_CRT_WRITE_C
 #define MBEDTLS_X509_CREATE_C
 #define MBEDTLS_GENPRIME
 #endif
-#if defined(MBEDTLS_ECDSA_C) || defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MBEDTLS_ECDSA_C) || defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_ASN1_WRITE_C
 #endif
 
@@ -186,7 +189,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
 // #define MBEDTLS_DEBUG_C
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_FS_IO
 #define MBEDTLS_ERROR_C
 #endif
@@ -201,11 +204,11 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 // #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
-#elif defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#elif defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MBEDTLS_MPI_MAX_SIZE
 #endif
 // #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_MPI_MAX_SIZE            1920     /**< Maximum number of bytes for usable MPIs. */
 #endif
 
@@ -497,7 +500,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
 #define MAX_INPUT_SIZE                  1048576
-#if defined(MEASURE_HANDSHAKE) || defined(MEASURE_KE)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MIN_SEC_LVL                     0
 #define MAX_SEC_LVL                     4
 #endif

@@ -1336,11 +1336,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             return(ret2);
         }
 
-        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            sprintf(buff, "client,%s,dhm_calc_secret", ssl->test_and_sec_lvl);
-        } else {
-            sprintf(buff, "server,%s,dhm_calc_secret", ssl->test_and_sec_lvl);
-        }
+        sprintf(buff, "%s,dhm_calc_secret", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -1398,11 +1394,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             return(ret2);
         }
 
-        if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-            sprintf(buff, "client,%s,ecdh_calc_secret", ssl->test_and_sec_lvl);
-        } else {
-            sprintf(buff, "server,%s,ecdh_calc_secret", ssl->test_and_sec_lvl);
-        }
+        sprintf(buff, "%s,ecdh_calc_secret", ssl->test_and_sec_lvl);
 
         if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
             return(ret2);
@@ -1467,11 +1459,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
 
     memset(buff, 0, PATH_SIZE);
 
-    if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-        sprintf(buff, "client,%s,psk_derive_premaster", ssl->test_and_sec_lvl);
-    } else {
-        sprintf(buff, "server,%s,psk_derive_premaster", ssl->test_and_sec_lvl);
-    }
+    sprintf(buff, "%s,psk_derive_premaster", ssl->test_and_sec_lvl);
 
     if((ret2 = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
         return(ret2);
@@ -1646,10 +1634,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                 if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
 
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                    sprintf(buffer, "client,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
-                else
-                    sprintf(buffer, "server,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                sprintf(buffer, "hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
                 if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
@@ -1709,10 +1694,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                sprintf(buffer, "client,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
-            else
-                sprintf(buffer, "server,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+            sprintf(buffer, "encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
             if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
                 return(ret);
@@ -1902,10 +1884,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
             if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                sprintf(buffer, "client,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
-            else
-                sprintf(buffer, "server,encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+            sprintf(buffer, "encrypt,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
             if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
                 return(ret);
@@ -1980,10 +1959,7 @@ static int ssl_encrypt_buf( mbedtls_ssl_context *ssl )
                 if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
 
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                    sprintf(buffer, "client,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
-                else
-                    sprintf(buffer, "server,hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
+                sprintf(buffer, "hash,%d", ssl->out_len[0]*256 + ssl->out_len[1]);
 
                 if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
@@ -2081,10 +2057,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                sprintf(buffer, "client,decrypt,%d", len);
-            else
-                sprintf(buffer, "server,decrypt,%d", len);
+            sprintf(buffer, "decrypt,%d", len);
 
             if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
                 return(ret);
@@ -2355,10 +2328,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
             if((ret = measure_get_vals(ssl->cipher_msr_ctx, MEASURE_END)) != 0)
                 return(ret);
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                sprintf(buffer, "client,decrypt,%d", len);
-            else
-                sprintf(buffer, "server,decrypt,%d", len);
+            sprintf(buffer, "decrypt,%d", len);
 
             if((ret = measure_finish(ssl->cipher_msr_ctx, cipher_fname, buffer)) != 0)
                 return(ret);
@@ -2369,10 +2339,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
         if(ssl->in_msgtype == 23) {
             int len = dec_msglen - (1 + ssl->in_msg[ssl->in_msglen - 1]);
 
-            if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                sprintf(buffer, "client,verify,%d", len);
-            else
-                sprintf(buffer, "server,verify,%d", len);
+            sprintf(buffer, "verify,%d", len);
 
             if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                 return(ret);
@@ -2629,10 +2596,7 @@ static int ssl_decrypt_buf( mbedtls_ssl_context *ssl )
                 if((ret = measure_get_vals(ssl->md_msr_ctx, MEASURE_END)) != 0)
                     return(ret);
 
-                if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT)
-                    sprintf(buffer, "client,verify,%d", ssl->in_len[0]*256 + ssl->in_len[1]);
-                else
-                    sprintf(buffer, "server,verify,%d", ssl->in_len[0]*256 + ssl->in_len[1]);
+                sprintf(buffer, "verify,%d", ssl->in_len[0]*256 + ssl->in_len[1]);
 
                 if((ret = measure_finish(ssl->md_msr_ctx, md_fname, buffer)) != 0)
                     return(ret);
@@ -6244,15 +6208,9 @@ crt_verify:
         return(ret);
     }
 
-    if(ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT) {
-        sprintf(buff, "client,%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
-                                    pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
-                                    md_to_str(ssl->session_negotiate->peer_cert->sig_md));
-    } else {
-        sprintf(buff, "server,%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
-                                    pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
-                                    md_to_str(ssl->session_negotiate->peer_cert->sig_md));
-    }
+    sprintf(buff, "%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
+                        pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
+                        md_to_str(ssl->session_negotiate->peer_cert->sig_md));
 
     if((ret = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
         return(ret);
@@ -8622,36 +8580,36 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #endif
 
 #if defined(MEASURE_CIPHER)
-            cipher_fname = (char *) malloc((strlen(path) + CIPHER_FNAME_SIZE)*sizeof(char));
-
+            cipher_fname = (char *) malloc((strlen(path) + END_FNAME_SIZE + CIPHER_FNAME_SIZE)*sizeof(char));
             strcpy(cipher_fname, path);
+            strcat(cipher_fname, ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER ? SRV_FNAME : CLI_FNAME);
             strcat(cipher_fname, CIPHER_EXTENSION);
 
-            if((ret = measure_starts(ssl->cipher_msr_ctx, cipher_fname, "endpoint,operation,msglen")) != 0)
+            if((ret = measure_starts(ssl->cipher_msr_ctx, cipher_fname, "operation,msglen")) != 0)
                 return(ret);
 #endif
 
 #if defined(MEASURE_MD)
-            md_fname = (char *) malloc((strlen(path) + MD_FNAME_SIZE)*sizeof(char));
-
+            md_fname = (char *) malloc((strlen(path) + END_FNAME_SIZE + MD_FNAME_SIZE)*sizeof(char));
             strcpy(md_fname, path);
+            strcat(md_fname, ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER ? SRV_FNAME : CLI_FNAME);
             strcat(md_fname, MD_EXTENSION);
 
-            if((ret = measure_starts(ssl->md_msr_ctx, md_fname, "endpoint,operation,msglen")) != 0)
+            if((ret = measure_starts(ssl->md_msr_ctx, md_fname, "operation,msglen")) != 0)
                 return(ret);
 #endif
 
 #if defined(MEASURE_HANDSHAKE)
             sprintf(cmp_buff, "%d,0", ssl->starting_lvl);
-            sprintf(buff, "%s,%s", ssl->conf->endpoint == MBEDTLS_SSL_IS_CLIENT ? "client" : "server", ssl->test_and_sec_lvl);
+            sprintf(buff, "%s", ssl->test_and_sec_lvl);
 
             if(strcmp(cmp_buff, ssl->test_and_sec_lvl) == 0) {
-                handshake_fname = (char *) malloc((strlen(path) + HANDSHAKE_FNAME_SIZE)*sizeof(char));
-
+                handshake_fname = (char *) malloc((strlen(path) + END_FNAME_SIZE + HANDSHAKE_FNAME_SIZE)*sizeof(char));
                 strcpy(handshake_fname, path);
+                strcat(handshake_fname, ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER ? SRV_FNAME : CLI_FNAME);
                 strcat(handshake_fname, HANDSHAKE_EXTENSION);
                 
-                if((ret = measure_starts(&ssl->hs_msr_ctx[0], handshake_fname, "endpoint,keylen,test_id")) != 0)
+                if((ret = measure_starts(&ssl->hs_msr_ctx[0], handshake_fname, "keylen,test_id")) != 0)
                     return(ret);
             }
 
