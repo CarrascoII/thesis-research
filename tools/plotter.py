@@ -49,12 +49,16 @@ def make_scatter(ylabel, operations, file_path, data):
 
 def make_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
     path = fname + alg + '_'
-    filename = path + 'data.csv'
-    stats_type = ['mean', 'stddev','median', 'mode']
+    stats_type = ['mean', 'stddev', 'median', 'mode']
     labels = settings.alg_labels[alg]
+    data_ops_func = {
+        'cipher': utils.parse_record_data,
+        'md': utils.parse_record_data,
+        'ke': utils.parse_handshake_data
+    }
 
     print(f'{spacing}Parsing obtained data'.ljust(strlen, '.'), end=' ', flush=True)
-    data, headers = utils.parse_record_data(filename, alg)
+    data, headers = data_ops_func[alg](fname, alg)
     print('ok')
 
     if weight != 0:
@@ -81,7 +85,7 @@ def make_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:cm', ['help', 'weight=', 'cipher', 'md'])
+        opts, args = getopt.getopt(argv, 'hw:cmk', ['help', 'weight=', 'cipher', 'md', 'ke'])
     
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "plotter.py -h" for help')
@@ -100,8 +104,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('plotter.py [-w <filter_weight>] [-c] [-m] <ciphersuite_list>')
-            print('plotter.py [--weight=<filter_weight>] [--cipher] [--md] <ciphersuite_list>')
+            print('plotter.py [-w <filter_weight>] [-c] [-m] [-k] <ciphersuite_list>')
+            print('plotter.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -112,6 +116,9 @@ def main(argv):
         
         elif opt in ('-m', '--md'):
             algs.append('md')
+
+        elif opt in ('-k', '--ke'):
+            algs.append('ke')
         
         else:
             print(f'Option "{opt}" does not exist')

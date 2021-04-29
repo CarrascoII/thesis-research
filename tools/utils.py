@@ -143,173 +143,135 @@ def parse_record_data(filename, alg, serv=None):
     if serv != None:
         alg = settings.serv_to_alg[serv]
 
-    with open(filename, mode='r') as fl:
-        opts = settings.alg_parser_opts[alg]
-        csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[opts[0]:]
-        data = {}
+    fnames = []
+    opts = settings.alg_parser_opts[alg]
+    data = {}
+
+    for end in ['srv_', 'cli_']:
+        fnames.append(filename + end + alg + '_data.csv')
+
+    for fname in fnames:
         sub_keys = []
-
-        for hdr in headers:
-            for end in settings.alg_labels[alg]:
-                sub_keys.append(hdr + '_' + end)
-
-        for row in csv_reader:
-            key = row[opts[1]]
-            operation = row[opts[2]]
-
-            if key not in data.keys():
-                data[key] = {}
-                
-                for sub in sub_keys:
-                    data[key][sub] = []
+        
+        with open(fname, mode='r') as fl:
+            csv_reader = csv.DictReader(fl)
+            headers = csv_reader.fieldnames[opts[0]:]
 
             for hdr in headers:
-                val = int(row[hdr])
+                for end in settings.alg_labels[alg]:
+                    sub_keys.append(hdr + '_' + end)
 
-                if val != 0:
-                    hdr += '_' + operation
-                    data[key][hdr].append(val)
+            for row in csv_reader:
+                msglen = row[opts[1]]
+                operation = row[opts[2]]
 
-        return data, headers
-
-def parse_handshake_data(filename, alg, serv):
-    with open(filename, mode='r') as fl:
-        csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[4:]
-        avail_op = settings.ke_operations_per_service[serv]
-        data = {}
-        sub_keys = []
-        row_lst = []
-        curr_test = 0
-
-        for hdr in headers:
-            for end in settings.serv_labels[serv]:
-                sub_keys.append(hdr + '_' + end)
-
-        for row in csv_reader:
-            test_id = int(row['test_id'])
-
-            if test_id == curr_test:
-                row_lst.append(row)
-                key = row['keylen']
-
-                if key not in data.keys():
-                    data[key] = {}
-                
+                if msglen not in data.keys():
+                    data[msglen] = {}
+                    
                     for sub in sub_keys:
-                        data[key][sub] = []
+                        data[msglen][sub] = []
 
-            else:
-                curr_test = test_id
-                all_val = {}
+                for hdr in headers:
+                    val = int(row[hdr])
 
-                for sub in sub_keys:
-                    all_val[sub] = 0
+                    if val != 0:
+                        hdr += '_' + operation
+                        data[msglen][hdr].append(val)
 
-                for elem in row_lst:
-                    operation = elem['operation']
+    return data, headers
 
-                    if operation in avail_op[alg]:
+def parse_handshake_data(filename, alg, serv=None):
+    fnames = []
+    data = {}
+    label = alg if serv == None else settings.serv_to_alg[serv]
+    avail_op = None if serv == None else settings.ke_operations_per_service[serv]
+    opts = settings.alg_parser_opts[label]
+
+    for end in ['srv_', 'cli_']:
+        fnames.append(filename + end + label + '_data.csv')
+
+    for fname, endpoint in zip(fnames, settings.alg_labels[label]):
+        sub_keys = []
+        
+        with open(fname, mode='r') as fl:
+            csv_reader = csv.DictReader(fl)
+            headers = csv_reader.fieldnames[opts[0]:]
+            row_dict = {}
+
+            for hdr in headers:
+                sub_keys.append(hdr + '_' + endpoint)
+
+            for row in csv_reader:
+                if serv == None or row['operation'] in avail_op[alg]:
+                    test_id = int(row['test_id'])
+                    sec_lvl = row['sec_lvl']
+
+                    if sec_lvl not in data.keys():
+                        data[sec_lvl] = {}
+
+                    if sec_lvl not in row_dict:
+                        row_dict[sec_lvl] = {}
+
+                    if test_id not in row_dict[sec_lvl]:
+                        row_dict[sec_lvl][test_id] = []
+
+                    row_dict[sec_lvl][test_id].append(row)
+
+            for sec_lvl in row_dict:
+                for test_id in row_dict[sec_lvl]:
+                    all_val = {}
+
+                    for sub in sub_keys:
+                        all_val[sub] = 0
+
+                        if sub not in data[sec_lvl].keys():
+                            data[sec_lvl][sub] = []
+
+                    for row in row_dict[sec_lvl][test_id]:
                         for hdr in headers:
-                            val = int(elem[hdr])
+                            all_val[hdr + '_' + endpoint] += int(row[hdr])
 
-                            if serv == 'auth':
-                                hdr += '_' + elem['endpoint']
-                            else:
-                                hdr += '_' + settings.serv_labels[serv][0]
+                    for sub in all_val:
+                        data[sec_lvl][sub].append(all_val[sub])
 
-                            all_val[hdr] += val
-
-                for sub in all_val:
-                    if all_val[sub] != 0:
-                        data[row_lst[0]['keylen']][sub].append(all_val[sub])
-
-                row_lst = []
-
-        return data, headers
+    return data, headers
 
 def parse_overhead_data(filename, alg, serv):
-    hs_fname = None
-    hs_data = None
-    hs_hdrs = None
-    idx = 4 if filename.find('ke_data.csv') != -1 else 3
+    data, headers = parse_handshake_data(filename, 'handshake')
+    ke_data, ke_hdrs = parse_handshake_data(filename, 'ke')
 
-    if filename.find('/ke_data.csv') != -1:
-        hs_fname = filename.replace('/ke', '/handshake')
-        hs_data, hs_hdrs = parse_overhead_data(hs_fname, alg, serv)
+    if headers == ke_hdrs:
+        for sec_lvl in data:
+            for hdr in data[sec_lvl]:
+                for i in range(len(data[sec_lvl][hdr])):
+                    data[sec_lvl][hdr][i] -= ke_data[sec_lvl][hdr][i]
+    else:
+        return None
 
-    with open(filename, mode='r') as fl:
-        csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[idx:]
-        data = {}
-        sub_keys = []
-        row_lst = []
-        curr_test = 0
-
-        for hdr in headers:
-            for end in settings.serv_labels[serv]:
-                sub_keys.append(hdr + '_' + end)
-
-        for row in csv_reader:
-            test_id = int(row['test_id'])
-
-            if test_id == curr_test:
-                row_lst.append(row)
-                key = row['keylen']
-
-                if key not in data.keys():
-                    data[key] = {}
-                
-                    for sub in sub_keys:
-                        data[key][sub] = []
-
-            else:
-                curr_test = test_id
-                all_val = {}
-
-                for sub in sub_keys:
-                    all_val[sub] = 0
-
-                for elem in row_lst:
-                    for hdr in headers:
-                        all_val[hdr + '_' + settings.serv_labels[serv][0]] += int(elem[hdr])
-
-                for sub in all_val:
-                    data[row_lst[0]['keylen']][sub].append(all_val[sub])
-
-                row_lst = []
-
-        if hs_fname != None and list(data.keys()) == list(hs_data.keys()) and headers == hs_hdrs:
-            for keylen in data:
-                for sub in sub_keys:
-                    for i in range(len(data[keylen][sub])):
-                        hs_data[keylen][sub][i] -= data[keylen][sub][i]
-
-        return data, headers
+    return data, headers
 
 def parse_session_data(filename):
-    with open(filename, mode='r') as fl:
-        csv_reader = csv.DictReader(fl)
-        headers = csv_reader.fieldnames[2:]
-        data = {}
+    data = {}
 
-        for endpoint in ['server', 'client']:
+    for ext, endpoint in zip(['srv_', 'cli_'], ['server', 'client']):
+        fname = filename + ext + 'session_data.csv'
+
+        with open(fname, mode='r') as fl:
+            csv_reader = csv.DictReader(fl)
+            headers = csv_reader.fieldnames[1:]
             data[endpoint] = {}
 
             for hdr in headers:
                 data[endpoint][hdr] = []
 
-        for row in csv_reader:
-            endpoint = row['endpoint']
+            for row in csv_reader:
+                for hdr in headers:
+                    val = int(row[hdr])
 
-            for hdr in headers:
-                val = int(row[hdr])
-
-                if val != 0:
-                    data[endpoint][hdr].append(val)
+                    if val != 0:
+                        data[endpoint][hdr].append(val)
         
-        return data, headers
+    return data, headers
 
 def write_alg_csv(filename, labels, stats):
     hdrs = list(stats.keys())

@@ -26,6 +26,11 @@ def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
 def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     all_headers = []
+    data_ops_func = {
+        'cipher': utils.parse_record_data,
+        'md': utils.parse_record_data,
+        'ke': utils.parse_handshake_data
+    }
 
     for alg in algs:
         all_stats = {}
@@ -37,7 +42,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
         
         for suite in ciphersuites:
             path = '../docs/' + suite + '/'
-            data, hdr = utils.parse_record_data(path + alg + '_data.csv', alg)
+            data, hdr = data_ops_func[alg](path, alg)
        
             all_data[suite] = data
             all_headers.append(hdr)
@@ -84,7 +89,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:cm', ['help', 'weight=', 'cipher', 'md'])
+        opts, args = getopt.getopt(argv, 'hw:cmk', ['help', 'weight=', 'cipher', 'md', 'ke'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -103,8 +108,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('ciphersuite_comparator.py [-w <filter_weight>] [-c] [-m] <ciphersuite_list>')
-            print('ciphersuite_comparator.py [--weight=<filter_weight>] [--cipher] [--md] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <ciphersuite_list>')
             sys.exit(0)
 
         if opt in ('-w', '--weight'):
@@ -115,6 +120,9 @@ def main(argv):
 
         elif opt in ('-m', '--md'):
             algs.append('md')
+
+        elif opt in ('-k', '--ke'):
+            algs.append('ke')
             
         else:
             print(f'Option "{opt}" does not exist')

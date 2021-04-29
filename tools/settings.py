@@ -4,16 +4,14 @@ def init():
 
     global alg_labels
     alg_labels = {
-        'cipher': ['encrypt', 'decrypt'],
-        'md': ['hash', 'verify'],
-        'ke': ['server', 'client']
+        'cipher': ['encrypt', 'decrypt'], 'md': ['hash', 'verify'],
+        'ke': ['server', 'client'], 'handshake': ['server', 'client']
     }
 
     global alg_parser_opts
     alg_parser_opts = {
-        'cipher': [3, 'msglen', 'operation'],
-        'md': [3, 'msglen', 'operation'],
-        'ke': [2, 'keylen', 'endpoint']
+        'cipher': [2, 'msglen', 'operation'], 'md': [2, 'msglen', 'operation'],
+        'ke': [3, 'sec_lvl'], 'handshake': [2, 'sec_lvl']
     }
 
     global serv_types
@@ -21,14 +19,14 @@ def init():
 
     global serv_labels
     serv_labels = {
-        'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'],
-        'auth': ['server', 'client'], 'ke': ['all'], 'pfs': ['all'], 'hs': ['all']
+        'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'], 'auth': ['server', 'client'],
+        'ke': ['server', 'client'], 'pfs': ['server', 'client'], 'hs': ['server', 'client']
     }
 
     global serv_to_alg
     serv_to_alg = {
         'conf': 'cipher', 'int': 'md', 'auth': 'ke',
-        'ke': 'ke', 'pfs': 'ke', 'hs': 'ke'
+        'ke': 'ke', 'pfs': 'ke', 'hs': 'handshake'
     }
 
     global sec_str

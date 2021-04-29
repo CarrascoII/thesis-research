@@ -1777,7 +1777,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
         strcat(ke_fname, CLI_FNAME);
         strcat(ke_fname, KE_EXTENTION);
 
-        if((ret = measure_starts(ssl->ke_msr_ctx, ke_fname, "keylen,test_id,operation")) != 0) {
+        if((ret = measure_starts(ssl->ke_msr_ctx, ke_fname, "sec_lvl,test_id,operation")) != 0) {
             return(ret);
         }
     }

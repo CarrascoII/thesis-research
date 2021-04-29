@@ -8609,7 +8609,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
                 strcat(handshake_fname, ssl->conf->endpoint == MBEDTLS_SSL_IS_SERVER ? SRV_FNAME : CLI_FNAME);
                 strcat(handshake_fname, HANDSHAKE_EXTENSION);
                 
-                if((ret = measure_starts(&ssl->hs_msr_ctx[0], handshake_fname, "keylen,test_id")) != 0)
+                if((ret = measure_starts(&ssl->hs_msr_ctx[0], handshake_fname, "sec_lvl,test_id")) != 0)
                     return(ret);
             }
 

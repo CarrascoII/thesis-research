@@ -545,9 +545,10 @@ int main(int argc, char **argv) {
         if(i == 0) {
             strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
             mkdir(path, 0777);
+            strcat(path, CLI_FNAME);
             strcat(path, SESSION_EXTENSION);
 
-            if((ret = measure_starts(&measure, path, "endpoint,msglen")) != 0) {
+            if((ret = measure_starts(&measure, path, "msglen")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
@@ -555,7 +556,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        sprintf(buffer, "client,%d", input_size);
+        sprintf(buffer, "%d", input_size);
 
         if((ret = measure_finish(&measure, path, buffer)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)

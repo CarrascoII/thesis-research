@@ -53,7 +53,7 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
     print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
     for suite in ciphersuites:
-        path = '../docs/' + suite + '/session_data.csv'
+        path = '../docs/' + suite + '/'
         data, hdr = utils.parse_session_data(path)
         all_data[suite] = data
 

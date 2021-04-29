@@ -10,7 +10,7 @@ def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
     
     if alg == 'ke':
         for i, val in enumerate(xtickslabels):
-            xtickslabels[i] = settings.sec_str[settings.keylen_to_sec_str[val]]
+            xtickslabels[i] = settings.sec_str[int(val)]
 
     for stype in stats_type:
         for op in operations:
@@ -31,6 +31,11 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
     headers = []
     all_stats = {}
     stats_type = ['mean', 'stddev']
+    data_ops_func = {
+        'cipher': utils.parse_record_data,
+        'md': utils.parse_record_data,
+        'ke': utils.parse_handshake_data
+    }
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
@@ -38,8 +43,15 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
         all_data[key] = {}
 
         for suite in grouped_suites[key]:
-            path = '../docs/' + suite + '/' + alg + '_data.csv'
-            data, hdr = utils.parse_record_data(path, alg)
+            path = '../docs/' + suite + '/'
+            data, hdr = data_ops_func[alg](path, alg)
+
+            # print(f'\n{suite}:')
+            # for a in data:
+            #     print(f'  {a}')
+            #     for b in data[a]:
+            #         print(f'    {b}: {data[a][b]}')
+            #     print('')
 
             if all_data[key] == {}:
                 all_data[key] = data

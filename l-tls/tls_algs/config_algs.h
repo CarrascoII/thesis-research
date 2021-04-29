@@ -7,8 +7,8 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-#define MEASURE_CIPHER
-#define MEASURE_MD
+// #define MEASURE_CIPHER
+// #define MEASURE_MD
 // #define MEASURE_KE
 #define MEASURE_HANDSHAKE
 #endif
@@ -517,7 +517,7 @@ static const unsigned char test_psk[] = {
 };
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-#define MUTUAL_AUTH
+// #define MUTUAL_AUTH
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

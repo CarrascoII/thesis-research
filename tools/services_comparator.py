@@ -48,8 +48,15 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
         data_ops_params['alg'] = key
 
         for suite in grouped_suites[key]:
-            data_ops_params['filename'] = '../docs/' + suite + '/' + settings.serv_to_alg[serv] + '_data.csv'
+            data_ops_params['filename'] = '../docs/' + suite + '/'
             data, hdr = data_ops_func[serv](**data_ops_params)
+
+            # print(f'\n{suite} ({key}):')
+            # for a in data:
+            #     print(f'  {a}')
+            #     for b in data[a]:
+            #         print(f'    {b}: {data[a][b]} : {len(data[a][b])}')
+            #     print('')
 
             if all_data[key] == {}:
                 all_data[key] = data
@@ -58,6 +65,9 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
             elif headers == hdr:
                 for sub in list(all_data[key].keys()):
                     for entry in data[sub]:
+                        if entry not in all_data[key][sub]:
+                            all_data[key][sub][entry] = []
+
                         all_data[key][sub][entry] += data[sub][entry]
 
             else:
@@ -66,6 +76,15 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
 
         if all_data[key] == {}:
             all_data.pop(key)
+
+    # print('')
+    # for a in all_data:
+    #     print(f'{a}:')
+    #     for b in all_data[a]:
+    #         print(f'  {b}:')            
+    #         for c in all_data[a][b]:
+    #             print(f'    {c}: {all_data[a][b][c]} : {len(all_data[a][b][c])}')
+    #     print('')
 
     print('ok')
 

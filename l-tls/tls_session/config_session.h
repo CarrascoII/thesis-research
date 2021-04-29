@@ -104,6 +104,7 @@
 #define MBEDTLS_SSL_TLS_C
 #define MBEDTLS_SSL_SRV_C
 #define MBEDTLS_SSL_CLI_C
+// #define MBEDTLS_SSL_SESSION_TICKETS
 
 /* Imports */
 #define MBEDTLS_NET_C
@@ -112,6 +113,10 @@
 #endif
 #define MBEDTLS_CTR_DRBG_C
 #define MBEDTLS_ENTROPY_C
+// #if defined(MBEDTLS_SSL_SESSION_TICKETS)
+// #define MBEDTLS_SSL_CACHE_C
+// #define MBEDTLS_SSL_TICKET_C
+// #endif
 // #define MBEDTLS_DEBUG_C
 
 /* Aditional features */
@@ -419,7 +424,7 @@
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
-// #define PRINT_HANDSHAKE_STEPS
+// #define PRINT_HANDSHAKE_OPERATIONS
 // #define PRINT_MSG_HEX
 #endif
 #if defined(MBEDTLS_KEY_EXCHANGE_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_PSK_ENABLED) || \
@@ -438,8 +443,10 @@
 
 #if defined(MEASURE_SESSION)
 #define FILE_PATH           "../docs/"
+#define SRV_FNAME           "/srv_"
+#define CLI_FNAME           "/cli_"
+#define SESSION_EXTENSION   "session_data.csv"
 #define PATH_SIZE           100
-#define SESSION_EXTENSION   "/session_data.csv"
 #endif
 
 /**

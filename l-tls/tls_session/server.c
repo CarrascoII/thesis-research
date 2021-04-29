@@ -13,6 +13,10 @@
 #endif
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
+// #if defined(MBEDTLS_SSL_SESSION_TICKETS)
+// #include "mbedtls/ssl_cache.h"
+// #include "mbedtls/ssl_ticket.h"
+// #endif
 
 #if defined(MEASURE_SESSION)
 #include "measurement/measure.h"
@@ -147,6 +151,10 @@ int main(int argc, char **argv) {
     mbedtls_entropy_context entropy;
     mbedtls_ssl_config tls_conf;
     mbedtls_ssl_context tls;
+// #if defined(MBEDTLS_SSL_SESSION_TICKETS)
+//     mbedtls_ssl_cache_context cache;
+//     mbedtls_ssl_ticket_context ticket_ctx;
+// #endif
 #if defined(USE_PSK_C)
     psk_entry *psk_info = NULL;
 #endif
@@ -264,6 +272,10 @@ int main(int argc, char **argv) {
     mbedtls_entropy_init(&entropy);
     mbedtls_ssl_config_init(&tls_conf);
     mbedtls_ssl_init(&tls);
+// #if defined(MBEDTLS_SSL_SESSION_TICKETS)
+//     mbedtls_ssl_cache_init(&cache);
+//     mbedtls_ssl_ticket_init(&ticket_ctx);
+// #endif
 
 #if defined(MEASURE_SESSION)
     measure_init(&measure);
@@ -430,6 +442,9 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
 #endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
+// #if defined(MBEDTLS_SSL_SESSION_TICKETS)
+//     mbedtls_ssl_conf_session_cache(&tls_conf, &cache, mbedtls_ssl_cache_get, mbedtls_ssl_cache_set);
+// #endif
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_ssl_conf_dbg(&tls_conf, my_debug, stdout);
 #endif
@@ -643,9 +658,10 @@ int main(int argc, char **argv) {
         if(i == 0) {
             strcat(path, mbedtls_ssl_get_ciphersuite(&tls));
             mkdir(path, 0777);
+            strcat(path, SRV_FNAME);
             strcat(path, SESSION_EXTENSION);
 
-            if((ret = measure_starts(&measure, path, "endpoint,msglen")) != 0) {
+            if((ret = measure_starts(&measure, path, "msglen")) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! measure_starts returned -0x%04x\n", -ret);
 #endif
@@ -653,7 +669,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        sprintf(buffer, "server,%d", input_size);
+        sprintf(buffer, "%d", input_size);
 
         if((ret = measure_finish(&measure, path, buffer)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -699,6 +715,10 @@ exit:
     measure_free(&measure);
 #endif
 
+// #if defined(MBEDTLS_SSL_SESSION_TICKETS)
+//     mbedtls_ssl_ticket_free(&ticket_ctx);
+//     mbedtls_ssl_cache_free(&cache);
+// #endif
     mbedtls_ssl_free(&tls);
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);

@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import session_comparator, plotter, utils
+import session_comparator, plotter, utils, settings
 
 
 def run_cli(input_size, n_tests, ciphersuite):
@@ -163,6 +163,7 @@ def main(argv):
             weight = float(arg)
 
     os.system('clear')
+    settings.init()
     exec_tls(args[0], target, timeout, input_size, n_tests, weight)
 
 if __name__ == '__main__':
