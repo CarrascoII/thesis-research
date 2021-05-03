@@ -262,7 +262,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     0xFFFFFFF,  /* Any curve      */
     1024        /* Min RSA keylen */
 };
-#endif /* MEASURE_HANDSHAKE || MEASURE_KE */
+#endif /* MEASURE_KE || MEASURE_HANDSHAKE */
 
     for(i = 1; i < argc; i++) {
         p = argv[i];
@@ -311,7 +311,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
                 return(1);
             }
-#else /* MEASURE_HANDSHAKE || MEASURE_KE */
+#else /* MEASURE_KE || MEASURE_HANDSHAKE */
 #if defined(MBEDTLS_DEBUG_C)
             printf("Option not available. Enable MEASURE_HANDSHAKE or MEASURE_KE\n");
 #endif
@@ -327,7 +327,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
                 return(1);
             }
-#else /* MEASURE_HANDSHAKE || MEASURE_KE */
+#else /* MEASURE_KE || MEASURE_HANDSHAKE */
 #if defined(MBEDTLS_DEBUG_C)
             printf("Option not available. Enable MEASURE_HANDSHAKE or MEASURE_KE\n");
 #endif
@@ -395,7 +395,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
-#if !defined(MEASURE_HANDSHAKE) && !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
 #if defined(MBEDTLS_RSA_C)
     mbedtls_x509_crt_init(&rsa_cert);
     mbedtls_pk_init(&rsa_key);
@@ -405,7 +405,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     mbedtls_pk_init(&ec_key);
 #endif
     mbedtls_ssl_config_init(&tls_conf);
-#endif /* !MEASURE_HANDSHAKE && !MEASURE_KE */
+#endif /* !MEASURE_KE && !MEASURE_HANDSHAKE */
 
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
@@ -450,7 +450,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     fflush(stdout);
 #endif
 
-#if !defined(MEASURE_HANDSHAKE) && !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     for(i = 0; mbedtls_test_cas[i] != NULL; i++) {
         if((ret = mbedtls_x509_crt_parse(&ca_cert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
@@ -461,7 +461,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
     }
 #endif
-#else /* !MEASURE_HANDSHAKE && !MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_HANDSHAKE */
     for(i = sec_lvl; i <= max_sec_lvl; i++) {
 #if defined(MBEDTLS_RSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL) {
@@ -519,7 +519,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 
         // Load the required keys and certs
-#if !defined(MEASURE_HANDSHAKE) && !defined(MEASURE_KE)
+#if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
 #if defined(USE_PSK_C)
         if((psk_info = psk_parse(test_psk, sizeof(test_psk))) == NULL) {
 #if defined(MBEDTLS_DEBUG_C)
@@ -561,7 +561,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             goto exit;
         }
 #endif /* MEBDTLS_ECDSA_C */
-#else /* !MEASURE_HANDSHAKE && !MEASURE_KE */
+#else /* !MEASURE_KE && !MEASURE_HANDSHAKE */
 #if defined(USE_PSK_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "PSK") != NULL) {
             if((psk_info = psk_parse(test_psk, psk_key_sizes[sec_lvl])) == NULL) {
@@ -625,7 +625,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             }
         }
 #endif /* MBEDTLS_ECDSA_C */
-#endif /* !MEASURE_HANDSHAKE && !MEASURE_KE */
+#endif /* !MEASURE_KE && !MEASURE_HANDSHAKE */
 
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
@@ -747,7 +747,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" ok");
 #endif
-#endif  /* MEASURE_HANDSHAKE || MEASURE_KE */
+#endif  /* MEASURE_KE || MEASURE_HANDSHAKE */
 
             // Listen and accept client
 #if defined(MBEDTLS_DEBUG_C)

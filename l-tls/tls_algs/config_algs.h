@@ -43,7 +43,7 @@ char *ke_fname;
 #define HANDSHAKE_EXTENSION     "handshake_data.csv"
 #define HANDSHAKE_FNAME_SIZE    19 /* = len(HANDSHAKE_EXTENSION) + len("\0") */
 #define MAX_SERVER_CTX          11
-#define MAX_CLIENT_CTX          9
+#define MAX_CLIENT_CTX          10
 char *handshake_fname;
 #endif
 
@@ -517,13 +517,14 @@ static const unsigned char test_psk[] = {
 };
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-// #define MUTUAL_AUTH
+#define MUTUAL_AUTH
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
 // #define PRINT_MSG_HEX
 #else
-// #define PRINT_HANDSHAKE_OPERATIONS
+// #define PRINT_HANDSHAKE_STEPS
+// #define PRINT_KE_OPERATIONS
 // #define PRINT_KEYS_OPERATIONS
 #endif
 

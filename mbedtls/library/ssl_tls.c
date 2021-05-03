@@ -1342,7 +1342,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             return(ret2);
         }
 
-#if defined(PRINT_HANDSHAKE_OPERATIONS)
+#if defined(PRINT_KE_OPERATIONS)
         printf("\n  dhm_calc_secret");
 #endif
 
@@ -1400,7 +1400,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
             return(ret2);
         }
 
-#if defined(PRINT_HANDSHAKE_OPERATIONS)
+#if defined(PRINT_KE_OPERATIONS)
         printf("\n  ecdh_calc_secret");
 #endif
 
@@ -1465,7 +1465,7 @@ int mbedtls_ssl_psk_derive_premaster( mbedtls_ssl_context *ssl, mbedtls_key_exch
         return(ret2);
     }
 
-#if defined(PRINT_HANDSHAKE_OPERATIONS)
+#if defined(PRINT_KE_OPERATIONS)
     printf("\n  psk_derive_premaster");
 #endif
 #endif
@@ -5987,10 +5987,12 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
 #else
     const int authmode = ssl->conf->authmode;
 #endif
+#if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
     void *rs_ctx = NULL;
-#if defined(MEASURE_KE)
-    char buff[PATH_SIZE];
 #endif
+// #if defined(MEASURE_KE)
+//     char buff[PATH_SIZE];
+// #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse certificate" ) );
 
@@ -6046,12 +6048,6 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
         return( ret );
     }
 
-#if defined(MEASURE_HANDSHAKE)
-    if((ret = measure_get_vals(&ssl->hs_msr_ctx[ssl->ctx_counter], MEASURE_START)) != 0) {
-        return(ret);
-    }
-#endif
-
     if( ( ret = ssl_parse_certificate_chain( ssl ) ) != 0 )
     {
 #if defined(MBEDTLS_SSL_SRV_C)
@@ -6066,11 +6062,18 @@ int mbedtls_ssl_parse_certificate( mbedtls_ssl_context *ssl )
         return( ret );
     }
 
-#if defined(MEASURE_KE)
-    if((ret = measure_get_vals(ssl->ke_msr_ctx, MEASURE_START)) != 0) {
+#if defined(MEASURE_HANDSHAKE)
+    if((ret = measure_get_vals(&ssl->hs_msr_ctx[ssl->ctx_counter], MEASURE_START)) != 0) {
         return(ret);
     }
 #endif
+
+#if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
+// #if defined(MEASURE_KE)
+//     if((ret = measure_get_vals(ssl->ke_msr_ctx, MEASURE_START)) != 0) {
+//         return(ret);
+//     }
+// #endif
 
 #if defined(MBEDTLS_SSL__ECP_RESTARTABLE)
     if( ssl->handshake->ecrs_enabled)
@@ -6203,24 +6206,24 @@ crt_verify:
                                             alert );
         }
 
-#if defined(MEASURE_KE)
-    if((ret = measure_get_vals(ssl->ke_msr_ctx, MEASURE_END)) != 0) {
-        return(ret);
-    }
+// #if defined(MEASURE_KE)
+//     if((ret = measure_get_vals(ssl->ke_msr_ctx, MEASURE_END)) != 0) {
+//         return(ret);
+//     }
 
-    sprintf(buff, "%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
-                        pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
-                        md_to_str(ssl->session_negotiate->peer_cert->sig_md));
+//     sprintf(buff, "%s,%s_verify_with_%s", ssl->test_and_sec_lvl,
+//                         pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
+//                         md_to_str(ssl->session_negotiate->peer_cert->sig_md));
 
-    if((ret = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
-        return(ret);
-    }
+//     if((ret = measure_finish(ssl->ke_msr_ctx, ke_fname, buff)) != 0) {
+//         return(ret);
+//     }
 
-#if defined(PRINT_HANDSHAKE_OPERATIONS)
-    printf("\n  %s_verify_with_%s", pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
-                                    md_to_str(ssl->session_negotiate->peer_cert->sig_md));
-#endif
-#endif
+// #if defined(PRINT_KE_OPERATIONS)
+//     printf("\n  %s_verify_with_%s", pk_to_str(ssl->session_negotiate->peer_cert->sig_pk),
+//                                     md_to_str(ssl->session_negotiate->peer_cert->sig_md));
+// #endif
+// #endif
 
 #if defined(MBEDTLS_DEBUG_C)
         if( ssl->session_negotiate->verify_result != 0 )
@@ -6234,6 +6237,9 @@ crt_verify:
         }
 #endif /* MBEDTLS_DEBUG_C */
     }
+#else /* !MEASURE_KE && !MEASURE_HANDSHAKE */
+    ret = 0;
+#endif
 
     ssl->state++;
 
@@ -8570,6 +8576,14 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 
         if( ret != 0 )
             break;
+
+#if defined(MEASURE_HANDSHAKE)
+        if(ssl->state == MBEDTLS_SSL_CLIENT_CHANGE_CIPHER_SPEC) {
+            if((ret = measure_get_vals(&ssl->hs_msr_ctx[ssl->ctx_counter++], MEASURE_END)) != 0) {
+                return(ret);
+            }
+        }
+#endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_HANDSHAKE)
         if(ssl->state == MBEDTLS_SSL_HANDSHAKE_WRAPUP) {

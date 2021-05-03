@@ -44,12 +44,12 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
     if(mode == MEASURE_TIMELIB_START) {
         gettimeofday(&ctx->start_time, NULL);
 #if defined(PRINT_MEASUREMENTS)
-        printf("\nSTART_TIME =  %ld", (long) (ctx->start_time.tv_sec*1e6 + ctx->start_time.tv_usec));
+        printf("\n  start_time = %ld", (long) (ctx->start_time.tv_sec*1e6 + ctx->start_time.tv_usec));
 #endif
     } else {
         gettimeofday(&ctx->end_time, NULL);
 #if defined(PRINT_MEASUREMENTS)
-        printf("\nEND_TIME =    %ld", (long) (ctx->end_time.tv_sec*1e6 + ctx->end_time.tv_usec));
+        printf("\n  end_time   = %ld\n", (long) (ctx->end_time.tv_sec*1e6 + ctx->end_time.tv_usec));
 #endif
     }
 
@@ -91,7 +91,7 @@ int measure_timelib_finish(measure_timelib_context *ctx, const char *file_name, 
                         (ctx->end_time.tv_usec - ctx->start_time.tv_usec));
 
 #if defined(PRINT_MEASUREMENTS)
-    printf("\nfinish: %s,%ld", file_output, final_time);
+    printf("\n  finish: %s,%ld", file_output, final_time);
 #endif
 
     if((csv = fopen(file_name, "a+")) == NULL) {
