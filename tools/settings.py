@@ -17,6 +17,9 @@ def init():
     global serv_types
     serv_types = ['conf', 'int', 'auth', 'ke', 'pfs', 'hs']
 
+    global hs_servs
+    hs_servs = ['auth', 'ke', 'pfs']
+
     global serv_labels
     serv_labels = {
         'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'], 'auth': ['server', 'client'],

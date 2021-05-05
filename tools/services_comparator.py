@@ -12,6 +12,12 @@ def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
         for i, val in enumerate(xtickslabels):
             xtickslabels[i] = settings.sec_str[int(val)]
 
+    if serv == 'hs':
+        size = len(labels)
+
+        for i in range(size):
+            labels.append('HS-' + labels[i])
+
     for stype in stats_type:
         for op in operations:
             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
@@ -21,6 +27,11 @@ def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
             for key in stats:
                 y.append(stats[key][stype + '_' + ylabel + '_' + op])
                 yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
+                
+            if serv == 'hs':
+                for key in stats:
+                    y.append(stats[key][stype + '_ke_' + ylabel + '_' + op])
+                    yerr.append(stats[key]['stddev_ke_' + ylabel + '_' + op])
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
@@ -102,6 +113,8 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     for key in all_data:
         stats = utils.calc_statistics(all_data[key], stats_type)
 
+        # print(f'\nstats[{key}]:\n{list(stats.keys())}')
+
         if stats == None:
             return None
 
@@ -154,8 +167,8 @@ def main(argv):
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] [-s] <services_list> <ciphersuite_list>')
-            print('services_comparator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--ke]' +
-                    ' [--pfs] [--hshake] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--ke] ' +
+                    '[--pfs] [--hshake] <services_list> <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):

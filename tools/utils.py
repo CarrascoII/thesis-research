@@ -10,6 +10,21 @@ def parse_ciphersuites(filename):
     with open(filename, 'r') as fl:
         return [line.strip() for line in fl.readlines()]
 
+def parse_ciphersuites_grouped(filename):
+    groups = {}
+
+    with open(filename, 'r') as fl:
+        for suite in fl.readlines():
+            suite = suite.strip()
+            alg = suite[4:suite.find('-WITH')]
+
+            if alg not in list(groups.keys()):
+                groups[alg] = []
+            
+            groups[alg].append(suite)
+
+    return groups
+
 def write_ciphersuites(target, ciphersuites):
     with open('examples/' + target + '_suites.txt', 'w') as fl:
         fl.writelines([f'{suite}\n' for suite in ciphersuites])
@@ -240,13 +255,93 @@ def parse_overhead_data(filename, alg, serv):
     data, headers = parse_handshake_data(filename, 'handshake')
     ke_data, ke_hdrs = parse_handshake_data(filename, 'ke')
 
+    # print(f'\ndata: {list(data.keys())}')
+    # for key in data:
+    #     print(f'  -{key}: {list(data[key].keys())}')
+
+    # print(f'\nke_data: {list(ke_data.keys())}')
+    # for key in ke_data:
+    #     print(f'  -{key}: {list(ke_data[key].keys())}')
+
+    # print('')
+
     if headers == ke_hdrs:
-        for sec_lvl in data:
-            for hdr in data[sec_lvl]:
-                for i in range(len(data[sec_lvl][hdr])):
-                    data[sec_lvl][hdr][i] -= ke_data[sec_lvl][hdr][i]
+        for sec_lvl in ke_data:
+            for hdr in ke_data[sec_lvl]:
+                data[sec_lvl]['ke_' + hdr] = ke_data[sec_lvl][hdr]
     else:
         return None
+
+    # print(f'\ndata: {list(data.keys())}')
+    # for key in data:
+    #     print(f'  -{key}: {list(data[key].keys())}')
+
+    return data, headers
+
+def parse_servs_data(filename, algs, servs):
+    data = {}
+    ke_opts = settings.alg_parser_opts['ke']
+
+    for ext, endpoint in zip(['srv_', 'cli_'], ['server', 'client']):
+        fname = filename + ext + 'ke_data.csv'
+        sub_keys = []
+
+        with open(fname, mode='r') as fl:
+            csv_reader = csv.DictReader(fl)
+            headers = csv_reader.fieldnames[ke_opts[0]:]
+            row_dict = {}
+
+            for hdr in headers:
+                sub_keys.append(hdr + '_' + endpoint)
+
+            for row in csv_reader:
+                sec_lvl = row['sec_lvl']
+                test_id = int(row['test_id'])
+                operation = row['operation']
+
+                for alg in algs.split('-'):
+                    for serv in servs:
+                        try:
+                            if operation in settings.ke_operations_per_service[serv][alg]:
+                                sec_lvl = serv + '_' + sec_lvl
+                        
+                        except KeyError:
+                            continue
+
+                if sec_lvl not in data.keys():
+                    data[sec_lvl] = {}
+
+                if sec_lvl not in row_dict:
+                    row_dict[sec_lvl] = {}
+
+                if test_id not in row_dict[sec_lvl]:
+                    row_dict[sec_lvl][test_id] = []
+
+                row_dict[sec_lvl][test_id].append(row)
+
+            for sec_lvl in row_dict:
+                for test_id in row_dict[sec_lvl]:
+                    all_val = {}
+
+                    for sub in sub_keys:
+                        all_val[sub] = 0
+
+                        if sub not in data[sec_lvl].keys():
+                            data[sec_lvl][sub] = []
+
+                    for row in row_dict[sec_lvl][test_id]:
+                        for hdr in headers:
+                            all_val[hdr + '_' + endpoint] += int(row[hdr])
+
+                    for sub in all_val:
+                        data[sec_lvl][sub].append(all_val[sub])
+                    
+    hs_data, hs_headers = parse_handshake_data(filename, 'handshake')
+
+
+    if headers == hs_headers:
+        for sec_lvl in hs_data.keys():
+            data['hs_' + sec_lvl] = hs_data[sec_lvl]
 
     return data, headers
 
@@ -364,6 +459,52 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
                     sub += str(all_stats[suite][key + '_' + end][i]) + ','
 
                 lines[end].append(sub[:-1] + '\n')
+
+    for end, label in zip(lines, labels):
+        with open(path + label + '_statistics.csv', 'w') as fl:
+            fl.writelines(lines[end])
+
+def write_suite_servs_cmp_csv(path, hdr, all_stats):
+    labels = settings.serv_labels['ke']
+    alg = settings.serv_to_alg['ke']
+    lines = {}
+    keys = []
+    line = hdr + ','
+
+    for end in labels:
+        lines[end] = []
+
+    for alg in all_stats:
+        for serv in all_stats[alg]['keys']:
+            if serv not in keys:
+                keys.append(serv)
+                line += serv + ','
+
+    for end in lines:
+        lines[end].append(line[:-1] + '\n')
+
+    for alg in all_stats:
+        entries = []
+
+        for key in all_stats[alg]:
+            if key != 'keys':
+                entries.append(key)
+
+        for end, entry in zip(lines, entries):
+            sub = alg + ','
+            tmp = {}
+
+            for key, val in zip(all_stats[alg]['keys'], all_stats[alg][entry]):
+                tmp[key] = val
+
+            for key in keys:
+                try:
+                    sub += str(tmp[key]) + ','
+
+                except KeyError:
+                    sub += '0,'
+
+            lines[end].append(sub[:-1] + '\n')
 
     for end, label in zip(lines, labels):
         with open(path + label + '_statistics.csv', 'w') as fl:
@@ -498,6 +639,41 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
     ax.legend()
     return(ax)
 
+def stacked_custom_bar(y_list, n_elems, width=0.5, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
+    x = np.arange(len(xtickslabels))
+    x *= (n_elems//2 + 1)
+
+    if ax is None:
+        ax = plt.gca()
+
+    for i in range(n_elems):
+        x1 = x + (i + (1 - n_elems)/2)*width
+        ax.bar(x1, y_list['hs'][i], width=width, label=labels[i])
+
+    bottom = []
+
+    for elem in y_list['hs']:
+        tmp = []
+
+        for i in range(len(elem)):
+            tmp.append(0)
+
+        bottom.append(tmp)
+
+    for serv, color in zip(settings.hs_servs, ['cyan', 'black', 'yellow']):
+        for i in range(n_elems):
+            x1 = x + (i + (1 - n_elems)/2)*width
+            ax.bar(x1, y_list[serv][i], width=width, label=labels[i], bottom=bottom[i], color=color)
+
+            for j in range(len(bottom[i])):
+                bottom[i][j] += y_list[serv][i][j]
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(xtickslabels)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+    ax.legend()
+    return(ax)
+
 def custom_scatter(x, y, ax=None, title=None, xlabel='msglen', xtickslabels=None, ylabel=None, kwargs={}):
     if ax is None:
         ax = plt.gca()
@@ -562,6 +738,7 @@ def filter_iqr(data, weight=1.5):
 
 def calc_statistics(data, stats_type):
     stats = {'keys': list(data.keys())}
+    sub_keys = []
     ops = {
         'mean': np.mean,
         'stddev': np.std,
@@ -569,15 +746,25 @@ def calc_statistics(data, stats_type):
         'mode': statistics.mode
     }
 
-    for sub in data[stats['keys'][0]]:
-        for stat in stats_type:
-            stats[stat + '_' + sub] = []
-
-    for key in data:
+    for key in stats['keys']:
         for sub in data[key]:
+            if sub not in sub_keys:
+                sub_keys.append(sub)
+
+            for stat in stats_type:
+                elem = stat + '_' + sub
+
+                if elem not in stats:
+                    stats[elem] = []
+
+    for key in stats['keys']:
+        for sub in sub_keys:
             for stat in stats_type:
                 try:
                     stats[stat + '_' + sub].append(ops[stat](data[key][sub]))
+
+                except KeyError:
+                    stats[stat + '_' + sub].append(0)
 
                 except:
                     print(f' {stat} is not an allowed type of statistic')
