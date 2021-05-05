@@ -7,16 +7,18 @@ import utils, settings
 def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
     xtickslabels = []
+    sec_lvl = []
     size = len(stats.keys())
 
     for key in stats[labels[0]]['keys']:
         val = key.split('_')
-        # val = settings.sec_str[int(val[1])]
 
-        # if val not in xtickslabels:
-        #     xtickslabels.append(val)
-        if val[1] not in xtickslabels:
-            xtickslabels.append(val[1])
+        if val[1] not in sec_lvl:
+            sec_lvl.append(val[1])
+
+    for lvl in sec_lvl:
+        for alg in stats:
+            xtickslabels.append(alg + ' (' + settings.sec_str[int(lvl)] + ')')
 
     for stype in stats_type:
         for op in operations:
@@ -28,36 +30,21 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
                     elem = key.split('_')
 
                     if elem[0] not in y:
-                        # y[elem[0]] = {}
                         y[elem[0]] = []
 
-                    # if elem[1] not in y[elem[0]]:
-                    #     y[elem[0]][elem[1]] = []
-
-            for alg in stats:
+            for lvl in sec_lvl:
                 for serv in y:
-                    tmp = []
-
-                    # for sec_lvl in y[serv]:
-                    for sec_lvl in xtickslabels:
+                    for alg in stats:
                         try:
-                            idx = stats[alg]['keys'].index(serv + '_' + sec_lvl)
-                            # y[serv][sec_lvl].append(stats[alg][stype + '_' + ylabel + '_' + op][idx])
-                            tmp.append(stats[alg][stype + '_' + ylabel + '_' + op][idx])
+                            idx = stats[alg]['keys'].index(serv + '_' + lvl)
+                            y[serv].append(stats[alg][stype + '_' + ylabel + '_' + op][idx])
                         
                         except ValueError:
-                            # y[serv][sec_lvl].append(0)
-                            tmp.append(0)
+                            y[serv].append(0)
 
-                    y[serv].append(tmp)
-
-            print('')
-            for a in y:
-                # print(f'{a}:')
-                print(f'{a}: {y[a]} : {len(y[a])}')
-                # for b in y[a]:
-                #     print(f'  {b}: {y[a][b]} : {len(y[a][b])}')
-                # print('')
+            # print('')
+            # for a in y:
+            #     print(f'{a}: {y[a]} : {len(y[a])}')
 
             ax = utils.stacked_custom_bar(y, size, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
@@ -138,12 +125,12 @@ def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spa
 
     print('ok')
 
-    print('')
-    for a in all_stats:
-        print(f'{a}:')
-        for b in all_stats[a]:
-            print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
-        print('')
+    # print('')
+    # for a in all_stats:
+    #     print(f'{a}:')
+    #     for b in all_stats[a]:
+    #         print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
+    #     print('')
 
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     utils.write_suite_servs_cmp_csv('../docs/serv_all_', 'algorithms', all_stats)

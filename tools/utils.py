@@ -641,32 +641,22 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
 
 def stacked_custom_bar(y_list, n_elems, width=0.5, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
-    x *= (n_elems//2 + 1)
 
     if ax is None:
         ax = plt.gca()
 
-    for i in range(n_elems):
-        x1 = x + (i + (1 - n_elems)/2)*width
-        ax.bar(x1, y_list['hs'][i], width=width, label=labels[i])
+    ax.bar(x, y_list['hs'], width=width, label='Handshake')
 
     bottom = []
+    
+    while len(bottom) < len(y_list['hs']):
+        bottom.append(0)
 
-    for elem in y_list['hs']:
-        tmp = []
+    for serv in settings.hs_servs:
+        ax.bar(x, y_list[serv], width=width, label=serv, bottom=bottom)
 
-        for i in range(len(elem)):
-            tmp.append(0)
-
-        bottom.append(tmp)
-
-    for serv, color in zip(settings.hs_servs, ['cyan', 'black', 'yellow']):
-        for i in range(n_elems):
-            x1 = x + (i + (1 - n_elems)/2)*width
-            ax.bar(x1, y_list[serv][i], width=width, label=labels[i], bottom=bottom[i], color=color)
-
-            for j in range(len(bottom[i])):
-                bottom[i][j] += y_list[serv][i][j]
+        for j in range(len(bottom)):
+            bottom[j] += y_list[serv][j]
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)
