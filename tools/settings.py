@@ -20,6 +20,16 @@ def init():
     global hs_servs
     hs_servs = ['auth', 'ke', 'pfs']
 
+    global serv_fullname
+    serv_fullname = {
+        'conf': 'Confidentiality',
+        'int': 'Integrity',
+        'auth': 'Authentication',
+        'ke': 'Key Establishment',
+        'pfs': 'Perfect Forward Secrecy',
+        'hs': 'Handshake'
+    }
+
     global serv_labels
     serv_labels = {
         'conf': ['encrypt', 'decrypt'], 'int': ['hash', 'verify'], 'auth': ['server', 'client'],

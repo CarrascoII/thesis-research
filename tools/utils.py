@@ -653,7 +653,7 @@ def stacked_custom_bar(y_list, n_elems, width=0.5, ax=None, title=None, labels=[
         bottom.append(0)
 
     for serv in settings.hs_servs:
-        ax.bar(x, y_list[serv], width=width, label=serv, bottom=bottom)
+        ax.bar(x, y_list[serv], width=width, label=settings.serv_fullname[serv], bottom=bottom)
 
         for j in range(len(bottom)):
             bottom[j] += y_list[serv][j]

@@ -16,23 +16,22 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
         if val[1] not in sec_lvl:
             sec_lvl.append(val[1])
 
-    for lvl in sec_lvl:
-        for alg in stats:
-            xtickslabels.append(alg + ' (' + settings.sec_str[int(lvl)] + ')')
+    for alg in stats:
+        xtickslabels.append(alg)
 
     for stype in stats_type:
         for op in operations:
-            fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-            y = {}
-
-            for alg in stats:
-                for key in stats[alg]['keys']:
-                    elem = key.split('_')
-
-                    if elem[0] not in y:
-                        y[elem[0]] = []
-
             for lvl in sec_lvl:
+                fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+                y = {}
+
+                for alg in stats:
+                    for key in stats[alg]['keys']:
+                        elem = key.split('_')
+
+                        if elem[0] not in y:
+                            y[elem[0]] = []
+
                 for serv in y:
                     for alg in stats:
                         try:
@@ -42,13 +41,13 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
                         except ValueError:
                             y[serv].append(0)
 
-            # print('')
-            # for a in y:
-            #     print(f'{a}: {y[a]} : {len(y[a])}')
+                # print('')
+                # for a in y:
+                #     print(f'{a}: {y[a]} : {len(y[a])}')
 
-            ax = utils.stacked_custom_bar(y, size, ax=ax, title=op + ' (' + stype + ')',
-                                        labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/serv_all_' + op + '_' + stype + '_' + ylabel + '.png')
+                ax = utils.stacked_custom_bar(y, size, ax=ax, title=op + ' (' + stype + ')',
+                                            labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+                utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '.png')
 
 def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
