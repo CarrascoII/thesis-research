@@ -139,7 +139,11 @@ run_algs_client: algs_client
 	./tls_algs/client.out
 
 algs:
+ifndef PAPI_DIR
 	$(TLS_ALGS_MAKE) local
+else
+	$(TLS_ALGS_MAKE) local_papi
+endif
 
 ### MAKE TLS ALGS PAPI ###
 algs_server_papi:
