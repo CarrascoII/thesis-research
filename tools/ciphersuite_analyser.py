@@ -124,15 +124,16 @@ def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spa
 
     print('ok')
 
-    # print('')
-    # for a in all_stats:
-    #     print(f'{a}:')
-    #     for b in all_stats[a]:
-    #         print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
-    #     print('')
+    print('')
+    for a in all_stats:
+        print(f'{a}:')
+        for b in all_stats[a]:
+            print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
+        print('')
 
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_suite_servs_cmp_csv('../docs/serv_all_', 'algorithms', all_stats)
+    for hdr in headers:
+        utils.write_suite_servs_cmp_csv('../docs/serv_all_', 'algorithms', all_stats, hdr)
     print('ok')
 
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)

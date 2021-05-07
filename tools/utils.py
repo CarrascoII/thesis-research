@@ -464,7 +464,7 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
         with open(path + label + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
-def write_suite_servs_cmp_csv(path, hdr, all_stats):
+def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
     labels = settings.serv_labels['ke']
     alg = settings.serv_to_alg['ke']
     lines = {}
@@ -487,7 +487,7 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats):
         entries = []
 
         for key in all_stats[alg]:
-            if key != 'keys':
+            if key.find(stype) != -1:
                 entries.append(key)
 
         for end, entry in zip(lines, entries):
@@ -507,7 +507,7 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats):
             lines[end].append(sub[:-1] + '\n')
 
     for end, label in zip(lines, labels):
-        with open(path + label + '_statistics.csv', 'w') as fl:
+        with open(path + label + '_' + stype + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[end])
 
 def write_session_cmp_csv(path, all_stats):
