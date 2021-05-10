@@ -12,12 +12,6 @@ def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
         for i, val in enumerate(xtickslabels):
             xtickslabels[i] = settings.sec_str[int(val)]
 
-    if serv == 'hs':
-        size = len(labels)
-
-        for i in range(size):
-            labels.append('HS-' + labels[i])
-
     for stype in stats_type:
         for op in operations:
             fig, ax = plt.subplots(1, 1, figsize=(30, 10))
@@ -27,11 +21,6 @@ def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
             for key in stats:
                 y.append(stats[key][stype + '_' + ylabel + '_' + op])
                 yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
-                
-            if serv == 'hs':
-                for key in stats:
-                    y.append(stats[key][stype + '_ke_' + ylabel + '_' + op])
-                    yerr.append(stats[key]['stddev_ke_' + ylabel + '_' + op])
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, xlabel='security strength (in bits)', ylabel=ylabel)
@@ -48,8 +37,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
         'int': utils.parse_record_data,
         'auth': utils.parse_handshake_data,
         'ke': utils.parse_handshake_data,
-        'pfs': utils.parse_handshake_data,
-        'hs': utils.parse_overhead_data
+        'pfs': utils.parse_handshake_data
     }
 
     print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
@@ -146,7 +134,7 @@ def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spa
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:ciakps', ['help', 'weight=', 'conf', 'int', 'auth', 'ke', 'pfs', 'hshake'])
+        opts, args = getopt.getopt(argv, 'hw:ciakp', ['help', 'weight=', 'conf', 'int', 'auth', 'ke', 'pfs'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "comparator.py -h" for help')
@@ -166,9 +154,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] [-s] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <services_list> <ciphersuite_list>')
             print('services_comparator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--ke] ' +
-                    '[--pfs] [--hshake] <services_list> <ciphersuite_list>')
+                    '[--pfs] <services_list> <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -188,9 +176,6 @@ def main(argv):
 
         elif opt in ('-p', '--pfs'):
             servs.append('pfs')
-
-        elif opt in ('-s', '--hshake'):
-            servs.append('hs')
 
         else:
             print(f'Option "{opt}" does not exist')

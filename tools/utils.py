@@ -144,14 +144,6 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
                     elif serv == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
                         serv_dict[serv.lower()][alg].append(suite)
 
-            if 'hs' in serv_dict:
-                alg = suite[4:suite.find('-WITH')]
-
-                if alg not in list(serv_dict['hs'].keys()):
-                    serv_dict['hs'][alg] = []
-                
-                serv_dict['hs'][alg].append(suite)
-
         return serv_dict
 
 def parse_record_data(filename, alg, serv=None):
@@ -251,33 +243,6 @@ def parse_handshake_data(filename, alg, serv=None):
 
     return data, headers
 
-def parse_overhead_data(filename, alg, serv):
-    data, headers = parse_handshake_data(filename, 'handshake')
-    ke_data, ke_hdrs = parse_handshake_data(filename, 'ke')
-
-    # print(f'\ndata: {list(data.keys())}')
-    # for key in data:
-    #     print(f'  -{key}: {list(data[key].keys())}')
-
-    # print(f'\nke_data: {list(ke_data.keys())}')
-    # for key in ke_data:
-    #     print(f'  -{key}: {list(ke_data[key].keys())}')
-
-    # print('')
-
-    if headers == ke_hdrs:
-        for sec_lvl in ke_data:
-            for hdr in ke_data[sec_lvl]:
-                data[sec_lvl]['ke_' + hdr] = ke_data[sec_lvl][hdr]
-    else:
-        return None
-
-    # print(f'\ndata: {list(data.keys())}')
-    # for key in data:
-    #     print(f'  -{key}: {list(data[key].keys())}')
-
-    return data, headers
-
 def parse_servs_data(filename, algs, servs):
     data = {}
     ke_opts = settings.alg_parser_opts['ke']
@@ -337,7 +302,6 @@ def parse_servs_data(filename, algs, servs):
                         data[sec_lvl][sub].append(all_val[sub])
                     
     hs_data, hs_headers = parse_handshake_data(filename, 'handshake')
-
 
     if headers == hs_headers:
         for sec_lvl in hs_data.keys():

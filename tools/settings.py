@@ -15,7 +15,7 @@ def init():
     }
 
     global serv_types
-    serv_types = ['conf', 'int', 'auth', 'ke', 'pfs', 'hs']
+    serv_types = ['conf', 'int', 'auth', 'ke', 'pfs']
 
     global hs_servs
     hs_servs = ['auth', 'ke', 'pfs']
@@ -39,7 +39,7 @@ def init():
     global serv_to_alg
     serv_to_alg = {
         'conf': 'cipher', 'int': 'md', 'auth': 'ke',
-        'ke': 'ke', 'pfs': 'ke', 'hs': 'handshake'
+        'ke': 'ke', 'pfs': 'ke'
     }
 
     global sec_str
