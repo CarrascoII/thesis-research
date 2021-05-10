@@ -34,7 +34,7 @@ def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
                     yerr.append(stats[key]['stddev_ke_' + ylabel + '_' + op])
 
             ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
-                                        labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+                                        labels=labels, xtickslabels=xtickslabels, xlabel='security strength (in bits)', ylabel=ylabel)
             utils.save_fig(fig, '../docs/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spacing=''):

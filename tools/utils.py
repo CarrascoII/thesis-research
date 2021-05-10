@@ -635,6 +635,7 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)
+    ax.set_yscale('log')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
     return(ax)
@@ -660,6 +661,7 @@ def stacked_custom_bar(y_list, n_elems, width=0.5, ax=None, title=None, labels=[
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)
+    ax.set_yscale('log')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
     return(ax)

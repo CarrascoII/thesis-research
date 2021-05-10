@@ -49,7 +49,7 @@ int measure_timelib_get_time(measure_timelib_context *ctx, int mode) {
     } else {
         gettimeofday(&ctx->end_time, NULL);
 #if defined(PRINT_MEASUREMENTS)
-        printf("\n  end_time   = %ld\n", (long) (ctx->end_time.tv_sec*1e6 + ctx->end_time.tv_usec));
+        printf("\n  end_time   = %ld", (long) (ctx->end_time.tv_sec*1e6 + ctx->end_time.tv_usec));
 #endif
     }
 

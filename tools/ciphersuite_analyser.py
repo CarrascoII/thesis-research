@@ -46,7 +46,7 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
                 #     print(f'{a}: {y[a]} : {len(y[a])}')
 
                 ax = utils.stacked_custom_bar(y, size, ax=ax, title=op + ' (' + stype + ')',
-                                            labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+                                            labels=labels, xtickslabels=xtickslabels, xlabel='algorithms', ylabel=ylabel)
                 utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '.png')
 
 def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spacing=''):
@@ -115,8 +115,6 @@ def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spa
     for key in all_data:
         stats = utils.calc_statistics(all_data[key], stats_type)
 
-        # print(f'\nstats[{key}]:\n{list(stats.keys())}')
-
         if stats == None:
             return None
 
@@ -124,12 +122,12 @@ def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spa
 
     print('ok')
 
-    print('')
-    for a in all_stats:
-        print(f'{a}:')
-        for b in all_stats[a]:
-            print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
-        print('')
+    # print('')
+    # for a in all_stats:
+    #     print(f'{a}:')
+    #     for b in all_stats[a]:
+    #         print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
+    #     print('')
 
     print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     for hdr in headers:
@@ -170,8 +168,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_comparator.py [-w <filter_weight>] <ciphersuite_list>')
-            print('services_comparator.py [--weight=<filter_weight>] <ciphersuite_list>')
+            print('ciphersuite_analyser.py [-w <filter_weight>] <ciphersuite_list>')
+            print('ciphersuite_analyser.py [--weight=<filter_weight>] <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
