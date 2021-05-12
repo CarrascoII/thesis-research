@@ -10,7 +10,7 @@
 // #define MEASURE_CIPHER
 // #define MEASURE_MD
 #define MEASURE_KE
-// #define MEASURE_HANDSHAKE
+#define MEASURE_HANDSHAKE
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
@@ -36,21 +36,26 @@ char *md_fname;
 #if defined(MEASURE_KE)
 #define KE_EXTENTION            "ke_data.csv"
 #define KE_FNAME_SIZE           12 /* = len(KE_EXTENTION) + len("\0") */
+#define KE_MAX_SRV_CTX          6
+#define KE_MAX_CLI_CTX          5
 char *ke_fname;
+int ke_is_count;
 #endif
 
 #if defined(MEASURE_HANDSHAKE)
 #define HANDSHAKE_EXTENSION     "handshake_data.csv"
 #define HANDSHAKE_FNAME_SIZE    19 /* = len(HANDSHAKE_EXTENSION) + len("\0") */
-#define MAX_SERVER_CTX          11
-#define MAX_CLIENT_CTX          10
-char *handshake_fname;
+#define HS_MAX_SRV_CTX          11
+#define HS_MAX_CLI_CTX          10
+char *hs_fname;
+int hs_is_count;
 #endif
 
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
-#define CERTS_PATH          "../l-tls/examples/"
-#define CERT_KEY_PATH_LEN   40
-#define BUFFER_LEN          15
+#define CERTS_PATH                  "../l-tls/examples/"
+#define CERT_KEY_PATH_LEN           40
+#define BUFFER_LEN                  15
+
 static const int psk_key_sizes[5] = {10, 14, 16, 24, 32};               /* in bytes */
 static const int asm_key_sizes[5] = {1024, 2048, 3072, 7680, 15360};    /* in bits */
 static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bits */

@@ -313,7 +313,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             }
 #else /* MEASURE_KE || MEASURE_HANDSHAKE */
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_HANDSHAKE or MEASURE_KE\n");
+            printf("Option not available. Enable MEASURE_KE or MEASURE_HANDSHAKE\n");
 #endif
 #endif
 		}
@@ -329,7 +329,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             }
 #else /* MEASURE_KE || MEASURE_HANDSHAKE */
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_HANDSHAKE or MEASURE_KE\n");
+            printf("Option not available. Enable MEASURE_KE or MEASURE_HANDSHAKE\n");
 #endif
 #endif
 		}
@@ -345,7 +345,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             }
 #else /* MEASUREMENT_MEASURE_C */
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_CIPHER, MEASURE_MD, MEASURE_HANDSHAKE or MEASURE_KE\n");
+            printf("Option not available. Enable MEASURE_CIPHER, MEASURE_MD, MEASURE_KE or MEASURE_HANDSHAKE\n");
 #endif
             return(1);
 #endif
@@ -962,8 +962,8 @@ exit:
 #endif
 
 #if defined(MEASURE_HANDSHAKE)
-    if(handshake_fname != NULL) {
-        free(handshake_fname);
+    if(hs_fname != NULL) {
+        free(hs_fname);
     }
 #endif
 

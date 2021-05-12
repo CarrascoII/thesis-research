@@ -15,6 +15,7 @@
 #define MEASURE_ERR_BAD_INPUT_DATA          -0xA002  /**< Bad input parameters to function. */
 #define MEASURE_ERR_CYCLES_FAILED           -0xA003  /**< Failed to get virtual cycles */
 #define MEASURE_ERR_TIME_FAILED             -0xA004  /**< Failed to get vitual time */
+#define MEASURE_ERR_BAD_OPERATION           -0xA005  /**< Incorrect order of functions (ex: MEASURE_START within MEASURE_START) */
 
 #define MEASURE_TYPE_CYCLES     0x01    /**< Measurement tool can measure clock cycles. */
 #define MEASURE_TYPE_TIME       0x02    /**< Measurement tool can measure time. */
