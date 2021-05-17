@@ -136,6 +136,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_BASE64_C
 #endif
 
+/* Used for generating certificates and keys */
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_PK_WRITE_C
 #define MBEDTLS_PEM_WRITE_C
@@ -154,13 +155,18 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_ARC4_C
 #define MBEDTLS_DES_C
 #define MBEDTLS_AES_C
-// #define MBEDTLS_AES_ALT
 // #define MBEDTLS_AES_ENCRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_ENC_ALT
 // #define MBEDTLS_AES_DECRYPT_ALT
 // #define MBEDTLS_AES_SETKEY_DEC_ALT
 #define MBEDTLS_ARIA_C
 #define MBEDTLS_CAMELLIA_C
+
+// #define MBEDTLS_ARC4_ALT
+// #define MBEDTLS_DES_ALT
+// #define MBEDTLS_AES_ALT
+// #define MBEDTLS_ARIA_ALT
+// #define MBEDTLS_CAMELLIA_ALT
 
 /* Cipher modes */
 #define MBEDTLS_CIPHER_MODE_CBC
@@ -173,6 +179,11 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define MBEDTLS_SHA256_C
 // #define MBEDTLS_SHA256_PROCESS_ALT
 #define MBEDTLS_SHA512_C
+
+// #define MBEDTLS_MD5_ALT
+// #define MBEDTLS_SHA1_ALT
+// #define MBEDTLS_SHA256_ALT
+// #define MBEDTLS_SHA512_ALT
 
 /* AEAD algorithms */
 // #define MBEDTLS_GCM_C
@@ -205,14 +216,11 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 /**
  *  Options to reduce footprint
  */
-// #define MBEDTLS_AES_ROM_TABLES              /* Save RAM at the expense of ROM */
-// #define MBEDTLS_ENTROPY_MAX_SOURCES     2   /* Minimum is 2 for the entropy test suite */
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #elif defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MBEDTLS_MPI_MAX_SIZE
 #endif
-// #define MBEDTLS_SSL_MAX_CONTENT_LEN     MAX_INPUT_SIZE + 1024    /* The optimal size here depends on the typical size of records (does not work) */
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_MPI_MAX_SIZE            1920     /**< Maximum number of bytes for usable MPIs. */
 #endif
@@ -504,7 +512,7 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
-#define MAX_INPUT_SIZE                  1048576
+#define MAX_INPUT_SIZE                  1048576         /* 1 GB */
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MIN_SEC_LVL                     0
 #define MAX_SEC_LVL                     4
