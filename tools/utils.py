@@ -243,7 +243,7 @@ def parse_handshake_data(filename, alg, serv=None):
 
     return data, headers
 
-def parse_servs_data(filename, algs, servs):
+def parse_servs_data(filename, algs):
     data = {}
     ke_opts = settings.alg_parser_opts['ke']
 
@@ -265,13 +265,12 @@ def parse_servs_data(filename, algs, servs):
                 operation = row['operation']
 
                 for alg in algs.split('-'):
-                    for serv in servs:
-                        try:
-                            if operation in settings.ke_operations_per_service[serv][alg]:
-                                sec_lvl = serv + '_' + sec_lvl
-                        
-                        except KeyError:
-                            continue
+                    try:
+                        if operation in settings.ke_operations[alg]:
+                            sec_lvl = alg + '_' + sec_lvl
+                    
+                    except KeyError:
+                        continue
 
                 if sec_lvl not in data.keys():
                     data[sec_lvl] = {}
@@ -546,7 +545,7 @@ def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='msglen', ylabel
     ax.legend()
     return(ax)
 
-def custom_bar(y_list, yerr, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
+def custom_bar(y_list, yerr, ax=None, title=None, xlabel='msglen', xtickslabels=None, ylabel=None):
     x_list = []
 
     if ax is None:
@@ -604,28 +603,27 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
     ax.legend()
     return(ax)
 
-def stacked_custom_bar(y_list, n_elems, width=0.5, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
+def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear', xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
+    bottom = []
 
     if ax is None:
         ax = plt.gca()
 
     ax.bar(x, y_list['hs'], width=width, label='Handshake')
-
-    bottom = []
     
     while len(bottom) < len(y_list['hs']):
         bottom.append(0)
 
-    for serv in settings.hs_servs:
-        ax.bar(x, y_list[serv], width=width, label=settings.serv_fullname[serv], bottom=bottom)
+    for alg in settings.ke_operations:
+        ax.bar(x, y_list[alg], width=width, label=alg, bottom=bottom)
 
         for j in range(len(bottom)):
-            bottom[j] += y_list[serv][j]
+            bottom[j] += y_list[alg][j]
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)
-    # ax.set_yscale('log')
+    ax.set_yscale(scale)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
     return(ax)

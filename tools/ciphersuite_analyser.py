@@ -8,7 +8,7 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
     xtickslabels = []
     sec_lvl = []
-    size = len(stats.keys())
+    scale_type = ['linear', 'log']
 
     for key in stats[labels[0]]['keys']:
         val = key.split('_')
@@ -22,32 +22,33 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
     for stype in stats_type:
         for op in operations:
             for lvl in sec_lvl:
-                fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-                y = {}
+                for scale in scale_type:
+                    fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+                    y = {}
 
-                for alg in stats:
-                    for key in stats[alg]['keys']:
-                        elem = key.split('_')
-
-                        if elem[0] not in y:
-                            y[elem[0]] = []
-
-                for serv in y:
                     for alg in stats:
-                        try:
-                            idx = stats[alg]['keys'].index(serv + '_' + lvl)
-                            y[serv].append(stats[alg][stype + '_' + ylabel + '_' + op][idx])
-                        
-                        except ValueError:
-                            y[serv].append(0)
+                        for key in stats[alg]['keys']:
+                            elem = key.split('_')
 
-                # print('')
-                # for a in y:
-                #     print(f'{a}: {y[a]} : {len(y[a])}')
+                            if elem[0] not in y:
+                                y[elem[0]] = []
 
-                ax = utils.stacked_custom_bar(y, size, ax=ax, title=op + ' (' + stype + ')',
-                                            labels=labels, xtickslabels=xtickslabels, xlabel='algorithms', ylabel=ylabel)
-                utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '.png')
+                    for serv in y:
+                        for alg in stats:
+                            try:
+                                idx = stats[alg]['keys'].index(serv + '_' + lvl)
+                                y[serv].append(stats[alg][stype + '_' + ylabel + '_' + op][idx])
+                            
+                            except ValueError:
+                                y[serv].append(0)
+
+                    # print('')
+                    # for a in y:
+                    #     print(f'{a}: {y[a]} : {len(y[a])}')
+
+                    ax = utils.stacked_custom_bar(y, ax=ax, title=op + ' (' + stype + ')', scale=scale,
+                                                xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
+                    utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
 def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
@@ -62,7 +63,7 @@ def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spa
 
         for suite in grouped_suites[algs]:
             filename = '../docs/' + suite + '/'
-            data, hdr = utils.parse_servs_data(filename, algs, servs)
+            data, hdr = utils.parse_servs_data(filename, algs)
 
             # print(f'\n{suite} ({algs}):')
             # for a in data:

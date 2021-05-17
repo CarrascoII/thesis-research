@@ -52,6 +52,19 @@ def init():
         '192': 0, '224': 1, '256': 2, '384': 3, '521': 4
     }
 
+    global ke_operations
+    ke_operations = {
+        'PSK': ['parse_client_psk_identity', 'parse_server_psk_hint', 'psk_derive_premaster'],
+        'RSA': ['rsa_encrypt', 'rsa_decrypt', 'rsa_sign_with_sha256',
+                'rsa_verify_with_sha256', 'rsa_sign_with_sha512', 'rsa_verify_with_sha512'],
+        'ECDSA': ['ecdsa_sign_with_sha256', 'ecdsa_verify_with_sha256', 'ecdsa_sign_with_sha512', 'ecdsa_verify_with_sha512'],
+        'DHE': ['dhm_set_group', 'dhm_make_params', 'parse_server_dh_params',
+                'dhm_make_public', 'parse_client_dh_public', 'dhm_calc_secret'],
+        'ECDH': ['get_ecdh_params_from_cert', 'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
+        'ECDHE': ['ecdh_setup', 'ecdh_make_params', 'parse_server_ecdh_params',
+                'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret']
+    }
+
     global ke_operations_per_service
     ke_operations_per_service = {
         'auth': {
