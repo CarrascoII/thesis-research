@@ -50,7 +50,7 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
                                                 xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
                     utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
-def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -142,12 +142,12 @@ def make_serv_cmp_figs(grouped_suites, servs, labels, weight=1.5, strlen=40, spa
 
     print('ok')
 
-def make_figs(grouped_suites, weight=1.5, strlen=40, spacing=''):    
-    serv_set = settings.hs_servs
+def make_figs(suites, weight=1.5, strlen=40, spacing=''):   
+    grouped_suites = utils.group_ciphersuites(suites)
     labels = settings.serv_labels['ke']
 
-    print(f'\nALL data:')
-    make_serv_cmp_figs(grouped_suites, serv_set, labels, weight=weight, strlen=strlen, spacing=spacing)
+    print(f'\n{spacing}ALL data:')
+    make_serv_cmp_figs(grouped_suites, labels, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
@@ -182,9 +182,9 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    groups = utils.parse_ciphersuites_grouped(args[0])
+    suites = utils.parse_ciphersuites(args[0])
     
-    make_figs(groups, weight=weight)
+    make_figs(suites, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

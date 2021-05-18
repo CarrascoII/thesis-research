@@ -615,6 +615,10 @@ static void ssl_calc_finished_tls_sha384( mbedtls_ssl_context *, unsigned char *
 int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
+#if defined(MEASURE_KE)
+    int ret2;
+    char buff[BUFFER_LEN];
+#endif
     unsigned char tmp[64];
     unsigned char keyblk[256];
     unsigned char *key1;
@@ -674,6 +678,9 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
     if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_3 &&
         transform->ciphersuite_info->mac == MBEDTLS_MD_SHA384 )
     {
+#if defined(MEASURE_KE)
+        sprintf(buff, "sha384_hash");
+#endif
         handshake->tls_prf = tls_prf_sha384;
         handshake->calc_verify = ssl_calc_verify_tls_sha384;
         handshake->calc_finished = ssl_calc_finished_tls_sha384;
@@ -683,6 +690,9 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
 #if defined(MBEDTLS_SHA256_C)
     if( ssl->minor_ver == MBEDTLS_SSL_MINOR_VERSION_3 )
     {
+#if defined(MEASURE_KE)
+        sprintf(buff, "sha256_hash");
+#endif
         handshake->tls_prf = tls_prf_sha256;
         handshake->calc_verify = ssl_calc_verify_tls_sha256;
         handshake->calc_finished = ssl_calc_finished_tls_sha256;
@@ -739,10 +749,37 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
 
             MBEDTLS_SSL_DEBUG_BUF( 3, "session hash", session_hash, hash_len );
 
+#if defined(MEASURE_KE)
+            if(ke_is_count == 0) {
+                ke_is_count = 1;
+
+                if((ret2 = measure_get_vals(&ssl->ke_msr_ctx[ssl->ke_ctx_counter], MEASURE_START)) != 0) {
+                    return(ret2);
+                }
+            } else {
+                return(MEASURE_ERR_BAD_OPERATION);
+            }
+#endif
+
             ret = handshake->tls_prf( handshake->premaster, handshake->pmslen,
                                       "extended master secret",
                                       session_hash, hash_len,
                                       session->master, 48 );
+
+#if defined(MEASURE_KE)
+            if(ke_is_count == 1) {
+                sprintf(ssl->ke_buffs[ssl->ke_ctx_counter], "%s,%s_extended_master_secret", ssl->test_and_sec_lvl, buff);
+        
+                if((ret2 = measure_get_vals(&ssl->ke_msr_ctx[ssl->ke_ctx_counter++], MEASURE_END)) != 0) {
+                    return(ret2);
+                }
+
+                ke_is_count = 0;
+            } else {
+                return(MEASURE_ERR_BAD_OPERATION);
+            }
+#endif
+
             if( ret != 0 )
             {
                 MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
@@ -752,10 +789,37 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
         }
         else
 #endif
+#if defined(MEASURE_KE)
+        if(ke_is_count == 0) {
+            ke_is_count = 1;
+
+            if((ret2 = measure_get_vals(&ssl->ke_msr_ctx[ssl->ke_ctx_counter], MEASURE_START)) != 0) {
+                return(ret2);
+            }
+        } else {
+            return(MEASURE_ERR_BAD_OPERATION);
+        }
+#endif
+
         ret = handshake->tls_prf( handshake->premaster, handshake->pmslen,
                                   "master secret",
                                   handshake->randbytes, 64,
                                   session->master, 48 );
+                                
+#if defined(MEASURE_KE)
+        if(ke_is_count == 1) {
+            sprintf(ssl->ke_buffs[ssl->ke_ctx_counter], "%s,%s_master_secret", ssl->test_and_sec_lvl, buff);
+    
+            if((ret2 = measure_get_vals(&ssl->ke_msr_ctx[ssl->ke_ctx_counter++], MEASURE_END)) != 0) {
+                return(ret2);
+            }
+
+            ke_is_count = 0;
+        } else {
+            return(MEASURE_ERR_BAD_OPERATION);
+        }
+#endif
+
         if( ret != 0 )
         {
             MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );
@@ -788,8 +852,36 @@ int mbedtls_ssl_derive_keys( mbedtls_ssl_context *ssl )
      *  TLSv1:
      *    key block = PRF( master, "key expansion", randbytes )
      */
+
+#if defined(MEASURE_KE)
+    if(ke_is_count == 0) {
+        ke_is_count = 1;
+
+        if((ret2 = measure_get_vals(&ssl->ke_msr_ctx[ssl->ke_ctx_counter], MEASURE_START)) != 0) {
+            return(ret2);
+        }
+    } else {
+        return(MEASURE_ERR_BAD_OPERATION);
+    }
+#endif
+
     ret = handshake->tls_prf( session->master, 48, "key expansion",
                               handshake->randbytes, 64, keyblk, 256 );
+
+#if defined(MEASURE_KE)
+    if(ke_is_count == 1) {
+        sprintf(ssl->ke_buffs[ssl->ke_ctx_counter], "%s,%s_key_expansion", ssl->test_and_sec_lvl, buff);
+
+        if((ret2 = measure_get_vals(&ssl->ke_msr_ctx[ssl->ke_ctx_counter++], MEASURE_END)) != 0) {
+            return(ret2);
+        }
+
+        ke_is_count = 0;
+    } else {
+        return(MEASURE_ERR_BAD_OPERATION);
+    }
+#endif
+
     if( ret != 0 )
     {
         MBEDTLS_SSL_DEBUG_RET( 1, "prf", ret );

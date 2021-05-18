@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import services_comparator, utils, settings
+import services_comparator, ciphersuite_analyser, utils, settings
 
 
 def run_cli(target, tls_opts):
@@ -101,6 +101,7 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
     print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
     print(f'\nCreating comparison graphs from all ciphersuites:')
     services_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='    ')
+    ciphersuite_analyser.make_figs(success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='    ')
 
     # Step 7: For each target, save successful ciphersuites in a file
     utils.write_ciphersuites('services', success_ciphersuites)

@@ -62,7 +62,9 @@ def init():
                 'dhm_make_public', 'parse_client_dh_public', 'dhm_calc_secret'],
         'ECDH': ['get_ecdh_params_from_cert', 'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
         'ECDHE': ['ecdh_setup', 'ecdh_make_params', 'parse_server_ecdh_params',
-                'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret']
+                'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
+        'SHA256': ['sha256_hash_extended_master_secret', 'sha256_hash_master_secret', 'sha256_hash_key_expansion'],
+        'SHA384': ['sha384_hash_extended_master_secret', 'sha384_hash_master_secret', 'sha384_hash_key_expansion']
     }
 
     global ke_operations_per_service
@@ -77,7 +79,9 @@ def init():
             'PSK': ['psk_derive_premaster'],
             'DHE': ['dhm_make_public', 'parse_client_dh_public', 'dhm_calc_secret'],
             'ECDH': ['get_ecdh_params_from_cert', 'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
-            'ECDHE': ['ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret']
+            'ECDHE': ['ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
+            'SHA256': ['sha256_hash_extended_master_secret', 'sha256_hash_master_secret', 'sha256_hash_key_expansion'],
+            'SHA384': ['sha384_hash_extended_master_secret', 'sha384_hash_master_secret', 'sha384_hash_key_expansion']
         },
         'pfs': {
             'DHE': ['dhm_set_group', 'dhm_make_params', 'parse_server_dh_params'],

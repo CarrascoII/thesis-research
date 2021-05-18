@@ -10,18 +10,16 @@ def parse_ciphersuites(filename):
     with open(filename, 'r') as fl:
         return [line.strip() for line in fl.readlines()]
 
-def parse_ciphersuites_grouped(filename):
+def group_ciphersuites(suites):
     groups = {}
 
-    with open(filename, 'r') as fl:
-        for suite in fl.readlines():
-            suite = suite.strip()
-            alg = suite[4:suite.find('-WITH')]
+    for suite in suites:
+        alg = suite[4:suite.find('-WITH')]
 
-            if alg not in list(groups.keys()):
-                groups[alg] = []
-            
-            groups[alg].append(suite)
+        if alg not in list(groups.keys()):
+            groups[alg] = []
+        
+        groups[alg].append(suite)
 
     return groups
 
@@ -120,6 +118,10 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
     for serv in serv_set:
         serv_dict[serv] = {}
 
+        if serv == 'ke':
+            serv_dict[serv]['SHA256'] = []
+            serv_dict[serv]['SHA384'] = []
+
     with open(filename, 'r') as fl:
         for line in fl.readlines():
             line = line.split(',')
@@ -143,6 +145,13 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
                     
                     elif serv == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
                         serv_dict[serv.lower()][alg].append(suite)
+
+                if serv == 'KE': 
+                    if suite.find('SHA384', len(suite) - 6) != -1:
+                        serv_dict[serv.lower()]['SHA384'].append(suite)
+
+                    else:
+                        serv_dict[serv.lower()]['SHA256'].append(suite)
 
         return serv_dict
 
@@ -246,6 +255,12 @@ def parse_handshake_data(filename, alg, serv=None):
 def parse_servs_data(filename, algs):
     data = {}
     ke_opts = settings.alg_parser_opts['ke']
+    alg_lst = algs.split('-')
+
+    if filename.find('SHA384', len(filename) - 6) != -1:
+        alg_lst.append('SHA384')
+    else:
+        alg_lst.append('SHA256')
 
     for ext, endpoint in zip(['srv_', 'cli_'], ['server', 'client']):
         fname = filename + ext + 'ke_data.csv'
@@ -264,7 +279,7 @@ def parse_servs_data(filename, algs):
                 test_id = int(row['test_id'])
                 operation = row['operation']
 
-                for alg in algs.split('-'):
+                for alg in alg_lst:
                     try:
                         if operation in settings.ke_operations[alg]:
                             sec_lvl = alg + '_' + sec_lvl
@@ -616,10 +631,14 @@ def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear', x
         bottom.append(0)
 
     for alg in settings.ke_operations:
-        ax.bar(x, y_list[alg], width=width, label=alg, bottom=bottom)
+        try:
+            ax.bar(x, y_list[alg], width=width, label=alg, bottom=bottom)
 
-        for j in range(len(bottom)):
-            bottom[j] += y_list[alg][j]
+            for j in range(len(bottom)):
+                bottom[j] += y_list[alg][j]
+        
+        except KeyError:
+            continue
 
     ax.set_xticks(x)
     ax.set_xticklabels(xtickslabels)

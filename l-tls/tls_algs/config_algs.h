@@ -36,8 +36,8 @@ char *md_fname;
 #if defined(MEASURE_KE)
 #define KE_EXTENTION            "ke_data.csv"
 #define KE_FNAME_SIZE           12 /* = len(KE_EXTENTION) + len("\0") */
-#define KE_MAX_SRV_CTX          6
-#define KE_MAX_CLI_CTX          5
+#define KE_MAX_SRV_CTX          8
+#define KE_MAX_CLI_CTX          7
 char *ke_fname;
 int ke_is_count;
 #endif
