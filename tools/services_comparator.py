@@ -50,14 +50,10 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
             data_ops_params['filename'] = '../docs/' + suite + '/'
             data, hdr = data_ops_func[serv](**data_ops_params)
 
-            # print(f'\n{suite} ({key}):')
-            # for a in data:
-            #     print(f'  {a}')
-            #     for b in data[a]:
-            #         print(f'    {b}: {data[a][b]} : {len(data[a][b])}')
-            #     print('')
+            if data == {}:
+                continue
 
-            if all_data[key] == {}:
+            elif all_data[key] == {}:
                 all_data[key] = data
                 headers = hdr
             
@@ -72,6 +68,13 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
             else:
                 print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
                 return None
+
+            # print(f'\n{suite} ({key}):')
+            # for a in data:
+            #     print(f'  {a}')
+            #     for b in data[a]:
+            #         print(f'    {b}: {data[a][b]} : {len(data[a][b])}')
+            #     print('')
 
         if all_data[key] == {}:
             all_data.pop(key)
@@ -127,6 +130,12 @@ def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spa
 
     labels = settings.serv_labels
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
+
+    # print('')
+    # for a in servs:
+    #     print(f'{a}:')
+    #     for b in servs[a]:
+    #         print(f'  {b}: {servs[a][b]}')
 
     for serv in serv_set:
         print(f'\n{serv.upper()} data:')

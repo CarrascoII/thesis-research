@@ -156,9 +156,9 @@ def main(argv):
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             print('services_profiller.py [-c <compilation_target>] [-t <timeout>] [-w <filter_weight>] ' +
-                '[-i <initial_size>,<final_size>] [-s <initial_lvl>,<final_lvl>] [-n <n_tests>] <algorithms_list>')
+                '[-i <initial_size>,<final_size>] [-s <initial_lvl>,<final_lvl>] [-n <n_tests>] <services_list>')
             print('services_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--weight=<filter_weight>]  ' +
-                '[--input_size=<initial_size>,<final_size>] [--sec_lvl=<initial_lvl>,<final_lvl] [--n_tests=<n_tests>] <algorithms_list>')
+                '[--input_size=<initial_size>,<final_size>] [--sec_lvl=<initial_lvl>,<final_lvl] [--n_tests=<n_tests>] <services_list>')
             sys.exit(0)
 
         elif opt in ('-c', '--compile'):

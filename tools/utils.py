@@ -118,7 +118,13 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
     for serv in serv_set:
         serv_dict[serv] = {}
 
-        if serv == 'ke':
+        if serv == 'auth':
+            serv_dict[serv]['RSA-SHA256'] = []
+            serv_dict[serv]['RSA-SHA512'] = []
+            serv_dict[serv]['ECDSA-SHA256'] = []
+            serv_dict[serv]['ECDSA-SHA512'] = []
+
+        elif serv == 'ke':
             serv_dict[serv]['SHA256'] = []
             serv_dict[serv]['SHA384'] = []
 
@@ -140,10 +146,15 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
         for suite in ciphersuites:
             for serv in alg_conv:
                 for alg in alg_conv[serv]:
-                    if suite.find('-' + alg + '-') != -1:
+                    if serv == 'AUTH' and alg != 'PSK' and suite.find('-' + alg + '-') != -1:
                         serv_dict[serv.lower()][alg].append(suite)
-                    
+                        serv_dict[serv.lower()][alg + '-SHA256'].append(suite)
+                        serv_dict[serv.lower()][alg + '-SHA512'].append(suite)
+
                     elif serv == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
+                        serv_dict[serv.lower()][alg].append(suite)
+
+                    elif suite.find('-' + alg + '-') != -1:
                         serv_dict[serv.lower()][alg].append(suite)
 
                 if serv == 'KE': 
@@ -152,6 +163,9 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 
                     else:
                         serv_dict[serv.lower()]['SHA256'].append(suite)
+
+        if 'auth' in serv_dict.keys():
+            serv_dict['auth'].pop('ECDSA')
 
         return serv_dict
 
@@ -261,6 +275,15 @@ def parse_servs_data(filename, algs):
         alg_lst.append('SHA384')
     else:
         alg_lst.append('SHA256')
+
+    if 'RSA' in alg_lst:
+        alg_lst.append('RSA-SHA256')
+        alg_lst.append('RSA-SHA512')
+
+    elif 'ECDSA' in alg_lst:
+        alg_lst.remove('ECDSA')
+        alg_lst.append('ECDSA-SHA256')
+        alg_lst.append('ECDSA-SHA512')
 
     for ext, endpoint in zip(['srv_', 'cli_'], ['server', 'client']):
         fname = filename + ext + 'ke_data.csv'
@@ -456,9 +479,14 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
         for serv in all_stats[alg]['keys']:
             if serv not in keys:
                 keys.append(serv)
-                line += serv + ','
+
+    keys.sort()
+
+    for serv in keys:
+        line += serv + ','
 
     for end in lines:
+        # print(f'\n{end}: {line[:-1]}')
         lines[end].append(line[:-1] + '\n')
 
     for alg in all_stats:
@@ -482,6 +510,7 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
                 except KeyError:
                     sub += '0,'
 
+            # print(f'\n{end}: {sub[:-1]}')
             lines[end].append(sub[:-1] + '\n')
 
     for end, label in zip(lines, labels):
@@ -625,7 +654,7 @@ def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear', x
     if ax is None:
         ax = plt.gca()
 
-    ax.bar(x, y_list['hs'], width=width, label='Handshake')
+    ax.bar(x, y_list['hs'], width=width, label='Handshake', color='black')
     
     while len(bottom) < len(y_list['hs']):
         bottom.append(0)

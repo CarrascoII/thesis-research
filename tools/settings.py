@@ -55,14 +55,16 @@ def init():
     global ke_operations
     ke_operations = {
         'PSK': ['parse_client_psk_identity', 'parse_server_psk_hint', 'psk_derive_premaster'],
-        'RSA': ['rsa_encrypt', 'rsa_decrypt', 'rsa_sign_with_sha256',
-                'rsa_verify_with_sha256', 'rsa_sign_with_sha512', 'rsa_verify_with_sha512'],
-        'ECDSA': ['ecdsa_sign_with_sha256', 'ecdsa_verify_with_sha256', 'ecdsa_sign_with_sha512', 'ecdsa_verify_with_sha512'],
+        'RSA': ['rsa_encrypt', 'rsa_decrypt'],
+        'RSA-SHA256': ['rsa_sign_with_sha256', 'rsa_verify_with_sha256'],
+        'RSA-SHA512': ['rsa_sign_with_sha512', 'rsa_verify_with_sha512'],
+        'ECDSA-SHA256': ['ecdsa_sign_with_sha256', 'ecdsa_verify_with_sha256'],
+        'ECDSA-SHA512': ['ecdsa_sign_with_sha512', 'ecdsa_verify_with_sha512'],
         'DHE': ['dhm_set_group', 'dhm_make_params', 'parse_server_dh_params',
                 'dhm_make_public', 'parse_client_dh_public', 'dhm_calc_secret'],
         'ECDH': ['get_ecdh_params_from_cert', 'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
         'ECDHE': ['ecdh_setup', 'ecdh_make_params', 'parse_server_ecdh_params',
-                'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
+                    'ecdh_make_public', 'ecdh_read_public', 'ecdh_calc_secret'],
         'SHA256': ['sha256_hash_extended_master_secret', 'sha256_hash_master_secret', 'sha256_hash_key_expansion'],
         'SHA384': ['sha384_hash_extended_master_secret', 'sha384_hash_master_secret', 'sha384_hash_key_expansion']
     }
@@ -71,9 +73,11 @@ def init():
     ke_operations_per_service = {
         'auth': {
             'PSK': ['parse_client_psk_identity', 'parse_server_psk_hint'],
-            'RSA': ['rsa_encrypt', 'rsa_decrypt', 'rsa_sign_with_sha256',
-                    'rsa_verify_with_sha256', 'rsa_sign_with_sha512', 'rsa_verify_with_sha512'],
-            'ECDSA': ['ecdsa_sign_with_sha256', 'ecdsa_verify_with_sha256', 'ecdsa_sign_with_sha512', 'ecdsa_verify_with_sha512']
+            'RSA': ['rsa_encrypt', 'rsa_decrypt'],
+            'RSA-SHA256': ['rsa_sign_with_sha256', 'rsa_verify_with_sha256'],
+            'RSA-SHA512': ['rsa_sign_with_sha512', 'rsa_verify_with_sha512'],
+            'ECDSA-SHA256': ['ecdsa_sign_with_sha256', 'ecdsa_verify_with_sha256'],
+            'ECDSA-SHA512': ['ecdsa_sign_with_sha512', 'ecdsa_verify_with_sha512']
         },
         'ke': {
             'PSK': ['psk_derive_premaster'],

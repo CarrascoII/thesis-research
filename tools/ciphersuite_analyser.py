@@ -95,7 +95,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     # for a in all_data:
     #     print(f'{a}:')
     #     for b in all_data[a]:
-    #         print(f'  {b}:')            
+    #         print(f'  {b}:')
     #         for c in all_data[a][b]:
     #             print(f'    {c}: {all_data[a][b][c]} : {len(all_data[a][b][c])}')
     #     print('')
@@ -118,6 +118,11 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
 
         if stats == None:
             return None
+
+        # print('')
+        # print(f'{key}:')
+        # for a in stats:
+        #     print(f'  {a}: {stats[a]} : {len(stats[a])}')
 
         all_stats[key] = stats
 
