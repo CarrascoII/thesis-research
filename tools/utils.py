@@ -346,6 +346,65 @@ def parse_servs_data(filename, algs):
 
     return data, headers
 
+def get_extra_labels(filename, algs):
+    fname = filename + 'srv_ke_data.csv'
+    alg_lst = algs.split('-')
+    labels = []
+
+    if filename.find('SHA384', len(filename) - 6) != -1:
+        alg_lst.append('SHA384')
+    else:
+        alg_lst.append('SHA256')
+
+    if 'RSA' in alg_lst:
+        alg_lst.remove('RSA')
+        alg_lst.append('RSA-SHA256')
+        alg_lst.append('RSA-SHA512')
+
+    elif 'ECDSA' in alg_lst:
+        alg_lst.remove('ECDSA')
+        alg_lst.append('ECDSA-SHA256')
+        alg_lst.append('ECDSA-SHA512')
+
+
+    with open(fname, mode='r') as fl:
+        csv_reader = csv.DictReader(fl)
+
+        for row in csv_reader:
+            test_id = int(row['test_id'])
+            operation = row['operation']
+
+            if test_id != 0:
+                break
+
+            elif operation == 'rsa_decrypt':
+                labels.append('D')
+                continue
+
+            elif operation in ['rsa_sign_with_sha512', 'ecdsa_sign_with_sha512']:
+                labels.append('E')
+                continue
+
+            for serv in settings.ke_operations_per_service:
+                for alg in alg_lst:
+                    try:
+                        if operation in settings.ke_operations_per_service[serv][alg]:
+                            if serv == 'auth':
+                                labels.append('A')
+                            elif serv == 'ke':
+                                labels.append('B')
+                            elif serv == 'pfs':
+                                labels.append('C')
+
+                            break
+
+                    except KeyError:
+                        continue
+
+    labels = sorted(list(dict.fromkeys(labels)))
+
+    return labels
+
 def parse_session_data(filename):
     data = {}
 
@@ -641,13 +700,19 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
         ax.bar(x1, y_list[i], width=width, label=labels[i], yerr=yerr[i], capsize=6*width)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(xtickslabels)
+    ax.set_xticklabels(xtickslabels, fontsize=20)
     ax.set_yscale('log')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    ax.legend()
+    ax.title.set_size(20)
+    ax.xaxis.label.set_size(20)
+    ax.yaxis.label.set_size(20)
+    ax.tick_params(axis='y', labelsize=20)
+    ax.legend(loc='upper right', ncol=2, frameon=False, prop={"size": 20})
+
     return(ax)
 
-def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear', xlabel='msglen', xtickslabels=None, ylabel=None):
+def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear',
+                            labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
     bottom = []
 
@@ -670,10 +735,16 @@ def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear', x
             continue
 
     ax.set_xticks(x)
-    ax.set_xticklabels(xtickslabels)
+    ax.set_xticklabels(xtickslabels, fontsize=20)
     ax.set_yscale(scale)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    ax.legend()
+    ax.title.set_size(20)
+    ax.xaxis.label.set_size(20)
+    ax.yaxis.label.set_size(20)
+    ax.tick_params(axis='y', labelsize=20)
+    ax.text(0.05, 0.95, 'A - Authentication\nB - Key Establishment\nC - Perfect Forward Secrecy\nD - Encrypted Client Key Exchange' +
+            '\nE - Signed Server Key Exchange', transform=ax.transAxes, fontsize=20, verticalalignment='top')
+    ax.legend(loc='upper right', ncol=2, frameon=False, prop={"size": 20})
     return(ax)
 
 def custom_scatter(x, y, ax=None, title=None, xlabel='msglen', xtickslabels=None, ylabel=None, kwargs={}):
@@ -687,6 +758,20 @@ def custom_scatter(x, y, ax=None, title=None, xlabel='msglen', xtickslabels=None
     return(ax)
 
 ########## DATA ANALYSIS UTILS ##########
+def sort_keys(all_data):
+    srt_keys = []
+    new_data = {}
+
+    for key in all_data:
+        srt_keys.append(key)
+
+    srt_keys.sort()
+
+    for key in srt_keys:
+        new_data[key] = all_data[key]
+
+    return new_data
+
 # def filter_z_score(data, weight=2):
 #     for key in data:
 #         sub_dict = data[key]

@@ -88,6 +88,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     #             print(f'    {c}: {all_data[a][b][c]} : {len(all_data[a][b][c])}')
     #     print('')
 
+    all_data = utils.sort_keys(all_data)
     print('ok')
 
     if weight != 0:

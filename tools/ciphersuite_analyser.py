@@ -4,20 +4,25 @@ import matplotlib.pyplot as plt
 import utils, settings
 
 
-def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
-    labels = list(stats.keys())
+def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels):
+    labels = {}
     xtickslabels = []
     sec_lvl = []
     scale_type = ['linear', 'log']
 
-    for key in stats[labels[0]]['keys']:
+    for key in stats[list(stats.keys())[0]]['keys']:
         val = key.split('_')
 
         if val[1] not in sec_lvl:
             sec_lvl.append(val[1])
 
     for alg in stats:
-        xtickslabels.append(alg)
+        tmp = '\n('
+
+        for id in extra_labels[alg]:
+            tmp += id
+
+        xtickslabels.append(alg + tmp + ')')
 
     for stype in stats_type:
         for op in operations:
@@ -46,13 +51,14 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type):
                     # for a in y:
                     #     print(f'{a}: {y[a]} : {len(y[a])}')
 
-                    ax = utils.stacked_custom_bar(y, ax=ax, title=op + ' (' + stype + ')', scale=scale,
+                    ax = utils.stacked_custom_bar(y, ax=ax, title=op + ' (' + stype + ')', scale=scale, labels=labels,
                                                 xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
                     utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
 def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
+    all_labels = {}
     all_stats = {}
     stats_type = ['mean']
 
@@ -88,8 +94,12 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
                 print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
                 return None
 
+            all_labels[algs] = utils.get_extra_labels(filename, algs)
+
         if all_data[algs] == {}:
             all_data.pop(algs)
+
+    all_data = utils.sort_keys(all_data)
 
     # print('')
     # for a in all_data:
@@ -99,6 +109,10 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     #         for c in all_data[a][b]:
     #             print(f'    {c}: {all_data[a][b][c]} : {len(all_data[a][b][c])}')
     #     print('')
+
+    # print('')
+    # for a in all_labels:
+    #     print(f'{a}: {all_labels[a]}')
 
     print('ok')
 
@@ -143,7 +157,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type)
+        make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
 
     print('ok')
 
