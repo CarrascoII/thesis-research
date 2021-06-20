@@ -118,13 +118,14 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
     for serv in serv_set:
         serv_dict[serv] = {}
 
-        if serv == 'auth':
-            serv_dict[serv]['RSA-SHA256'] = []
-            serv_dict[serv]['RSA-SHA512'] = []
-            serv_dict[serv]['ECDSA-SHA256'] = []
-            serv_dict[serv]['ECDSA-SHA512'] = []
+        # if serv == 'auth':
+        #     serv_dict[serv]['RSA-SHA256'] = []
+        #     serv_dict[serv]['RSA-SHA512'] = []
+        #     serv_dict[serv]['ECDSA-SHA256'] = []
+        #     serv_dict[serv]['ECDSA-SHA512'] = []
 
-        elif serv == 'ke':
+        # elif serv == 'ke':
+        if serv == 'ke':
             serv_dict[serv]['SHA256'] = []
             serv_dict[serv]['SHA384'] = []
 
@@ -146,16 +147,17 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
         for suite in ciphersuites:
             for serv in alg_conv:
                 for alg in alg_conv[serv]:
-                    if serv == 'AUTH' and alg != 'PSK' and suite.find('-' + alg + '-') != -1:
+                    # if serv == 'AUTH' and alg != 'PSK' and suite.find('-' + alg + '-') != -1:
+                    if suite.find('-' + alg + '-') != -1:
                         serv_dict[serv.lower()][alg].append(suite)
-                        serv_dict[serv.lower()][alg + '-SHA256'].append(suite)
-                        serv_dict[serv.lower()][alg + '-SHA512'].append(suite)
+                        # serv_dict[serv.lower()][alg + '-SHA256'].append(suite)
+                        # serv_dict[serv.lower()][alg + '-SHA512'].append(suite)
 
                     elif serv == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
                         serv_dict[serv.lower()][alg].append(suite)
 
-                    elif suite.find('-' + alg + '-') != -1:
-                        serv_dict[serv.lower()][alg].append(suite)
+                    # elif suite.find('-' + alg + '-') != -1:
+                    #     serv_dict[serv.lower()][alg].append(suite)
 
                 if serv == 'KE': 
                     if suite.find('SHA384', len(suite) - 6) != -1:
@@ -164,8 +166,8 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
                     else:
                         serv_dict[serv.lower()]['SHA256'].append(suite)
 
-        if 'auth' in serv_dict.keys():
-            serv_dict['auth'].pop('ECDSA')
+        # if 'auth' in serv_dict.keys():
+        #     serv_dict['auth'].pop('ECDSA')
 
         return serv_dict
 
@@ -276,14 +278,14 @@ def parse_servs_data(filename, algs):
     else:
         alg_lst.append('SHA256')
 
-    if 'RSA' in alg_lst:
-        alg_lst.append('RSA-SHA256')
-        alg_lst.append('RSA-SHA512')
+    # if 'RSA' in alg_lst:
+    #     alg_lst.append('RSA-SHA256')
+    #     alg_lst.append('RSA-SHA512')
 
-    elif 'ECDSA' in alg_lst:
-        alg_lst.remove('ECDSA')
-        alg_lst.append('ECDSA-SHA256')
-        alg_lst.append('ECDSA-SHA512')
+    # elif 'ECDSA' in alg_lst:
+    #     alg_lst.remove('ECDSA')
+    #     alg_lst.append('ECDSA-SHA256')
+    #     alg_lst.append('ECDSA-SHA512')
 
     for ext, endpoint in zip(['srv_', 'cli_'], ['server', 'client']):
         fname = filename + ext + 'ke_data.csv'
@@ -356,15 +358,15 @@ def get_extra_labels(filename, algs):
     else:
         alg_lst.append('SHA256')
 
-    if 'RSA' in alg_lst:
-        alg_lst.remove('RSA')
-        alg_lst.append('RSA-SHA256')
-        alg_lst.append('RSA-SHA512')
+    # if 'RSA' in alg_lst:
+    #     alg_lst.remove('RSA')
+    #     alg_lst.append('RSA-SHA256')
+    #     alg_lst.append('RSA-SHA512')
 
-    elif 'ECDSA' in alg_lst:
-        alg_lst.remove('ECDSA')
-        alg_lst.append('ECDSA-SHA256')
-        alg_lst.append('ECDSA-SHA512')
+    # elif 'ECDSA' in alg_lst:
+    #     alg_lst.remove('ECDSA')
+    #     alg_lst.append('ECDSA-SHA256')
+    #     alg_lst.append('ECDSA-SHA512')
 
 
     with open(fname, mode='r') as fl:
@@ -897,6 +899,7 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
 
 def make_progs(target):
     args = ['make', '-C', '../l-tls', target]
+    # args = ['python', '--version']
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     ret = p.returncode
