@@ -9,16 +9,8 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from services_profiller import exec_tls
 
 class Ui_DialogProfile(object):
-    def acceptedBox(self, button):
-        # print('pressed the %s button' % button.text())
-
-        if button.text() == 'OK':
-            tls_opts = {'input_size': '256', 'max_input_size': '16384', 'sec_lvl': '0', 'max_sec_lvl': '4', 'n_tests': '500'}
-            exec_tls('config/services', 'algs', 2, tls_opts, 1.5)
-
     def setupUi(self, DialogProfile):
         DialogProfile.setObjectName("DialogProfile")
         DialogProfile.resize(400, 360)
@@ -32,7 +24,6 @@ class Ui_DialogProfile(object):
         self.buttonBox.setObjectName("buttonBox")
         self.buttonBox.accepted.connect(DialogProfile.accept)
         self.buttonBox.rejected.connect(DialogProfile.reject)
-        self.buttonBox.clicked.connect(self.acceptedBox)
         self.frame = QtWidgets.QFrame(DialogProfile)
         self.frame.setGeometry(QtCore.QRect(20, 10, 360, 300))
         font = QtGui.QFont()

@@ -9,9 +9,28 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import time
 from ui.edit import Ui_DialogEdit
 from ui.profile import Ui_DialogProfile
+from services_profiller import exec_tls
 
+class Worker(QtCore.QRunnable):
+    def __init__(self, **kwargs):
+        super(Worker, self).__init__()
+        self.kwargs = kwargs
+
+    def run(self):
+        app = QtCore.QCoreApplication.instance()
+        dialog = QtWidgets.QMessageBox()
+        dialog.setIcon(QtWidgets.QMessageBox.Information)
+        dialog.setText('The program is being executed! Please check the command window for more information.')
+        dialog.setWindowTitle('Profile Info')
+        dialog.show()
+
+        exec_tls('config/services', **self.kwargs)
+        
+        dialog.close()
+        app.quit()
 
 class Ui_MainWindow(object):
     def showEditWindow(self):
@@ -25,7 +44,59 @@ class Ui_MainWindow(object):
         self.dialog = QtWidgets.QDialog()
         self.ui = Ui_DialogProfile()
         self.ui.setupUi(self.dialog)
-        self.dialog.exec()
+        ret = self.dialog.exec()
+
+        if ret == self.dialog.Accepted:
+            args = self.getArgs()
+
+            self.threadpool = QtCore.QThreadPool()
+            worker = Worker(**args)
+            self.threadpool.start(worker)
+
+    def getArgs(self):
+        args = {'tls_opts': {}}
+
+        if self.ui.lineTarget.text().strip() != '':
+            args['target'] = self.ui.lineTarget.text().strip()
+        else:
+            args['target'] = self.ui.lineTarget.placeholderText().strip()
+
+        if self.ui.lineTimeout.text().strip() != '':
+            args['timeout'] = int(self.ui.lineTimeout.text())
+        else:
+            args['timeout'] = int(self.ui.lineTimeout.placeholderText())
+
+        if self.ui.lineFilter.text().strip() != '':
+            args['weight'] = float(self.ui.lineFilter.text())
+        else:
+            args['weight'] = float(self.ui.lineFilter.placeholderText())
+
+        if self.ui.lineMinSize.text().strip() != '':
+            args['tls_opts']['input_size'] = self.ui.lineMinSize.text().strip()
+        else:
+            args['tls_opts']['input_size'] = self.ui.lineMinSize.placeholderText().strip()
+
+        if self.ui.lineMaxSize.text().strip() != '':
+            args['tls_opts']['max_input_size'] = self.ui.lineMaxSize.text().strip()
+        else:
+            args['tls_opts']['max_input_size'] = self.ui.lineMaxSize.placeholderText().strip()
+
+        if self.ui.lineMinLvl.text().strip() != '':
+            args['tls_opts']['sec_lvl'] = self.ui.lineMinLvl.text().strip()
+        else:
+            args['tls_opts']['sec_lvl'] = self.ui.lineMinLvl.placeholderText().strip()
+
+        if self.ui.lineMaxLvl.text().strip() != '':
+            args['tls_opts']['max_sec_lvl'] = self.ui.lineMaxLvl.text().strip()
+        else:
+            args['tls_opts']['max_sec_lvl'] = self.ui.lineMaxLvl.placeholderText().strip()
+
+        if self.ui.lineTests.text().strip() != '':
+            args['tls_opts']['n_tests'] = self.ui.lineTests.text().strip()
+        else:
+            args['tls_opts']['n_tests'] = self.ui.lineTests.placeholderText().strip()
+
+        return args
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
