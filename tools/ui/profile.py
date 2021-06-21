@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\profile.ui'
+# Form implementation generated from reading ui file 'ui/profile.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_DialogProfile(object):
     def setupUi(self, DialogProfile):
@@ -22,8 +23,6 @@ class Ui_DialogProfile(object):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setCenterButtons(True)
         self.buttonBox.setObjectName("buttonBox")
-        self.buttonBox.accepted.connect(DialogProfile.accept)
-        self.buttonBox.rejected.connect(DialogProfile.reject)
         self.frame = QtWidgets.QFrame(DialogProfile)
         self.frame.setGeometry(QtCore.QRect(20, 10, 360, 300))
         font = QtGui.QFont()

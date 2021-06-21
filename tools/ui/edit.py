@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui\edit.ui'
+# Form implementation generated from reading ui file 'ui/edit.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -12,87 +12,19 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_DialogEdit(object):
-    def __init__(self):
-        self.servs = {}
-
-    def load(self, filename):
-        self.servs = {}
-        
-        with open(filename, 'r') as fl:
-            for line in fl.readlines():
-                line = line.split(',')
-
-                if line[0] not in self.servs:
-                    self.servs[line[0]] = []
-
-                self.servs[line[0]].append(line[1].strip())
-
-    def save(self, filename):
-        with open(filename, 'w') as fl:
-            for key in self.servs:
-                fl.writelines([f'{key}, {val}\n' for val in self.servs[key]])
-
-    def updateList(self, value):
-        model = QtGui.QStandardItemModel()
-        self.listView.setModel(model)
-
-        for i in self.servs[value]:
-            item = QtGui.QStandardItem(i)
-            model.appendRow(item)
-
-    def populate(self, filename):
-        self.load(filename)
-
-        for serv in self.servs:
-            self.comboBox.addItem(serv)
-
-        self.updateList(self.comboBox.currentText())
-
-    def deleteItem(self):
-        key = self.comboBox.currentText()
-        val = self.listView.currentIndex()
-
-        if val.row() != -1:
-            # print('comboBox: %s' % key)
-            # print('listView: %s' % val.data())
-            self.servs[key].remove(val.data())
-            self.updateList(key)
-
-    def appendItem(self):
-        key = self.comboBox.currentText()
-        val = self.lineEdit.text().strip()
-
-        if val != '':
-            # print('comboBox: %s' % key)
-            # print('listView: %s' % val)
-            self.servs[key].append(val)
-            self.lineEdit.setText('')
-            self.updateList(key)
-
-    def acceptedBox(self, button):
-        # print('pressed the %s button' % button.text())
-
-        if button.text() == 'OK':
-            self.save('config/services')
-
-        elif button.text() == 'Restore Defaults':
-            self.load('config/services.default')
-            self.updateList(self.comboBox.currentText())
-
     def setupUi(self, DialogEdit):
         DialogEdit.setObjectName("DialogEdit")
         DialogEdit.resize(400, 450)
+        DialogEdit.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.buttonBox = QtWidgets.QDialogButtonBox(DialogEdit)
         self.buttonBox.setGeometry(QtCore.QRect(25, 390, 350, 50))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.buttonBox.setFont(font)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.RestoreDefaults|QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok|QtWidgets.QDialogButtonBox.RestoreDefaults)
         self.buttonBox.setCenterButtons(True)
         self.buttonBox.setObjectName("buttonBox")
-        self.buttonBox.accepted.connect(DialogEdit.accept)
-        self.buttonBox.rejected.connect(DialogEdit.reject)
-        self.buttonBox.clicked.connect(self.acceptedBox)
         self.frame_2 = QtWidgets.QFrame(DialogEdit)
         self.frame_2.setGeometry(QtCore.QRect(20, 80, 360, 311))
         font = QtGui.QFont()
@@ -107,11 +39,9 @@ class Ui_DialogEdit(object):
         self.buttonRem = QtWidgets.QPushButton(self.frame_2)
         self.buttonRem.setGeometry(QtCore.QRect(240, 10, 100, 50))
         self.buttonRem.setObjectName("buttonRem")
-        self.buttonRem.clicked.connect(self.deleteItem)
         self.buttonAdd = QtWidgets.QPushButton(self.frame_2)
         self.buttonAdd.setGeometry(QtCore.QRect(240, 80, 100, 50))
         self.buttonAdd.setObjectName("buttonAdd")
-        self.buttonAdd.clicked.connect(self.appendItem)
         self.lineEdit = QtWidgets.QLineEdit(self.frame_2)
         self.lineEdit.setGeometry(QtCore.QRect(220, 140, 140, 30))
         self.lineEdit.setClearButtonEnabled(True)
@@ -127,7 +57,6 @@ class Ui_DialogEdit(object):
         font.setPointSize(10)
         self.comboBox.setFont(font)
         self.comboBox.setObjectName("comboBox")
-        self.comboBox.currentTextChanged.connect(self.updateList)
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 20, 111, 30))
         font = QtGui.QFont()
@@ -138,8 +67,6 @@ class Ui_DialogEdit(object):
 
         self.retranslateUi(DialogEdit)
         QtCore.QMetaObject.connectSlotsByName(DialogEdit)
-
-        self.populate('config/services')
 
     def retranslateUi(self, DialogEdit):
         _translate = QtCore.QCoreApplication.translate
