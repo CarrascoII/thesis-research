@@ -1,7 +1,7 @@
 import csv
-import matplotlib.pyplot as plt
 import statistics
 import numpy as np
+import matplotlib.pyplot as plt
 import subprocess
 import settings
 
@@ -619,30 +619,20 @@ def save_fig(fig, fname):
     fig.tight_layout()
     fig.savefig(fname)
     plt.close(fig)
-    plt.cla()
 
-def custom_errorbar(x, y, e, ax=None, title=None, xlabel='msglen', ylabel=None, kwargs={}):
-    if ax is None:
-        ax = plt.gca()
-
+def custom_errorbar(x, y, e, ax, title=None, xlabel='msglen', ylabel=None, kwargs={}):
     ax.errorbar(x, y, yerr=e, fmt='.', capsize=5, barsabove=True, **kwargs)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     return(ax)
 
-def custom_plots(x, y1, y2, ax=None, title=None, xlabel='msglen', ylabel=None, kwargs1={}, kwargs2={}):
-    if ax is None:
-        ax = plt.gca()
-
+def custom_plots(x, y1, y2, ax, title=None, xlabel='msglen', ylabel=None, kwargs1={}, kwargs2={}):
     ax.plot(x, y1, **kwargs1)
     ax.plot(x, y2, **kwargs2)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.legend()
     return(ax)
 
-def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='msglen', ylabel=None, kwargs_lst=None):
-    if ax is None:
-        ax = plt.gca()
-
+def multiple_custom_plots(x, y_lst, ax, title=None, xlabel='msglen', ylabel=None, kwargs_lst=None):
     for y, kwargs in zip(y_lst, kwargs_lst):
         ax.plot(x, y, **kwargs)
 
@@ -650,27 +640,21 @@ def multiple_custom_plots(x, y_lst, ax=None, title=None, xlabel='msglen', ylabel
     ax.legend()
     return(ax)
 
-def custom_bar(y_list, yerr, ax=None, title=None, xlabel='msglen', xtickslabels=None, ylabel=None):
-    x_list = []
+# def custom_bar(y_list, yerr, ax, title=None, xlabel='msglen', xtickslabels=None, ylabel=None):
+#     x_list = []
 
-    if ax is None:
-        ax = plt.gca()
+#     for i in range(len(y_list)):
+#         x = (i + (1 - len(y_list)))
+#         x_list.append(x)
+#         ax.bar(x, y_list[i], alpha=0.7, align='center', yerr=yerr[i], capsize=5)
 
-    for i in range(len(y_list)):
-        x = (i + (1 - len(y_list)))
-        x_list.append(x)
-        ax.bar(x, y_list[i], alpha=0.7, align='center', yerr=yerr[i], capsize=5)
+#     ax.set_xticks(x_list)
+#     ax.set_xticklabels(xtickslabels, rotation=60, ha='right', va='top')
+#     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+#     return(ax)
 
-    ax.set_xticks(x_list)
-    ax.set_xticklabels(xtickslabels, rotation=60, ha='right', va='top')
-    ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    return(ax)
-
-def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0, xlabel='msglen', xtickslabels=None, ylabel=None):
+def grouped_custom_bar(y_list, yerr, ax, title=None, labels=[], label_lim=0, xlabel='msglen', xtickslabels=None, ylabel=None):
     x_list = [0]
-
-    if ax is None:
-        ax = plt.gca()
 
     for i in range(len(y_list)):
         x_list.append(x_list[-1] + (len(y_list[i]) + len(y_list[i+1]))/2)
@@ -690,12 +674,9 @@ def grouped_custom_bar(y_list, yerr, ax=None, title=None, labels=[], label_lim=0
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     return(ax)
 
-def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
+def multiple_custom_bar(y_list, yerr, ax, width=0.5, title=None, labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
     x *= (len(y_list)//2 + 1)
-
-    if ax is None:
-        ax = plt.gca()
 
     for i in range(len(y_list)):
         x1 = x + (i + (1 - len(y_list))/2)*width
@@ -713,13 +694,9 @@ def multiple_custom_bar(y_list, yerr, width=0.5, ax=None, title=None, labels=[],
 
     return(ax)
 
-def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear',
-                            labels=[], xlabel='msglen', xtickslabels=None, ylabel=None):
+def stacked_custom_bar(y_list, ax, width=0.5, title=None, scale='linear', xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
     bottom = []
-
-    if ax is None:
-        ax = plt.gca()
 
     ax.bar(x, y_list['hs'], width=width, label='Handshake', color='black')
     
@@ -749,10 +726,7 @@ def stacked_custom_bar(y_list, width=0.5, ax=None, title=None, scale='linear',
     ax.legend(loc='upper right', ncol=2, frameon=False, prop={"size": 20})
     return(ax)
 
-def custom_scatter(x, y, ax=None, title=None, xlabel='msglen', xtickslabels=None, ylabel=None, kwargs={}):
-    if ax is None:
-        ax = plt.gca()
-
+def custom_scatter(x, y, ax, title=None, xlabel='msglen', xtickslabels=None, ylabel=None, kwargs={}):
     ax.scatter(x, y, marker='.', **kwargs)
     ax.set_xticks(np.arange(len(xtickslabels)))
     ax.set_xticklabels(xtickslabels)

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>810</width>
-    <height>610</height>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>270</x>
       <y>10</y>
       <width>15</width>
-      <height>580</height>
+      <height>510</height>
      </rect>
     </property>
     <property name="orientation">
@@ -33,7 +33,7 @@
       <x>540</x>
       <y>15</y>
       <width>10</width>
-      <height>580</height>
+      <height>510</height>
      </rect>
     </property>
     <property name="orientation">
@@ -118,7 +118,7 @@
       <x>0</x>
       <y>80</y>
       <width>810</width>
-      <height>520</height>
+      <height>440</height>
      </rect>
     </property>
     <property name="font">
@@ -135,10 +135,10 @@
     <widget class="QWidget" name="verticalLayoutWidget">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>20</x>
        <y>0</y>
-       <width>261</width>
-       <height>311</height>
+       <width>241</width>
+       <height>251</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
@@ -185,10 +185,10 @@
     <widget class="QWidget" name="verticalLayoutWidget_2">
      <property name="geometry">
       <rect>
-       <x>290</x>
+       <x>330</x>
        <y>0</y>
-       <width>251</width>
-       <height>311</height>
+       <width>171</width>
+       <height>251</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -222,7 +222,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>320</y>
+       <y>250</y>
        <width>261</width>
        <height>191</height>
       </rect>
@@ -256,6 +256,51 @@
       </item>
       <item>
        <widget class="QPushButton" name="buttonAnalServs">
+        <property name="text">
+         <string>Get Statistics</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="verticalLayoutWidget_4">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>250</y>
+       <width>261</width>
+       <height>191</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="buttonEditAlgs">
+        <property name="text">
+         <string>Edit</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonProfAlgs">
+        <property name="text">
+         <string>Get Data</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonAnalAlgs">
         <property name="text">
          <string>Get Statistics</string>
         </property>

@@ -1,41 +1,42 @@
+import os
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ui.main import Ui_MainWindow
 from ui.edit import Ui_DialogEdit
 from ui.profile import Ui_DialogProfile
-import settings, services_profiller
+import settings, services_profiller, algs_profiller
 
+################
+# WORKER CLASS #
+################
 
-class Worker(QtCore.QRunnable):
-    def __init__(self, **kwargs):
+class Worker(QtCore.QThread):
+    def __init__(self, func, **kwargs):
         super(Worker, self).__init__()
+        self.func = func
         self.kwargs = kwargs
 
     def run(self):
-        app = QtCore.QCoreApplication.instance()
-        dialog = QtWidgets.QMessageBox()
-        dialog.setIcon(QtWidgets.QMessageBox.Information)
-        dialog.setText('The program is being executed! Please check the command window for more information.')
-        dialog.setWindowTitle('Profile Info')
-        dialog.show()
+        self.func(**self.kwargs)
 
-        services_profiller.exec_tls('config/services', **self.kwargs)
-        
-        dialog.close()
-        app.quit()
+####################
+# EDITDIALOG CLASS #
+####################
 
 class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
-    def __init__(self, parent=None):
+    def __init__(self, fname, label, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.servs = {}
+        self.file = fname
         self.setupUi(self)
+        self.label.setText(label)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.buttonBox.clicked.connect(self.acceptedBox)
         self.buttonRem.clicked.connect(self.deleteItem)
         self.buttonAdd.clicked.connect(self.appendItem)
         self.comboBox.currentTextChanged.connect(self.updateList)
-        self.populate('config/services')
+        self.populate()
 
     def load(self, filename):
         self.servs = {}
@@ -49,8 +50,8 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
 
                 self.servs[line[0]].append(line[1].strip())
 
-    def save(self, filename):
-        with open(filename, 'w') as fl:
+    def save(self):
+        with open(self.file, 'w') as fl:
             for key in self.servs:
                 fl.writelines([f'{key}, {val}\n' for val in self.servs[key]])
 
@@ -62,8 +63,8 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
             item = QtGui.QStandardItem(i)
             model.appendRow(item)
 
-    def populate(self, filename):
-        self.load(filename)
+    def populate(self):
+        self.load(self.file)
 
         for serv in self.servs:
             self.comboBox.addItem(serv)
@@ -95,44 +96,94 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
         # print('pressed the %s button' % button.text())
 
         if button.text() == 'OK':
-            self.save('config/services')
+            self.save()
 
         elif button.text() == 'Restore Defaults':
-            self.load('config/services.default')
+            self.load(self.file + '.default')
             self.updateList(self.comboBox.currentText())
+
+#######################
+# PROFILEDIALOG CLASS #
+#######################
 
 class ProfileDialog(QtWidgets.QDialog, Ui_DialogProfile):
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
+        anyInt = QtGui.QIntValidator(0, 1000)
+        anyDouble = QtGui.QDoubleValidator(0.0, 5.0, 2)
+        sizeInt = QtGui.QIntValidator(32, 1048576)
+        secInt = QtGui.QIntValidator(0, 4)
+
+        self.lineTimeout.setValidator(anyInt)
+        self.lineFilter.setValidator(anyDouble)
+        self.lineMinSize.setValidator(sizeInt)
+        self.lineMaxSize.setValidator(sizeInt)
+        self.lineMinLvl.setValidator(secInt)
+        self.lineMaxLvl.setValidator(secInt)
+        self.lineTests.setValidator(anyInt)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+
+####################
+# MAINWINDOW CLASS #
+####################
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.setupUi(self)
-        self.buttonEditServs.clicked.connect(self.showEditDialog)
-        self.buttonProfServs.clicked.connect(self.showProfileWindow)
+        self.buttonEditServs.clicked.connect(lambda: self.showEditDialog('config/services', 'Services:'))
+        self.buttonProfServs.clicked.connect(lambda: self.showProfileWindow(services_profiller.exec_tls, 'config/services'))
+        self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServComparatorArgs, services_profiller.make_figs))
 
-    def showEditDialog(self):
-        self.dialog = EditDialog()
-        self.dialog.label.setText("Services:")
+        self.buttonEditAlgs.clicked.connect(lambda: self.showEditDialog('config/algorithms', 'Category:'))
+        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiller.exec_tls, 'config/algorithms'))
+        self.buttonAnalAlgs.clicked.connect(lambda: self.calcStatistics(self.getAlgComparatorArgs, algs_profiller.make_figs))
+
+    def showEditDialog(self, fname, label):
+        self.dialog = EditDialog(fname, label)
         self.dialog.exec()
     
-    def showProfileWindow(self):
+    def showProfileWindow(self, func, fname):
         self.dialog = ProfileDialog()
         ret = self.dialog.exec()
 
         if ret == self.dialog.Accepted:
-            args = self.getArgs()
+            args = self.getProfileArgs(fname)
 
-            self.threadpool = QtCore.QThreadPool()
-            worker = Worker(**args)
-            self.threadpool.start(worker)
+            self.dialog = QtWidgets.QMessageBox()
+            self.dialog.setIcon(QtWidgets.QMessageBox.Information)
+            self.dialog.setText('The program is being executed! Please check the command window for more information.')
+            self.dialog.setWindowTitle('Profile Info')
+            self.dialog.show()
 
-    def getArgs(self):
-        args = {'tls_opts': {}}
+            self.thread = Worker(func, **args)
+            self.thread.finished.connect(self.dialog.close)
+            self.thread.start()
+
+    def calcStatistics(self, args_func, prof_func):
+        file = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
+
+        if file != '':
+            suites = [f.name for f in os.scandir(file) if f.is_dir()]
+            weight, done = QtWidgets.QInputDialog.getDouble(self, 'Input Dialog', 'Enter filter weight:')
+            
+            if done:
+                args = args_func(suites, weight)
+
+                self.dialog = QtWidgets.QMessageBox()
+                self.dialog.setIcon(QtWidgets.QMessageBox.Information)
+                self.dialog.setText('The program is being executed! Please check the command window for more information.')
+                self.dialog.setWindowTitle('Profile Info')
+                self.dialog.show()
+
+                self.thread = Worker(prof_func, **args)
+                self.thread.finished.connect(self.dialog.close)
+                self.thread.start()
+
+    def getProfileArgs(self, fname):
+        args = {'suites_file': fname, 'tls_opts': {}}
 
         if self.dialog.lineTarget.text().strip() != '':
             args['target'] = self.dialog.lineTarget.text().strip()
@@ -173,6 +224,55 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             args['tls_opts']['n_tests'] = self.dialog.lineTests.text().strip()
         else:
             args['tls_opts']['n_tests'] = self.dialog.lineTests.placeholderText().strip()
+
+        if self.dialog.checkBox.isChecked():
+            args['gen_stats'] = True
+        else:
+            args['gen_stats'] = False
+
+        return args
+
+    def getServComparatorArgs(self, suites, weight):
+        args = {
+            'suites_file': 'config/services',
+            'success_ciphersuites': suites,
+            'weight': weight,
+            'serv_set': []
+        }
+
+        if self.checkConf.isChecked():
+            args['serv_set'].append('conf')
+
+        if self.checkInt.isChecked():
+            args['serv_set'].append('int')
+
+        if self.checkAuth.isChecked():
+            args['serv_set'].append('auth')
+
+        if self.checkKest.isChecked():
+            args['serv_set'].append('ke')
+
+        if self.checkPfs.isChecked():
+            args['serv_set'].append('pfs')
+
+        return args
+
+    def getAlgComparatorArgs(self, suites, weight):
+        args = {
+            'suites_file': 'config/algorithms',
+            'success_ciphersuites': suites,
+            'weight': weight,
+            'alg_set': [] 
+        }
+
+        if self.checkCipher.isChecked():
+            args['alg_set'].append('cipher')
+
+        if self.checkMd.isChecked():
+            args['alg_set'].append('md')
+
+        if self.checkKex.isChecked():
+            args['alg_set'].append('ke')
 
         return args
 

@@ -1,5 +1,6 @@
 import os
 import sys, getopt
+import matplotlib
 import matplotlib.pyplot as plt
 import utils, settings
 
@@ -19,9 +20,10 @@ def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
                 y_lst.append(all_stats[suite][hdr + '_' + ylabel + '_' + op[i]])
                 kwargs_lst.append({'label': suite})
 
-            axes[i] = utils.multiple_custom_plots(x, y_lst, ax=axes[i], title=op[i] + ' (' + hdr + ')', ylabel=ylabel, kwargs_lst=kwargs_lst)
+            axes[i] = utils.multiple_custom_plots(x, y_lst, axes[i],
+                                title=op[i] + ' (' + hdr + ')', ylabel=ylabel, kwargs_lst=kwargs_lst)
 
-        utils.save_fig(fig, '../docs/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
+        utils.save_fig(fig, 'statistics/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
 def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
     all_data = {}
@@ -31,6 +33,8 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
         'md': utils.parse_record_data,
         'ke': utils.parse_handshake_data
     }
+
+    matplotlib.use('Agg')
 
     for alg in algs:
         all_stats = {}
@@ -77,7 +81,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
         print('ok')
 
         print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-        utils.write_alg_cmp_csv('../docs/cmp_'  + alg + '_', 'ciphersuite', alg, all_stats)
+        utils.write_alg_cmp_csv('statistics/cmp_'  + alg + '_', 'ciphersuite', alg, all_stats)
         print('ok')
         
         print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)

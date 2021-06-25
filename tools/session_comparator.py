@@ -1,5 +1,6 @@
 import os
 import sys, getopt
+import matplotlib
 import matplotlib.pyplot as plt
 import utils
 
@@ -40,9 +41,9 @@ def make_session_cmp_bar_by_ke(ylabel, stats, labels, stats_type):
                 if n > m:
                     m = n
 
-            ax = utils.grouped_custom_bar(y, yerr, ax=ax, labels=lab, label_lim=m,
+            ax = utils.grouped_custom_bar(y, yerr, ax, labels=lab, label_lim=m,
                                         xlabel='ciphersuites', xtickslabels=ke, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/session_' + endpoints[i] + '_' + stype + '_' + ylabel + '.png')
+            utils.save_fig(fig, 'statistics/session_' + endpoints[i] + '_' + stype + '_' + ylabel + '.png')
 
 def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
     all_data = {}
@@ -88,10 +89,11 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
     print('ok')
 
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_session_cmp_csv('../docs/session_', all_stats)
+    utils.write_session_cmp_csv('statistics/session_', all_stats)
     print('ok')
     
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    matplotlib.use('Agg')
 
     for hdr in headers:
         make_session_cmp_bar_by_ke(hdr, all_stats, ciphersuites, stats_type[:-1])

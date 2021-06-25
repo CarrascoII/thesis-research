@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import session_comparator, plotter, utils, settings
+import session_comparator, algs_plotter, utils, settings
 
 
 def run_cli(input_size, n_tests, ciphersuite):

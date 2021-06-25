@@ -1,11 +1,11 @@
 import os
 import sys, getopt
+import matplotlib
 import matplotlib.pyplot as plt
 import utils, settings
 
 
 def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels):
-    labels = {}
     xtickslabels = []
     sec_lvl = []
     scale_type = ['linear', 'log']
@@ -51,9 +51,9 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels)
                     # for a in y:
                     #     print(f'{a}: {y[a]} : {len(y[a])}')
 
-                    ax = utils.stacked_custom_bar(y, ax=ax, title=op + ' (' + stype + ')', scale=scale, labels=labels,
+                    ax = utils.stacked_custom_bar(y, ax, title=op + ' (' + stype + ')', scale=scale,
                                                 xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
-                    utils.save_fig(fig, '../docs/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
+                    utils.save_fig(fig, 'statistics/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
 def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
@@ -62,7 +62,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     all_stats = {}
     stats_type = ['mean']
 
-    print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
     for algs in grouped_suites:
         all_data[algs] = {}
@@ -117,7 +117,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     print('ok')
 
     if weight != 0:
-        print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
+        print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
             data = utils.filter_iqr(all_data[key], weight=weight)
@@ -125,7 +125,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
         
         print('ok')
 
-    print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     for key in all_data:
         stats = utils.calc_statistics(all_data[key], stats_type)
@@ -149,12 +149,14 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     #         print(f'  {b}: {all_stats[a][b]} : {len(all_stats[a][b])}')
     #     print('')
 
-    print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+
     for hdr in headers:
-        utils.write_suite_servs_cmp_csv('../docs/serv_all_', 'algorithms', all_stats, hdr)
+        utils.write_suite_servs_cmp_csv('statistics/serv_all_', 'algorithms', all_stats, hdr)
+    
     print('ok')
 
-    print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
         make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
@@ -162,10 +164,11 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     print('ok')
 
 def make_figs(suites, weight=1.5, strlen=40, spacing=''):   
+    matplotlib.use('Agg')
     grouped_suites = utils.group_ciphersuites(suites)
     labels = settings.serv_labels['ke']
 
-    print(f'\n{spacing}ALL data:')
+    print(f'\nALL data:')
     make_serv_cmp_figs(grouped_suites, labels, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
@@ -188,8 +191,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('ciphersuite_analyser.py [-w <filter_weight>] <ciphersuite_list>')
-            print('ciphersuite_analyser.py [--weight=<filter_weight>] <ciphersuite_list>')
+            print('services_analyser.py [-w <filter_weight>] <ciphersuite_list>')
+            print('services_analyser.py [--weight=<filter_weight>] <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):

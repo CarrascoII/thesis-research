@@ -1,5 +1,6 @@
 import os
 import sys, getopt
+import matplotlib
 import matplotlib.pyplot as plt
 import utils, settings
 
@@ -22,9 +23,9 @@ def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
                 y.append(stats[key][stype + '_' + ylabel + '_' + op])
                 yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
 
-            ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
+            ax = utils.multiple_custom_bar(y, yerr, ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-            utils.save_fig(fig, '../docs/alg_' + alg + '_' + op + '_' + stype + '_' + ylabel + '.png')
+            utils.save_fig(fig, 'statistics/alg_' + alg + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
@@ -37,7 +38,7 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
         'ke': utils.parse_handshake_data
     }
 
-    print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
     for key in grouped_suites:
         all_data[key] = {}
@@ -72,7 +73,7 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
     print('ok')
 
     if weight != 0:
-        print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
+        print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
             data = utils.filter_iqr(all_data[key], weight=weight)
@@ -80,7 +81,7 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
         
         print('ok')
 
-    print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     for key in all_data:
         stats = utils.calc_statistics(all_data[key], stats_type)
@@ -92,11 +93,11 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
 
     print('ok')
 
-    print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_alg_cmp_csv('../docs/alg_' + alg + '_', 'algorithm', alg, all_stats)
+    print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    utils.write_alg_cmp_csv('statistics/alg_' + alg + '_', 'algorithm', alg, all_stats)
     print('ok')
     
-    print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
         make_alg_cmp_bar(alg, labels, hdr, all_stats, stats_type[:-1])
@@ -105,8 +106,10 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
 
 def make_figs(algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing=''):
     if alg_set == []:
-        alg_set = settings.alg_types
+        print('\nError!! No algorithms were selected to analyse!!!')
+        return None
 
+    matplotlib.use('Agg')
     labels = settings.alg_labels
     algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
     

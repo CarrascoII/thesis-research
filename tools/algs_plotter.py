@@ -1,5 +1,6 @@
 import os
 import sys, getopt
+import matplotlib
 import matplotlib.pyplot as plt
 import utils, settings
 
@@ -10,7 +11,7 @@ def make_errorbar(ylabel, operations, file_path, stats, types):
 
     for i in range(len(axes)):
         axes[i] = utils.custom_errorbar(stats['keys'], stats[types[0] + '_' + ylabel + '_' + operations[i]],
-                                    stats[types[1] + '_' + ylabel + '_' + operations[i]], ax=axes[i], title=operations[i],
+                                    stats[types[1] + '_' + ylabel + '_' + operations[i]], axes[i], title=operations[i],
                                     ylabel=ylabel, kwargs=params[i])
 
     utils.save_fig(fig, file_path + ylabel + '_deviation.png')
@@ -22,7 +23,7 @@ def make_plot(ylabel, operations, file_path, stats, types):
 
     for ax, tp in zip(axes, types):
         ax = utils.custom_plots(stats['keys'], stats[tp + '_' + ylabel + '_' + operations[0]],
-                            stats[tp + '_' + ylabel + '_' + operations[1]], ax=ax,
+                            stats[tp + '_' + ylabel + '_' + operations[1]], ax,
                             title=tp.capitalize(), ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_statistics.png')
@@ -43,12 +44,12 @@ def make_scatter(ylabel, operations, file_path, data):
             y[op] += data[key][ylabel + '_' + op]
         
     for i in range(len(axes)):
-        axes[i] = utils.custom_scatter(x[operations[i]], y[operations[i]], ax=axes[i], title=operations[i],
+        axes[i] = utils.custom_scatter(x[operations[i]], y[operations[i]], axes[i], title=operations[i],
                                     xtickslabels=xtickslabels, ylabel=ylabel, kwargs=kwargs[i])
         utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
-def make_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
-    path = fname + alg + '_'
+def make_alg_suite_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
+    path = fname.replace('../docs/', 'statistics/')
     stats_type = ['mean', 'stddev', 'median', 'mode']
     labels = settings.alg_labels[alg]
     data_ops_func = {
@@ -71,24 +72,46 @@ def make_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
     print('ok')
     
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_alg_csv(path + 'statistics.csv', labels, stats)
+    
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    utils.write_alg_csv(path + alg + '_statistics.csv', labels, stats)
     print('ok')
 
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
-        make_scatter(hdr, labels, path, data)
-        make_plot(hdr, labels, path, stats, [stats_type[0]] + stats_type[2:])
-        make_errorbar(hdr, labels, path, stats, stats_type[:2])    
+        make_scatter(hdr, labels, path + alg + '_', data)
+        make_plot(hdr, labels, path + alg + '_', stats, [stats_type[0]] + stats_type[2:])
+        make_errorbar(hdr, labels, path + alg + '_', stats, stats_type[:2])    
     
     print('ok')
+
+def make_figs(ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing='  '):
+    if alg_set == []:
+        print('\nError!! No algorithms were selected to analyse!!!')
+        return None
+    
+    matplotlib.use('Agg')
+    current = 1
+
+    for suite in ciphersuites:
+        print(f'\nCreating graphs for: {suite} ({current}/{len(ciphersuites)})', end='')
+        current +=1
+        
+        for alg in alg_set:
+            fname = '../docs/' + suite + '/'
+
+            print('\n' + alg.upper() + ' algorithm:')
+            make_alg_suite_figs(fname, alg, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hw:cmk', ['help', 'weight=', 'cipher', 'md', 'ke'])
     
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "plotter.py -h" for help')
+        print('One of the options does not exit.\nUse: "algs_plotter.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -104,8 +127,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('plotter.py [-w <filter_weight>] [-c] [-m] [-k] <ciphersuite_list>')
-            print('plotter.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <ciphersuite_list>')
+            print('algs_plotter.py [-w <filter_weight>] [-c] [-m] [-k] <ciphersuite_list>')
+            print('algs_plotter.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -127,17 +150,7 @@ def main(argv):
     os.system('clear')
     settings.init()
     ciphersuites = utils.parse_ciphersuites(args[0])
-    current = 1
-
-    for suite in ciphersuites:
-        print(f'\nCreating graphs for: {suite} ({current}/{len(ciphersuites)})', end='')
-        current +=1
-        
-        for alg in algs:
-            fname = '../docs/' + suite + '/'
-
-            print('\n' + alg.upper() + ' algorithm:')
-            make_figs(fname, alg, weight=weight, spacing='  ')
+    make_figs(ciphersuites, algs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

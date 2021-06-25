@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import services_comparator, ciphersuite_analyser, utils, settings
+import services_comparator, services_analyser, utils, settings
 
 
 def run_cli(target, tls_opts):
@@ -30,7 +30,12 @@ def run_srv(target, tls_opts):
 
     return utils.check_endpoint_ret(ret, 'server', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
 
-def exec_tls(suites_file, target, timeout, tls_opts, weight):
+def make_figs(suites_file, success_ciphersuites, weight, serv_set=[]):
+    print('\nCreating comparison graphs from all ciphersuites:')
+    services_comparator.make_figs(suites_file, success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
+    services_analyser.make_figs(success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='  ')
+
+def exec_tls(suites_file, target, timeout, tls_opts, weight, gen_stats=True):
     # Step 1: Parse service list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {suites_file}'.ljust(settings.strlen, '.'), end=' ', flush=True)    
@@ -49,7 +54,8 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
         f'\n    -Ending input size: {tls_opts["max_input_size"]} bytes' +
         f'\n    -Starting security level: {tls_opts["sec_lvl"]}' +
         f'\n    -Ending security level: {tls_opts["max_sec_lvl"]}' +
-        f'\n    -Number of tests: {tls_opts["n_tests"]}')
+        f'\n    -Number of tests: {tls_opts["n_tests"]}' +
+        f'\n    -Generate statistics: {"Yes" if gen_stats else "No"}')
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
 
     # Step 2: Compile libs and programs
@@ -97,14 +103,13 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
     n_not = len(not_ciphersuites)
     n_error = len(error_ciphersuites)
 
-    # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
-    print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
-    print(f'\nCreating comparison graphs from all ciphersuites:')
-    services_comparator.make_figs(suites_file, success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='    ')
-    ciphersuite_analyser.make_figs(success_ciphersuites, weight=weight, strlen=settings.strlen, spacing='    ')
+    if gen_stats:
+        # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
+        print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
+        make_figs(suites_file, success_ciphersuites, weight, serv_set=settings.serv_types)
 
-    # Step 7: For each target, save successful ciphersuites in a file
-    utils.write_ciphersuites('services', success_ciphersuites)
+        # Step 7: For each target, save successful ciphersuites in a file
+        # utils.write_ciphersuites('services', success_ciphersuites)
 
     # Step 8: Report final status
     print('\n--- FINAL STATUS ---')
@@ -126,15 +131,18 @@ def exec_tls(suites_file, target, timeout, tls_opts, weight):
         for suite in error_ciphersuites:
             print(f'        {suite}')
 
-    print('\nPlots generation:')
-    print(f'    -Number of ciphersuites: {n_success}')
-    print('\nData aquisition and analysis has ended.')
-    print('You can check all the csv data and png figure files in the docs/<ciphersuite_name> directories.')
+    if gen_stats:
+        print('\nPlots generation:')
+        print(f'    -Number of ciphersuites: {n_success}')
+
+    print(f'\nData aquisition{" and analysis" if gen_stats else ""} has ended.')
+    print(f'You can check all the csv data{" and png figure files" if gen_stats else ""} in the docs/<ciphersuite_name>' +
+        f'{" and tools/statistics" if gen_stats else ""} directories{", respectively" if gen_stats else ""}.')
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hc:t:w:i:s:n:', ['help', 'compile=', 'timeout=', 'weight=', 'input_size=',
-                                                        'sec_lvl=', 'n_tests='])
+        opts, args = getopt.getopt(argv, 'hc:t:w:i:s:n:p', ['help', 'compile=', 'timeout=', 'weight=', 'input_size=',
+                                                        'sec_lvl=', 'n_tests=', 'plot'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "services_profiller.py -h" for help')
@@ -152,13 +160,15 @@ def main(argv):
     timeout = 2
     tls_opts = {'input_size': '256', 'max_input_size': '16384', 'sec_lvl': '0', 'max_sec_lvl': '4', 'n_tests': '500'}
     weight = 1.5
+    gen_stats = False
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             print('services_profiller.py [-c <compilation_target>] [-t <timeout>] [-w <filter_weight>] ' +
-                '[-i <initial_size>,<final_size>] [-s <initial_lvl>,<final_lvl>] [-n <n_tests>] <services_list>')
+                '[-i <initial_size>,<final_size>] [-s <initial_lvl>,<final_lvl>] [-n <n_tests>] [-p] <services_list>')
             print('services_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--weight=<filter_weight>]  ' +
-                '[--input_size=<initial_size>,<final_size>] [--sec_lvl=<initial_lvl>,<final_lvl] [--n_tests=<n_tests>] <services_list>')
+                '[--input_size=<initial_size>,<final_size>] [--sec_lvl=<initial_lvl>,<final_lvl] [--n_tests=<n_tests>] ' +
+                '[--plot] <services_list>')
             sys.exit(0)
 
         elif opt in ('-c', '--compile'):
@@ -191,9 +201,12 @@ def main(argv):
         elif opt in ('-w', '--weight'):
             weight = float(arg)
 
+        elif opt in ('-p', '--plot'):
+            gen_stats = True
+
     os.system('clear')
     settings.init()
-    exec_tls(args[0], target, timeout, tls_opts, weight)
+    exec_tls(args[0], target, timeout, tls_opts, weight, gen_stats=gen_stats)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

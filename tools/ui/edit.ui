@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>380</width>
     <height>450</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>25</x>
+     <x>15</x>
      <y>390</y>
      <width>350</width>
      <height>50</height>
@@ -43,10 +43,10 @@
   <widget class="QFrame" name="frame_2">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>10</x>
      <y>80</y>
      <width>360</width>
-     <height>311</height>
+     <height>310</height>
     </rect>
    </property>
    <property name="font">
@@ -99,9 +99,9 @@
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>230</x>
       <y>140</y>
-      <width>140</width>
+      <width>120</width>
       <height>30</height>
      </rect>
     </property>
@@ -113,7 +113,7 @@
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>10</x>
      <y>10</y>
      <width>360</width>
      <height>71</height>

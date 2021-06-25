@@ -1,5 +1,6 @@
 import os
 import sys, getopt
+import matplotlib
 import matplotlib.pyplot as plt
 import utils, settings
 
@@ -22,9 +23,9 @@ def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
                 y.append(stats[key][stype + '_' + ylabel + '_' + op])
                 yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
 
-            ax = utils.multiple_custom_bar(y, yerr, ax=ax, title=op + ' (' + stype + ')',
+            ax = utils.multiple_custom_bar(y, yerr, ax, title=op + ' (' + stype + ')',
                                         labels=labels, xtickslabels=xtickslabels, xlabel='security strength (in bits)', ylabel=ylabel)
-            utils.save_fig(fig, '../docs/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
+            utils.save_fig(fig, 'statistics/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
 
 def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
@@ -40,7 +41,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
         'pfs': utils.parse_handshake_data
     }
 
-    print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
     for key in grouped_suites:
         all_data[key] = {}
@@ -92,7 +93,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     print('ok')
 
     if weight != 0:
-        print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
+        print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
             data = utils.filter_iqr(all_data[key], weight=weight)
@@ -100,7 +101,7 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
         
         print('ok')
 
-    print(f'{spacing}  Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     for key in all_data:
         stats = utils.calc_statistics(all_data[key], stats_type)
@@ -114,11 +115,11 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
 
     print('ok')
 
-    print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_serv_cmp_csv('../docs/serv_' + serv + '_', 'algorithms', serv, all_stats)
+    print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
+    utils.write_serv_cmp_csv('statistics/serv_' + serv + '_', 'algorithms', serv, all_stats)
     print('ok')
 
-    print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
         make_record_alg_cmp_bar(serv, labels, hdr, all_stats, stats_type[:-1])
@@ -127,8 +128,10 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
 
 def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
     if serv_set == []:
-        serv_set = settings.serv_types
+        print('\nError!! No services were selected to analyse!!!')
+        return None
 
+    matplotlib.use('Agg')
     labels = settings.serv_labels
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
 
