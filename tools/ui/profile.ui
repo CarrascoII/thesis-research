@@ -329,6 +329,17 @@
    </widget>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>lineTarget</tabstop>
+  <tabstop>lineTimeout</tabstop>
+  <tabstop>lineFilter</tabstop>
+  <tabstop>lineMinSize</tabstop>
+  <tabstop>lineMaxSize</tabstop>
+  <tabstop>lineMinLvl</tabstop>
+  <tabstop>lineMaxLvl</tabstop>
+  <tabstop>lineTests</tabstop>
+  <tabstop>checkBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

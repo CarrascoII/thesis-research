@@ -67,6 +67,10 @@ class Ui_DialogEdit(object):
 
         self.retranslateUi(DialogEdit)
         QtCore.QMetaObject.connectSlotsByName(DialogEdit)
+        DialogEdit.setTabOrder(self.comboBox, self.listView)
+        DialogEdit.setTabOrder(self.listView, self.buttonRem)
+        DialogEdit.setTabOrder(self.buttonRem, self.buttonAdd)
+        DialogEdit.setTabOrder(self.buttonAdd, self.lineEdit)
 
     def retranslateUi(self, DialogEdit):
         _translate = QtCore.QCoreApplication.translate

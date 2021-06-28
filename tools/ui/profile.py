@@ -113,6 +113,14 @@ class Ui_DialogProfile(object):
 
         self.retranslateUi(DialogProfile)
         QtCore.QMetaObject.connectSlotsByName(DialogProfile)
+        DialogProfile.setTabOrder(self.lineTarget, self.lineTimeout)
+        DialogProfile.setTabOrder(self.lineTimeout, self.lineFilter)
+        DialogProfile.setTabOrder(self.lineFilter, self.lineMinSize)
+        DialogProfile.setTabOrder(self.lineMinSize, self.lineMaxSize)
+        DialogProfile.setTabOrder(self.lineMaxSize, self.lineMinLvl)
+        DialogProfile.setTabOrder(self.lineMinLvl, self.lineMaxLvl)
+        DialogProfile.setTabOrder(self.lineMaxLvl, self.lineTests)
+        DialogProfile.setTabOrder(self.lineTests, self.checkBox)
 
     def retranslateUi(self, DialogProfile):
         _translate = QtCore.QCoreApplication.translate

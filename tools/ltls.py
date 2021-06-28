@@ -6,9 +6,6 @@ from ui.edit import Ui_DialogEdit
 from ui.profile import Ui_DialogProfile
 import settings, services_profiller, algs_profiller
 
-################
-# WORKER CLASS #
-################
 
 class Worker(QtCore.QThread):
     def __init__(self, func, **kwargs):
@@ -19,9 +16,6 @@ class Worker(QtCore.QThread):
     def run(self):
         self.func(**self.kwargs)
 
-####################
-# EDITDIALOG CLASS #
-####################
 
 class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
     def __init__(self, fname, label, parent=None):
@@ -102,9 +96,6 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
             self.load(self.file + '.default')
             self.updateList(self.comboBox.currentText())
 
-#######################
-# PROFILEDIALOG CLASS #
-#######################
 
 class ProfileDialog(QtWidgets.QDialog, Ui_DialogProfile):
     def __init__(self, parent=None):
@@ -125,9 +116,6 @@ class ProfileDialog(QtWidgets.QDialog, Ui_DialogProfile):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
-####################
-# MAINWINDOW CLASS #
-####################
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):

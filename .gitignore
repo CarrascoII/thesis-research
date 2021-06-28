@@ -200,3 +200,4 @@ papi
 *.pcapng
 docs/*_statistics.csv
 docs/*/*_statistics.csv
+tools/statistics/*

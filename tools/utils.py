@@ -268,7 +268,7 @@ def parse_handshake_data(filename, alg, serv=None):
 
     return data, headers
 
-def parse_servs_data(filename, algs):
+def parse_servs_data(filename, algs, servs):
     data = {}
     ke_opts = settings.alg_parser_opts['ke']
     alg_lst = algs.split('-')
@@ -301,16 +301,24 @@ def parse_servs_data(filename, algs):
 
             for row in csv_reader:
                 sec_lvl = row['sec_lvl']
+                tmp = sec_lvl
                 test_id = int(row['test_id'])
                 operation = row['operation']
 
-                for alg in alg_lst:
-                    try:
-                        if operation in settings.ke_operations[alg]:
-                            sec_lvl = alg + '_' + sec_lvl
-                    
-                    except KeyError:
-                        continue
+                for serv in servs:
+                    for alg in alg_lst:
+                        try:
+                            if operation in settings.ke_operations_per_service[serv][alg]:
+                                tmp = alg + '_' + tmp
+                        
+                        except KeyError:
+                            continue
+
+                if tmp == sec_lvl:
+                    continue
+
+                else:
+                    sec_lvl = tmp
 
                 if sec_lvl not in data.keys():
                     data[sec_lvl] = {}
@@ -348,7 +356,7 @@ def parse_servs_data(filename, algs):
 
     return data, headers
 
-def get_extra_labels(filename, algs):
+def get_extra_labels(filename, algs, servs):
     fname = filename + 'srv_ke_data.csv'
     alg_lst = algs.split('-')
     labels = []
@@ -379,22 +387,23 @@ def get_extra_labels(filename, algs):
             if test_id != 0:
                 break
 
-            elif operation == 'rsa_decrypt':
-                labels.append('D')
-                continue
-
-            elif operation in ['rsa_sign_with_sha512', 'ecdsa_sign_with_sha512']:
-                labels.append('E')
-                continue
-
-            for serv in settings.ke_operations_per_service:
+            for serv in servs:
                 for alg in alg_lst:
                     try:
                         if operation in settings.ke_operations_per_service[serv][alg]:
                             if serv == 'auth':
-                                labels.append('A')
+                                if operation == 'rsa_decrypt':
+                                    labels.append('D')
+
+                                elif operation in ['rsa_sign_with_sha512', 'ecdsa_sign_with_sha512']:
+                                    labels.append('E')
+
+                                else:
+                                    labels.append('A')
+
                             elif serv == 'ke':
                                 labels.append('B')
+
                             elif serv == 'pfs':
                                 labels.append('C')
 
@@ -528,7 +537,6 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
 
 def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
     labels = settings.serv_labels['ke']
-    alg = settings.serv_to_alg['ke']
     lines = {}
     keys = []
     line = hdr + ','
@@ -601,6 +609,35 @@ def write_session_cmp_csv(path, all_stats):
     for key in lines:
         with open(path + key + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[key])
+
+def write_srv_values_cmp_csv(path, hdr, all_values):
+    labels = settings.serv_labels['ke']
+    lines = {}
+    keys = []
+    line = hdr + ',security bits,'
+
+    for end in labels:
+        lines[end] = []
+
+    for key in all_values:
+        if key.find(labels[0]) != -1:
+                keys.append(key[:-7])
+                line += key[:-7] + ','
+
+    for end in lines:
+        lines[end].append(line[:-1] + '\n')
+
+    for key in keys:
+        for end in labels:
+            sub = key + '_' + end
+
+            for alg in all_values[sub]:
+                for lvl in all_values[sub][alg]:
+                    lines[end].append(alg + ',' + lvl + ',' + str(all_values[sub][alg][lvl]) + '\n')
+
+    for end, label in zip(lines, labels):
+        with open(path + label + '_vals.csv', 'w') as fl:
+            fl.writelines(lines[end])
 
 def get_ke_algs(ciphersuites):
     ke = []
@@ -835,6 +872,43 @@ def calc_statistics(data, stats_type):
 
     return stats
 
+def calc_best_config(all_stats):
+    values = {}
+    stats = []
+    lvls = []
+
+    for key in all_stats[list(all_stats.keys())[0]]:
+        if key == 'keys':
+            for id in all_stats[list(all_stats.keys())[0]][key]:
+                id = id.split('_')
+
+                if int(id[1]) not in lvls:
+                    lvls.append(int(id[1]))
+        else:
+            if key not in stats:
+                stats.append(key)
+
+    for stat in stats:
+        values[stat] = {}
+
+        for alg in all_stats:
+            # print(f'\n{alg} ({stat}):')
+            values[stat][alg] = {}
+
+            for lvl in lvls:
+                values[stat][alg][settings.sec_str[lvl]] = 0
+
+            for id, val in zip(all_stats[alg]['keys'], all_stats[alg][stat]):
+                # print(f'  {id}: {val}')
+
+                if id.find('hs') == -1:
+                    values[stat][alg][settings.sec_str[int(id.split('_')[1])]] += val
+
+            # for lvl in lvls:
+            #     print(f'  TOTAL_{settings.sec_str[lvl]}: {values[stat][alg][settings.sec_str[lvl]]}')
+
+    return values
+
 ########## PROFILLER UTILS ##########
 def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strlen):
     last_msg = [
@@ -875,7 +949,7 @@ def make_progs(target):
     args = ['make', '-C', '../l-tls', target]
     # args = ['python', '--version']
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
+    _, stderr = p.communicate()
     ret = p.returncode
     strerr = stderr.decode('utf-8').strip('\n')
     last_err = strerr.split('\n')

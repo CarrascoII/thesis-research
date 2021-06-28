@@ -17,12 +17,15 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels)
             sec_lvl.append(val[1])
 
     for alg in stats:
-        tmp = '\n('
+        tmp = ''
 
         for id in extra_labels[alg]:
             tmp += id
 
-        xtickslabels.append(alg + tmp + ')')
+        if tmp == '':
+            xtickslabels.append(alg)
+        else:
+            xtickslabels.append(alg + '\n(' + tmp + ')')
 
     for stype in stats_type:
         for op in operations:
@@ -55,7 +58,7 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels)
                                                 xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
                     utils.save_fig(fig, 'statistics/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
-def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(grouped_suites, labels, servs, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_labels = {}
@@ -69,7 +72,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
 
         for suite in grouped_suites[algs]:
             filename = '../docs/' + suite + '/'
-            data, hdr = utils.parse_servs_data(filename, algs)
+            data, hdr = utils.parse_servs_data(filename, algs, servs)
 
             # print(f'\n{suite} ({algs}):')
             # for a in data:
@@ -94,7 +97,7 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
                 print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n')
                 return None
 
-            all_labels[algs] = utils.get_extra_labels(filename, algs)
+            all_labels[algs] = utils.get_extra_labels(filename, algs, servs)
 
         if all_data[algs] == {}:
             all_data.pop(algs)
@@ -156,27 +159,36 @@ def make_serv_cmp_figs(grouped_suites, labels, weight=1.5, strlen=40, spacing=''
     
     print('ok')
 
-    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    # print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
-    for hdr in headers:
-        make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
+    # for hdr in headers:
+    #     make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
 
+    # print('ok')
+
+    print(f'{spacing}Calculating best configuration'.ljust(strlen, '.'), end=' ', flush=True)
+    values = utils.calc_best_config(all_stats)
+    utils.write_srv_values_cmp_csv('statistics/serv_', 'algorithms', values)
     print('ok')
 
-def make_figs(suites, weight=1.5, strlen=40, spacing=''):   
+def make_figs(suites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+    if serv_set == []:
+        print('\nError!! No services were selected to analyse!!!')
+        return None
+
     matplotlib.use('Agg')
     grouped_suites = utils.group_ciphersuites(suites)
     labels = settings.serv_labels['ke']
 
-    print(f'\nALL data:')
-    make_serv_cmp_figs(grouped_suites, labels, weight=weight, strlen=strlen, spacing=spacing)
+    print(f'\nSERVICES data:')
+    make_serv_cmp_figs(grouped_suites, labels, serv_set, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:', ['help', 'weight='])
+        opts, args = getopt.getopt(argv, 'hw:akp', ['help', 'weight=', 'auth', 'ke', 'pfs'])
 
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "comparator.py -h" for help')
+        print('One of the options does not exit.\nUse: "services_analysers.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -187,16 +199,26 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
+    servs = []
     weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_analyser.py [-w <filter_weight>] <ciphersuite_list>')
-            print('services_analyser.py [--weight=<filter_weight>] <ciphersuite_list>')
+            print('services_analyser.py [-w <filter_weight>] [-a] [-k] [-p] <ciphersuite_list>')
+            print('services_analyser.py [--weight=<filter_weight>] [--auth] [--ke] [--pfs] <ciphersuite_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
             weight = float(arg)
+
+        elif opt in ('-a', '--auth'):
+            servs.append('auth')
+
+        elif opt in ('-k', '--ke'):
+            servs.append('ke')
+
+        elif opt in ('-p', '--pfs'):
+            servs.append('pfs')
 
         else:
             print(f'Option "{opt}" does not exist')
@@ -206,7 +228,7 @@ def main(argv):
     settings.init()
     suites = utils.parse_ciphersuites(args[0])
     
-    make_figs(suites, weight=weight)
+    make_figs(suites, serv_set=servs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

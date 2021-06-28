@@ -163,6 +163,13 @@
    </widget>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>comboBox</tabstop>
+  <tabstop>listView</tabstop>
+  <tabstop>buttonRem</tabstop>
+  <tabstop>buttonAdd</tabstop>
+  <tabstop>lineEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -57,7 +57,7 @@ class Ui_MainWindow(object):
         self.frameChecks.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frameChecks.setObjectName("frameChecks")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.frameChecks)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 0, 241, 251))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 0, 243, 251))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -137,6 +137,19 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        MainWindow.setTabOrder(self.checkConf, self.checkInt)
+        MainWindow.setTabOrder(self.checkInt, self.checkAuth)
+        MainWindow.setTabOrder(self.checkAuth, self.checkKest)
+        MainWindow.setTabOrder(self.checkKest, self.checkPfs)
+        MainWindow.setTabOrder(self.checkPfs, self.buttonEditServs)
+        MainWindow.setTabOrder(self.buttonEditServs, self.buttonProfServs)
+        MainWindow.setTabOrder(self.buttonProfServs, self.buttonAnalServs)
+        MainWindow.setTabOrder(self.buttonAnalServs, self.checkCipher)
+        MainWindow.setTabOrder(self.checkCipher, self.checkMd)
+        MainWindow.setTabOrder(self.checkMd, self.checkKex)
+        MainWindow.setTabOrder(self.checkKex, self.buttonEditAlgs)
+        MainWindow.setTabOrder(self.buttonEditAlgs, self.buttonProfAlgs)
+        MainWindow.setTabOrder(self.buttonProfAlgs, self.buttonAnalAlgs)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

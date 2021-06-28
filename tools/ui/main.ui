@@ -137,7 +137,7 @@
       <rect>
        <x>20</x>
        <y>0</y>
-       <width>241</width>
+       <width>243</width>
        <height>251</height>
       </rect>
      </property>
@@ -322,6 +322,22 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>checkConf</tabstop>
+  <tabstop>checkInt</tabstop>
+  <tabstop>checkAuth</tabstop>
+  <tabstop>checkKest</tabstop>
+  <tabstop>checkPfs</tabstop>
+  <tabstop>buttonEditServs</tabstop>
+  <tabstop>buttonProfServs</tabstop>
+  <tabstop>buttonAnalServs</tabstop>
+  <tabstop>checkCipher</tabstop>
+  <tabstop>checkMd</tabstop>
+  <tabstop>checkKex</tabstop>
+  <tabstop>buttonEditAlgs</tabstop>
+  <tabstop>buttonProfAlgs</tabstop>
+  <tabstop>buttonAnalAlgs</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

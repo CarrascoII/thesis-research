@@ -150,7 +150,7 @@ def main(argv):
         opts, args = getopt.getopt(argv, 'hw:ciakp', ['help', 'weight=', 'conf', 'int', 'auth', 'ke', 'pfs'])
 
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "comparator.py -h" for help')
+        print('One of the options does not exit.\nUse: "services_comparator.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -198,7 +198,7 @@ def main(argv):
     settings.init()
     suites = utils.parse_ciphersuites(args[1])
     
-    make_figs(args[0], suites, weight=weight, serv_set=servs)
+    make_figs(args[0], suites, serv_set=servs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])
