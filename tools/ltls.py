@@ -16,6 +16,28 @@ class Worker(QtCore.QThread):
     def run(self):
         self.func(**self.kwargs)
 
+class TableWidget(QtWidgets.QTableWidget):
+    def __init__(self, fname):
+        with open(fname, 'r') as fl:
+            self.content = [line.strip('\n').split(',') for line in fl if line != '\n']
+            self.nRows = len(self.content) - 1
+            self.nCols = len(self.content[0])
+
+        super().__init__(self.nRows, self.nCols)
+        self.setWindowTitle('Display: ' + fname.split('/')[1])
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.populate()
+
+    def populate(self):
+        self.setSortingEnabled(False)
+        self.setHorizontalHeaderLabels(self.content[0])
+
+        for row in range(self.nRows):
+            for col in range(self.nCols):
+                self.setItem(row, col, QtWidgets.QTableWidgetItem(self.content[row + 1][col]))
+
+        self.setSortingEnabled(True)
+        self.resizeColumnsToContents()
 
 class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
     def __init__(self, fname, label, parent=None):
@@ -147,7 +169,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog.show()
 
             self.thread = Worker(func, **args)
-            self.thread.finished.connect(self.dialog.close)
+            self.thread.finished.connect(lambda: self.makeTable(fname, gen_table=args['gen_stats']))
             self.thread.start()
 
     def calcStatistics(self, args_func, prof_func):
@@ -167,7 +189,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.dialog.show()
 
                 self.thread = Worker(prof_func, **args)
-                self.thread.finished.connect(self.dialog.close)
+                self.thread.finished.connect(lambda: self.makeTable(args['suites_file']))
                 self.thread.start()
 
     def getProfileArgs(self, fname):
@@ -264,7 +286,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return args
 
-if __name__ == "__main__":
+    def makeTable(self, fname, gen_table=True):
+        self.dialog.close()
+
+        if gen_table == True and fname.find('services') != -1:
+            files = [f.name for f in os.scandir('results/') if f.is_file()]
+
+            for id, file in enumerate(files):
+                if id == 0:
+                    self.dialog1 = TableWidget('results/' + file)
+                    self.dialog1.show()
+
+                elif id == 1:
+                    self.dialog2 = TableWidget('results/' + file)
+                    self.dialog2.show()
+
+                if id == 2:
+                    self.dialog3 = TableWidget('results/' + file)
+                    self.dialog3.show()
+
+                if id == 3:
+                    self.dialog4 = TableWidget('results/' + file)
+                    self.dialog4.show()
+
+if __name__ == '__main__':
     settings.init()
     app = QtWidgets.QApplication(sys.argv)
     main = MainWindow()

@@ -3,7 +3,7 @@ import sys, getopt
 from multiprocessing.pool import ThreadPool
 import subprocess
 import time
-import services_comparator, services_analyser, utils, settings
+import services_comparator, services_calculator, services_analyser, utils, settings
 
 
 def run_cli(target, tls_opts):
@@ -31,9 +31,12 @@ def run_srv(target, tls_opts):
     return utils.check_endpoint_ret(ret, 'server', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
 
 def make_figs(suites_file, success_ciphersuites, weight, serv_set=[]):
-    print('\nCreating comparison graphs from all ciphersuites:')
-    services_comparator.make_figs(suites_file, success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
-    services_analyser.make_figs(success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
+    # print('\nCreating comparison graphs from all ciphersuites:')
+    # services_comparator.make_figs(suites_file, success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
+    # services_analyser.make_figs(success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
+
+    print('\nFinding best configuration:')
+    services_calculator.make_calcs(success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
 
 def exec_tls(suites_file, target, timeout, tls_opts, weight, gen_stats=True):
     # Step 1: Parse service list

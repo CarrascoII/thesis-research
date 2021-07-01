@@ -347,12 +347,6 @@ def parse_servs_data(filename, algs, servs):
 
                     for sub in all_val:
                         data[sec_lvl][sub].append(all_val[sub])
-                    
-    hs_data, hs_headers = parse_handshake_data(filename, 'handshake')
-
-    if headers == hs_headers:
-        for sec_lvl in hs_data.keys():
-            data['hs_' + sec_lvl] = hs_data[sec_lvl]
 
     return data, headers
 
@@ -610,34 +604,53 @@ def write_session_cmp_csv(path, all_stats):
         with open(path + key + '_statistics.csv', 'w') as fl:
             fl.writelines(lines[key])
 
-def write_srv_values_cmp_csv(path, hdr, all_values):
-    labels = settings.serv_labels['ke']
+def write_config_values_csv(path, hdr, all_values):
+    labels = {'hs': settings.serv_labels['ke'], 'rec': ['out', 'in']}
+    tags = {'hs': 'security bits', 'rec': 'message size (bits)'}
     lines = {}
-    keys = []
-    line = hdr + ',security bits,'
+    keys = {}
+    tmp = next(iter(all_values))
 
-    for end in labels:
-        lines[end] = []
+    for serv in all_values[tmp]:
+        lines[serv] = {}
 
-    for key in all_values:
-        if key.find(labels[0]) != -1:
-                keys.append(key[:-7])
-                line += key[:-7] + ','
+        for end in labels[serv]:
+            lines[serv][end] = []
 
-    for end in lines:
-        lines[end].append(line[:-1] + '\n')
+    for serv in all_values[tmp]:
+        keys[serv] = []
+        idx = len(labels[serv][0]) + 1
 
-    for key in keys:
-        for end in labels:
-            sub = key + '_' + end
+        for key in all_values[tmp][serv]:
+            if key.find(labels[serv][0]) != -1:
+                keys[serv].append(key[:-idx])
 
-            for alg in all_values[sub]:
-                for lvl in all_values[sub][alg]:
-                    lines[end].append(alg + ',' + lvl + ',' + str(all_values[sub][alg][lvl]) + '\n')
+    for serv in keys:
+        line = hdr + ',' + tags[serv] + ','
+        
+        for val in keys[serv]:
+            line += val + ','
 
-    for end, label in zip(lines, labels):
-        with open(path + label + '_vals.csv', 'w') as fl:
-            fl.writelines(lines[end])
+        for end in lines[serv]:
+            lines[serv][end].append(line[:-1] + '\n')
+
+    for serv in keys:
+        for suite in all_values:
+            for end in labels[serv]:
+                line = suite + ','
+
+                for id in range(len(all_values[suite][serv]['keys'])):
+                    new = line + all_values[suite][serv]['keys'][id] + ','
+
+                    for key in keys[serv]:
+                        new += str(all_values[suite][serv][key + '_' + end][id]) + ','
+
+                    lines[serv][end].append(new[:-1] + '\n')
+
+    for serv, label in zip(lines, labels):
+        for end in labels[label]:
+            with open(path + label + '_' + end + '.csv', 'w') as fl:
+                fl.writelines(lines[serv][end])
 
 def get_ke_algs(ciphersuites):
     ke = []
@@ -735,9 +748,9 @@ def stacked_custom_bar(y_list, ax, width=0.5, title=None, scale='linear', xlabel
     x = np.arange(len(xtickslabels))
     bottom = []
 
-    ax.bar(x, y_list['hs'], width=width, label='Handshake', color='black')
+    ax.bar(x, y_list['ALL'], width=width, label='Handshake', color='black')
     
-    while len(bottom) < len(y_list['hs']):
+    while len(bottom) < len(y_list['ALL']):
         bottom.append(0)
 
     for alg in settings.ke_operations:
@@ -871,43 +884,6 @@ def calc_statistics(data, stats_type):
                     return None
 
     return stats
-
-def calc_best_config(all_stats):
-    values = {}
-    stats = []
-    lvls = []
-
-    for key in all_stats[list(all_stats.keys())[0]]:
-        if key == 'keys':
-            for id in all_stats[list(all_stats.keys())[0]][key]:
-                id = id.split('_')
-
-                if int(id[1]) not in lvls:
-                    lvls.append(int(id[1]))
-        else:
-            if key not in stats:
-                stats.append(key)
-
-    for stat in stats:
-        values[stat] = {}
-
-        for alg in all_stats:
-            # print(f'\n{alg} ({stat}):')
-            values[stat][alg] = {}
-
-            for lvl in lvls:
-                values[stat][alg][settings.sec_str[lvl]] = 0
-
-            for id, val in zip(all_stats[alg]['keys'], all_stats[alg][stat]):
-                # print(f'  {id}: {val}')
-
-                if id.find('hs') == -1:
-                    values[stat][alg][settings.sec_str[int(id.split('_')[1])]] += val
-
-            # for lvl in lvls:
-            #     print(f'  TOTAL_{settings.sec_str[lvl]}: {values[stat][alg][settings.sec_str[lvl]]}')
-
-    return values
 
 ########## PROFILLER UTILS ##########
 def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strlen):

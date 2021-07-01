@@ -147,8 +147,14 @@
       </property>
       <item>
        <widget class="QCheckBox" name="checkConf">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="text">
          <string>Confidentiality</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -157,12 +163,18 @@
         <property name="text">
          <string>Integrity</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="checkAuth">
         <property name="text">
          <string>Authentication</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -171,12 +183,18 @@
         <property name="text">
          <string>Key Establishment</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="checkPfs">
         <property name="text">
          <string>Perfect Forward Secrecy</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -200,6 +218,9 @@
         <property name="text">
          <string>Encryption</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
@@ -207,12 +228,18 @@
         <property name="text">
          <string>Message Digest</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="checkKex">
         <property name="text">
          <string>Key Exchange</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

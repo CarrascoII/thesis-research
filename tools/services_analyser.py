@@ -73,6 +73,11 @@ def make_serv_cmp_figs(grouped_suites, labels, servs, weight=1.5, strlen=40, spa
         for suite in grouped_suites[algs]:
             filename = '../docs/' + suite + '/'
             data, hdr = utils.parse_servs_data(filename, algs, servs)
+            hs_data, hs_headers = utils.parse_handshake_data(filename, 'handshake')
+
+            if headers == hs_headers:
+                for sec_lvl in hs_data.keys():
+                    data['ALL_' + sec_lvl] = hs_data[sec_lvl]
 
             # print(f'\n{suite} ({algs}):')
             # for a in data:
@@ -159,17 +164,17 @@ def make_serv_cmp_figs(grouped_suites, labels, servs, weight=1.5, strlen=40, spa
     
     print('ok')
 
-    # print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
+    print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
-    # for hdr in headers:
-    #     make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
+    for hdr in headers:
+        make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
 
-    # print('ok')
-
-    print(f'{spacing}Calculating best configuration'.ljust(strlen, '.'), end=' ', flush=True)
-    values = utils.calc_best_config(all_stats)
-    utils.write_srv_values_cmp_csv('statistics/serv_', 'algorithms', values)
     print('ok')
+
+    # print(f'{spacing}Calculating best configuration'.ljust(strlen, '.'), end=' ', flush=True)
+    # values = utils.calc_best_config(all_stats)
+    # utils.write_serv_values_csv('statistics/serv_', 'algorithms', values)
+    # print('ok')
 
 def make_figs(suites, serv_set=[], weight=1.5, strlen=40, spacing=''):
     if serv_set == []:
