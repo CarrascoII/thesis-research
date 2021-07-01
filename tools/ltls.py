@@ -16,6 +16,20 @@ class Worker(QtCore.QThread):
     def run(self):
         self.func(**self.kwargs)
 
+class MyTableWidgetItem(QtWidgets.QTableWidgetItem):
+    def __lt__(self, other):
+        if isinstance(other, QtWidgets.QTableWidgetItem):
+            my_value = self.data(QtCore.Qt.ItemDataRole.EditRole)
+            other_value = other.data(QtCore.Qt.ItemDataRole.EditRole)
+
+            try:
+                return float(my_value) < float(other_value)
+            
+            except ValueError:
+                return super(MyTableWidgetItem, self).__lt__(other)
+
+        return super(MyTableWidgetItem, self).__lt__(other)
+
 class TableWidget(QtWidgets.QTableWidget):
     def __init__(self, fname):
         with open(fname, 'r') as fl:
@@ -34,7 +48,9 @@ class TableWidget(QtWidgets.QTableWidget):
 
         for row in range(self.nRows):
             for col in range(self.nCols):
-                self.setItem(row, col, QtWidgets.QTableWidgetItem(self.content[row + 1][col]))
+                item = MyTableWidgetItem()
+                item.setData(QtCore.Qt.ItemDataRole.EditRole, QtCore.QVariant(self.content[row + 1][col]))
+                self.setItem(row, col, item)
 
         self.setSortingEnabled(True)
         self.resizeColumnsToContents()
