@@ -1,11 +1,10 @@
-import os
-import sys, getopt
-import matplotlib
+import os, sys, getopt
+from matplotlib import use
 import matplotlib.pyplot as plt
 import utils, settings
 
 
-def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels):
+def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels):
     xtickslabels = []
     sec_lvl = []
     scale_type = ['linear', 'log']
@@ -27,38 +26,37 @@ def make_record_alg_cmp_bar(operations, ylabel, stats, stats_type, extra_labels)
         else:
             xtickslabels.append(alg + '\n(' + tmp + ')')
 
-    for stype in stats_type:
-        for op in operations:
-            for lvl in sec_lvl:
-                for scale in scale_type:
-                    fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-                    y = {}
+    for op in operations:
+        for lvl in sec_lvl:
+            for scale in scale_type:
+                fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+                y = {}
 
+                for alg in stats:
+                    for key in stats[alg]['keys']:
+                        elem = key.split('_')
+
+                        if elem[0] not in y:
+                            y[elem[0]] = []
+
+                for serv in y:
                     for alg in stats:
-                        for key in stats[alg]['keys']:
-                            elem = key.split('_')
+                        try:
+                            idx = stats[alg]['keys'].index(serv + '_' + lvl)
+                            y[serv].append(stats[alg]['mean_' + ylabel + '_' + op][idx])
+                        
+                        except ValueError:
+                            y[serv].append(0)
 
-                            if elem[0] not in y:
-                                y[elem[0]] = []
+                # print('')
+                # for a in y:
+                #     print(f'{a}: {y[a]} : {len(y[a])}')
 
-                    for serv in y:
-                        for alg in stats:
-                            try:
-                                idx = stats[alg]['keys'].index(serv + '_' + lvl)
-                                y[serv].append(stats[alg][stype + '_' + ylabel + '_' + op][idx])
-                            
-                            except ValueError:
-                                y[serv].append(0)
+                ax = utils.stacked_custom_bar(y, ax, title=op + ' (mean)', scale=scale,
+                                            xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
+                utils.save_fig(fig, 'statistics/' + path + '/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
-                    # print('')
-                    # for a in y:
-                    #     print(f'{a}: {y[a]} : {len(y[a])}')
-
-                    ax = utils.stacked_custom_bar(y, ax, title=op + ' (' + stype + ')', scale=scale,
-                                                xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
-                    utils.save_fig(fig, 'statistics/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
-
-def make_serv_cmp_figs(grouped_suites, labels, servs, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_labels = {}
@@ -71,7 +69,7 @@ def make_serv_cmp_figs(grouped_suites, labels, servs, weight=1.5, strlen=40, spa
         all_data[algs] = {}
 
         for suite in grouped_suites[algs]:
-            filename = '../docs/' + suite + '/'
+            filename = '../docs/' + path + '/' + suite + '/'
             data, hdr = utils.parse_servs_data(filename, algs, servs)
             hs_data, hs_headers = utils.parse_handshake_data(filename, 'handshake')
 
@@ -160,33 +158,28 @@ def make_serv_cmp_figs(grouped_suites, labels, servs, weight=1.5, strlen=40, spa
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
-        utils.write_suite_servs_cmp_csv('statistics/serv_all_', 'algorithms', all_stats, hdr)
+        utils.write_suite_servs_cmp_csv('statistics/' + path + '/', 'algorithms', all_stats, hdr)
     
     print('ok')
 
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(labels, hdr, all_stats, stats_type, all_labels)
+        make_record_alg_cmp_bar(path, labels, hdr, all_stats, all_labels)
 
     print('ok')
 
-    # print(f'{spacing}Calculating best configuration'.ljust(strlen, '.'), end=' ', flush=True)
-    # values = utils.calc_best_config(all_stats)
-    # utils.write_serv_values_csv('statistics/serv_', 'algorithms', values)
-    # print('ok')
-
-def make_figs(suites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+def make_figs(path, suites, serv_set=[], weight=1.5, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
 
-    matplotlib.use('Agg')
+    use('Agg')
     grouped_suites = utils.group_ciphersuites(suites)
     labels = settings.serv_labels['ke']
 
     print(f'\nSERVICES data:')
-    make_serv_cmp_figs(grouped_suites, labels, serv_set, weight=weight, strlen=strlen, spacing=spacing)
+    make_serv_cmp_figs(path, grouped_suites, labels, serv_set, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
@@ -209,8 +202,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_analyser.py [-w <filter_weight>] [-a] [-k] [-p] <ciphersuite_list>')
-            print('services_analyser.py [--weight=<filter_weight>] [--auth] [--ke] [--pfs] <ciphersuite_list>')
+            print('services_analyser.py [-w <filter_weight>] [-a] [-k] [-p] <path_to_data>')
+            print('services_analyser.py [--weight=<filter_weight>] [--auth] [--ke] [--pfs] <path_to_data>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -231,9 +224,9 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    suites = utils.parse_ciphersuites(args[0])
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_file()]
     
-    make_figs(suites, serv_set=servs, weight=weight)
+    make_figs(args[0], suites, serv_set=servs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

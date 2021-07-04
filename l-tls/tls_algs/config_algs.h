@@ -19,6 +19,7 @@
 #define SRV_FNAME               "/srv_"
 #define CLI_FNAME               "/cli_"
 #define END_FNAME_SIZE          5
+char *data_path;
 #endif
 
 #if defined(MEASURE_CIPHER)

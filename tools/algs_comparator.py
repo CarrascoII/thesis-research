@@ -1,13 +1,14 @@
-import os
 import sys, getopt
-import matplotlib
+from os import system
+from copy import deepcopy
+from matplotlib import use
 import matplotlib.pyplot as plt
 import utils, settings
 
 
 def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
     labels = list(stats.keys())
-    xtickslabels = stats[next(iter(stats))]['keys']
+    xtickslabels = deepcopy(stats[next(iter(stats))]['keys'])
     
     if alg == 'ke':
         for i, val in enumerate(xtickslabels):
@@ -109,7 +110,7 @@ def make_figs(algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spaci
         print('\nError!! No algorithms were selected to analyse!!!')
         return None
 
-    matplotlib.use('Agg')
+    use('Agg')
     labels = settings.alg_labels
     algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
     
@@ -160,7 +161,7 @@ def main(argv):
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
 
-    os.system('clear')
+    system('clear')
     settings.init()
     suites = utils.parse_ciphersuites(args[1])
     

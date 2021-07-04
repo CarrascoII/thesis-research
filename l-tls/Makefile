@@ -1,9 +1,9 @@
 MY_MBEDTLS_DIR = my_mbedtls
 MEASUREMENT_LIB_DIR = measurement/library
 MBEDCORE_LIB_DIR = mbedcore/library
-MY_AES_MODULE_DIR = ../../l-tls/my_mbedtls/aes_module
 MBEDTLS_LIB_DIR = ../mbedtls/library
 MBEDTLS_PROG_DIR = ../mbedtls/programs
+MY_AES_MODULE_DIR = ../../l-tls/my_mbedtls/aes_module
 PERSONAL_DIR = ../../l-tls
 PAPI_INC_DIR = ../../papi/src/install/include
 PAPI_LIB_DIR = ../../papi/src/install/lib
@@ -25,22 +25,19 @@ PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement lib_measurement_papi alt_algs alt_session alt_core alt_cipher \
-		lib_mbedtls lib_algs lib_algs_papi lib_session lib_session_papi lib_core lib_core_papi \
-		lib_cipher progs \
-		algs_server run_algs_server algs_client run_algs_client algs \
-		algs_server_papi run_algs_server_papi algs_client_papi run_algs_client_papi algs_papi \
-		session_server run_session_server session_client run_session_client session \
-		session_server_papi run_session_server_papi session_client_papi run_session_client_papi session_papi \
-		cipher run_cipher \
-		clean_local clean
+.PHONY: lib_measurement alt_algs alt_session alt_core alt_cipher \
+		lib_mbedtls lib_algs lib_session lib_core lib_cipher progs \
+		tls_algs_server tls_algs_client tls_algs tls_algs_core \
+		session_server session_client session \
+		cipher clean_local clean
 
 ### MAKE MEASUREMENT LIBRARY ###
 lib_measurement:
+ifndef PAPI_DIR
 	$(MEASUREMENT_LIB_MAKE)
-
-lib_measurement_papi:
+else
 	$(MEASUREMENT_LIB_MAKE) PAPI_CFLAGS="$(PAPI_CFLAGS)"
+endif
 	
 ### MAKE MBEDTLS ALT ###
 alt_algs:
@@ -62,111 +59,88 @@ lib_mbedtls:
 	$(MBEDTLS_LIB_MAKE)
 
 lib_algs:
+ifndef PAPI_DIR
 	$(TLS_ALGS_MAKE) lib
-
-lib_algs_papi:
+else
 	$(TLS_ALGS_MAKE) lib_papi
+endif
 
 lib_session:
+ifndef PAPI_DIR
 	$(TLS_SESSION_MAKE) lib
-
-lib_session_papi:
+else
 	$(TLS_SESSION_MAKE) lib_papi
+endif
 
 lib_core:
+ifndef PAPI_DIR
 	$(TLS_CORE_MAKE) lib
-
-lib_core_papi:
+else
 	$(TLS_CORE_MAKE) lib_papi
+endif
 
 lib_cipher:
 	$(CIPHER_MAKE) lib
 
 ### MAKE MBEDTLS PROGRAMS ###
 progs: clean lib_mbedtls
-	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I$(MY_AES_MODULE_DIR) $(PERSONAL_DIR)/$(MY_AES).o $(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
+	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I$(MY_AES_MODULE_DIR) $(PERSONAL_DIR)/$(MY_AES).o \
+									$(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
 
 ### MAKE TLS ALGS ###
-algs_server:
+tls_algs_server:
+ifndef PAPI_DIR
 	$(TLS_ALGS_MAKE) server
+else
+	$(TLS_ALGS_MAKE) server_papi
+endif
 
-run_algs_server: algs_server
-	./tls_algs/server.out
-
-algs_client:
+tls_algs_client:
+ifndef PAPI_DIR
 	$(TLS_ALGS_MAKE) client
+else
+	$(TLS_ALGS_MAKE) client_papi
+endif
 
-run_algs_client: algs_client
-	./tls_algs/client.out
-
-algs:
+tls_algs:
 ifndef PAPI_DIR
 	$(TLS_ALGS_MAKE) local
 else
 	$(TLS_ALGS_MAKE) local_papi
 endif
 
-algs_core:
+tls_algs_core:
 ifndef PAPI_DIR
 	$(TLS_ALGS_MAKE) core
 else
 	$(TLS_ALGS_MAKE) core_papi
 endif
 
-### MAKE TLS ALGS PAPI ###
-algs_server_papi:
-	$(TLS_ALGS_MAKE) server_papi
-
-run_algs_server_papi: algs_server_papi
-	./tls_algs/server.out
-
-algs_client_papi:
-	$(TLS_ALGS_MAKE) client_papi
-
-run_algs_client_papi: algs_client_papi
-	./tls_algs/client.out
-
-algs_papi:
-	$(TLS_ALGS_MAKE) local_papi
-
 ### MAKE TLS SESSION ###
 session_server:
+ifndef PAPI_DIR
 	$(TLS_SESSION_MAKE) server
-
-run_session_server: session_server
-	./tls_session/server.out
+else
+	$(TLS_SESSION_MAKE) server_papi
+endif
 
 session_client:
+ifndef PAPI_DIR
 	$(TLS_SESSION_MAKE) client
-
-run_session_client: session_client
-	./tls_session/client.out
+else
+	$(TLS_SESSION_MAKE) client_papi
+endif
 
 session:
+ifndef PAPI_DIR
 	$(TLS_SESSION_MAKE) local
-
-### MAKE TLS SESSION PAPI ###
-session_server_papi:
-	$(TLS_SESSION_MAKE) server_papi
-
-run_session_server_papi: session_server_papi
-	./tls_session/server.out
-
-session_client_papi:
-	$(TLS_SESSION_MAKE) client_papi
-
-run_session_client_papi: session_client_papi
-	./tls_session/client.out
-
-session_papi:
+else
 	$(TLS_SESSION_MAKE) local_papi
+endif
 
 ### MAKE TEST CIPHER ###
 cipher:
 	$(CIPHER_MAKE) local
-
-run_cipher:
-	$(CIPHER_MAKE) run
 
 ### CLEAN ###
 clean_local:

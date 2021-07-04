@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#if defined(MEASUREMENT_MEASURE_C)
+#include <time.h>
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
 #if defined(PRINT_MSG_HEX)
@@ -235,6 +238,10 @@ int main(int argc, char **argv) {
 #if defined(MUTUAL_AUTH)
     uint32_t flags;
 #endif
+#if defined(MEASUREMENT_MEASURE_C)
+    time_t rawtime;
+    struct tm *timeinfo;
+#endif
 #if defined(MBEDTLS_DHM_C) && \
     (defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE))
     const unsigned char dhm_g[] = MBEDTLS_DHM_RFC3526_MODP_2048_G_BIN;
@@ -264,6 +271,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 };
 #endif /* MEASURE_KE || MEASURE_HANDSHAKE */
 
+#if defined(MEASUREMENT_MEASURE_C)
+    data_path = (char*) malloc(sizeof(char)*PATH_SIZE);
+#endif
+
     for(i = 1; i < argc; i++) {
         p = argv[i];
 
@@ -275,32 +286,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         }
 
         *q++ = '\0';
-        if(strcmp(p, "input_size") == 0) {
-            input_size = atoi(q);
-
-            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE) {
+        if(strcmp(p, "ciphersuite") == 0) {
+            if((suite_id = mbedtls_ssl_get_ciphersuite_id(q)) == 0) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Input size must be between %d and %d\n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+                printf("%s is not an available ciphersuite\n", q);
 #endif
                 return(1);
             }
         }
-        else if(strcmp(p, "max_input_size") == 0) {
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-            max_input_size = atoi(q);
-
-            if(max_input_size < MIN_INPUT_SIZE || max_input_size > MAX_INPUT_SIZE) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf("Maximum input size must be between %d and %d\n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
-#endif
-                return(1);
-            }
-#else /* MEASURE_CIPHER || MEASURE_MD */
-#if defined(MBEDTLS_DEBUG_C)
-            printf("Option not available. Enable MEASURE_CIPHER or MEASURE_MD\n");
-#endif
-#endif
-		}
         else if(strcmp(p, "sec_lvl") == 0) {
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             sec_lvl = atoi(q);
@@ -333,6 +326,32 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 #endif
 		}
+        else if(strcmp(p, "input_size") == 0) {
+            input_size = atoi(q);
+
+            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf("Input size must be between %d and %d\n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+#endif
+                return(1);
+            }
+        }
+        else if(strcmp(p, "max_input_size") == 0) {
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+            max_input_size = atoi(q);
+
+            if(max_input_size < MIN_INPUT_SIZE || max_input_size > MAX_INPUT_SIZE) {
+#if defined(MBEDTLS_DEBUG_C)
+                printf("Maximum input size must be between %d and %d\n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
+#endif
+                return(1);
+            }
+#else /* MEASURE_CIPHER || MEASURE_MD */
+#if defined(MBEDTLS_DEBUG_C)
+            printf("Option not available. Enable MEASURE_CIPHER or MEASURE_MD\n");
+#endif
+#endif
+		}
         else if(strcmp(p, "n_tests") == 0) {
 #if defined(MEASUREMENT_MEASURE_C)
             n_tests = atoi(q);
@@ -350,6 +369,18 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             return(1);
 #endif
 		}
+        else if(strcmp(p, "path") == 0) {
+#if defined(MEASUREMENT_MEASURE_C)
+            strcpy(data_path, FILE_PATH);
+            strcat(data_path, q);
+            strcat(data_path, "/");
+#else /* MEASUREMENT_MEASURE_C */
+#if defined(MBEDTLS_DEBUG_C)
+            printf("Option not available. Enable MEASURE_CIPHER, MEASURE_MD, MEASURE_KE or MEASURE_HANDSHAKE\n");
+#endif
+            return(1);
+#endif
+        }
 #if defined(MBEDTLS_DEBUG_C)
         else if(strcmp(p, "debug_level") == 0) {
             debug = atoi(q);
@@ -360,27 +391,20 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             }
         }
 #endif
-        else if(strcmp(p, "ciphersuite") == 0) {
-            if((suite_id = mbedtls_ssl_get_ciphersuite_id(q)) == 0) {
-#if defined(MBEDTLS_DEBUG_C)
-                printf("%s is not an available ciphersuite\n", q);
-#endif
-                return(1);
-            }
-        }
         else {
 #if defined(MBEDTLS_DEBUG_C)
-            printf("Available options are input_size, ");
-#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-            printf("max_input_size, ");
-#endif
+            printf("Available options are ciphersuite");
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
-            printf("sec_lvl, max_sec_lvl, ");
+            printf(" ,sec_lvl, max_sec_lvl");
+#endif
+            printf(", input_size");
+#if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
+            printf(", max_input_size");
 #endif
 #if defined(MEASUREMENT_MEASURE_C)
-            printf("n_tests, ");
+            printf(", n_tests, path");
 #endif
-            printf("debug_level and ciphersuite\n");
+            printf(" and debug_level\n");
             fflush(stdout);
 #endif /* MBEDTLS_DEBUG_C */
             return(1);
@@ -406,6 +430,16 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
     mbedtls_ssl_config_init(&tls_conf);
 #endif /* !MEASURE_KE && !MEASURE_HANDSHAKE */
+
+#if defined(MEASUREMENT_MEASURE_C)
+    if(strcmp(data_path, "") == 0) {
+        sprintf(data_path, "%s", FILE_PATH);
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+        sprintf(data_path, "%s%02d%02d%02d_%02d%02d/", FILE_PATH, timeinfo->tm_mday, timeinfo->tm_mon + 1,
+                                        timeinfo->tm_year + 1900, timeinfo->tm_hour, timeinfo->tm_min);
+    }
+#endif
 
 #if defined(MBEDTLS_DEBUG_C)
     mbedtls_debug_set_threshold(debug);
@@ -943,6 +977,12 @@ exit:
     mbedtls_net_free(&server);
     mbedtls_ssl_free(&tls);
 
+#if defined(MEASUREMENT_MEASURE_C)
+    if(data_path != NULL) {
+        free(data_path);
+    }
+#endif
+
 #if defined(MEASURE_CIPHER)
     if(cipher_fname != NULL) {
         free(cipher_fname);
@@ -967,5 +1007,5 @@ exit:
     }
 #endif
 
-    return(ret);
+    return(-ret);
 }

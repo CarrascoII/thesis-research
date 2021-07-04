@@ -8717,7 +8717,7 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
     int ret = 0;
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_HANDSHAKE)
     const mbedtls_ssl_ciphersuite_t *suite_info;
-    char path[PATH_SIZE] = FILE_PATH;
+    char path[PATH_SIZE];
 #endif
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
     int i;
@@ -8775,6 +8775,8 @@ int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl )
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD) || defined(MEASURE_HANDSHAKE)
             suite_info = mbedtls_ssl_ciphersuite_from_id(ssl->session_negotiate->ciphersuite);
 
+            strcpy(path, data_path);
+            mkdir(path, 0777);
             strcat(path, suite_info->name);
             mkdir(path, 0777);
 #endif

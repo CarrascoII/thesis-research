@@ -81,7 +81,7 @@ def sum_hs_vals(stats):
 
 #     return values
 
-def make_serv_calcs(ciphersuites, serv_set, weight=1.5, strlen=40, spacing=''):
+def make_serv_calcs(path, ciphersuites, serv_set, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -93,7 +93,7 @@ def make_serv_calcs(ciphersuites, serv_set, weight=1.5, strlen=40, spacing=''):
     print(f'{spacing}Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
 
     for suite in ciphersuites:
-        filename = '../docs/' + suite + '/'
+        filename = '../docs/' + path + '/' + suite + '/'
 
         if 'conf' in serv_set:
             all_data[suite]['conf'], hdr = utils.parse_record_data(filename, 'cipher', 'conf')
@@ -187,15 +187,15 @@ def make_serv_calcs(ciphersuites, serv_set, weight=1.5, strlen=40, spacing=''):
     # print('ok')
 
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_config_values_csv('results/serv_config_', 'ciphersuite', all_stats)
+    utils.write_config_values_csv('results/' + path + '/', 'ciphersuite', all_stats)
     print('ok')
 
-def make_calcs(ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+def make_calcs(path, ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
 
-    make_serv_calcs(ciphersuites, serv_set, weight=weight, strlen=strlen, spacing=spacing)
+    make_serv_calcs(path, ciphersuites, serv_set, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
@@ -218,8 +218,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_calculator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <ciphersuite_list>')
-            print('services_calculator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--ke] [--pfs] <ciphersuite_list>')
+            print('services_calculator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <path_to_data>')
+            print('services_calculator.py [--weight=<filter_weight>] [--conf] [--int] ' +
+                '[--auth] [--ke] [--pfs] <path_to_data>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -246,9 +247,9 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    suites = utils.parse_ciphersuites(args[0])
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_file()]
     
-    make_calcs(suites, serv_set=servs, weight=weight)
+    make_calcs(args[0], suites, serv_set=servs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

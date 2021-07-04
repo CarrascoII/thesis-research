@@ -1527,7 +1527,7 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
     const mbedtls_ssl_ciphersuite_t *suite_info;
 #if defined(MEASURE_KE)
     char buff[PATH_SIZE];
-    char path[PATH_SIZE] = FILE_PATH;
+    char path[PATH_SIZE];
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> parse server hello" ) );
@@ -1793,6 +1793,8 @@ static int ssl_parse_server_hello( mbedtls_ssl_context *ssl )
     sprintf(buff, "%d,0", ssl->starting_lvl);
 
     if(strcmp(buff, ssl->test_and_sec_lvl) == 0) {
+        strcpy(path, data_path);
+        mkdir(path, 0777);
         strcat(path, mbedtls_ssl_get_ciphersuite_name(i));
         mkdir(path, 0777);
 

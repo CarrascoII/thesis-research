@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>810</width>
+    <width>540</width>
     <height>530</height>
    </rect>
   </property>
@@ -17,22 +17,9 @@
    <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>265</x>
       <y>10</y>
       <width>15</width>
-      <height>510</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Vertical</enum>
-    </property>
-   </widget>
-   <widget class="Line" name="line_2">
-    <property name="geometry">
-     <rect>
-      <x>540</x>
-      <y>15</y>
-      <width>10</width>
       <height>510</height>
      </rect>
     </property>
@@ -45,7 +32,7 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>810</width>
+      <width>540</width>
       <height>80</height>
      </rect>
     </property>
@@ -95,30 +82,14 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="labelSession">
-     <property name="geometry">
-      <rect>
-       <x>550</x>
-       <y>0</y>
-       <width>250</width>
-       <height>80</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Session</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
    </widget>
    <widget class="QFrame" name="frameChecks">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>80</y>
-      <width>810</width>
-      <height>440</height>
+      <width>540</width>
+      <height>450</height>
      </rect>
     </property>
     <property name="font">
@@ -135,13 +106,13 @@
     <widget class="QWidget" name="verticalLayoutWidget">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>10</x>
        <y>0</y>
-       <width>243</width>
+       <width>241</width>
        <height>251</height>
       </rect>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QVBoxLayout" name="layoutServsOpts">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -209,7 +180,7 @@
        <height>251</height>
       </rect>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="layoutAlgsOpts">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -248,13 +219,13 @@
     <widget class="QWidget" name="verticalLayoutWidget_3">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>0</x>
        <y>250</y>
        <width>261</width>
        <height>191</height>
       </rect>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
+     <layout class="QVBoxLayout" name="layoutServsButtons">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -270,21 +241,21 @@
       <item>
        <widget class="QPushButton" name="buttonEditServs">
         <property name="text">
-         <string>Edit</string>
+         <string>Edit Services</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="buttonProfServs">
         <property name="text">
-         <string>Get Data</string>
+         <string>Acquire Data</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="buttonAnalServs">
         <property name="text">
-         <string>Get Statistics</string>
+         <string>Generate Statistics</string>
         </property>
        </widget>
       </item>
@@ -299,7 +270,7 @@
        <height>191</height>
       </rect>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
+     <layout class="QVBoxLayout" name="layoutAlgsButtons">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -315,39 +286,31 @@
       <item>
        <widget class="QPushButton" name="buttonEditAlgs">
         <property name="text">
-         <string>Edit</string>
+         <string>Edit Algorithms</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="buttonProfAlgs">
         <property name="text">
-         <string>Get Data</string>
+         <string>Acquire Data</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="buttonAnalAlgs">
         <property name="text">
-         <string>Get Statistics</string>
+         <string>Generate Statistics</string>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
    </widget>
+   <zorder>frameLabel</zorder>
+   <zorder>frameChecks</zorder>
+   <zorder>line</zorder>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>810</width>
-     <height>26</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
   <tabstop>checkConf</tabstop>

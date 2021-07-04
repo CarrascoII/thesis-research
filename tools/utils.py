@@ -1,8 +1,10 @@
-import csv
-import statistics
+import os
+import subprocess
+from csv import DictReader
+from statistics import mode
+from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
-import subprocess
 import settings
 
 ########## FILE PARSING UTILS ##########
@@ -186,7 +188,7 @@ def parse_record_data(filename, alg, serv=None):
         sub_keys = []
         
         with open(fname, mode='r') as fl:
-            csv_reader = csv.DictReader(fl)
+            csv_reader = DictReader(fl)
             headers = csv_reader.fieldnames[opts[0]:]
 
             for hdr in headers:
@@ -226,7 +228,7 @@ def parse_handshake_data(filename, alg, serv=None):
         sub_keys = []
         
         with open(fname, mode='r') as fl:
-            csv_reader = csv.DictReader(fl)
+            csv_reader = DictReader(fl)
             headers = csv_reader.fieldnames[opts[0]:]
             row_dict = {}
 
@@ -292,7 +294,7 @@ def parse_servs_data(filename, algs, servs):
         sub_keys = []
 
         with open(fname, mode='r') as fl:
-            csv_reader = csv.DictReader(fl)
+            csv_reader = DictReader(fl)
             headers = csv_reader.fieldnames[ke_opts[0]:]
             row_dict = {}
 
@@ -372,7 +374,7 @@ def get_extra_labels(filename, algs, servs):
 
 
     with open(fname, mode='r') as fl:
-        csv_reader = csv.DictReader(fl)
+        csv_reader = DictReader(fl)
 
         for row in csv_reader:
             test_id = int(row['test_id'])
@@ -417,7 +419,7 @@ def parse_session_data(filename):
         fname = filename + ext + 'session_data.csv'
 
         with open(fname, mode='r') as fl:
-            csv_reader = csv.DictReader(fl)
+            csv_reader = DictReader(fl)
             headers = csv_reader.fieldnames[1:]
             data[endpoint] = {}
 
@@ -463,7 +465,7 @@ def write_alg_cmp_csv(path, hdr, alg, all_stats):
     lines = {}
     keys = []
     line = hdr + ',' + settings.alg_parser_opts[alg][1] + ','
-    elem = next(iter(all_stats.values()))
+    elem = deepcopy(next(iter(all_stats.values())))
 
     for end in labels:
         lines[end] = []
@@ -499,7 +501,7 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
     lines = {}
     keys = []
     line = hdr + ',' + settings.alg_parser_opts[alg][1] + ','
-    elem = next(iter(all_stats.values()))
+    elem = deepcopy(next(iter(all_stats.values())))
 
     for end in labels:
         lines[end] = []
@@ -525,8 +527,11 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
 
                 lines[end].append(sub[:-1] + '\n')
 
+    if not os.path.exists(path):
+        os.mkdir(path)
+
     for end, label in zip(lines, labels):
-        with open(path + label + '_statistics.csv', 'w') as fl:
+        with open(path + 'serv_' + serv + '_' + label + '.csv', 'w') as fl:
             fl.writelines(lines[end])
 
 def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
@@ -576,14 +581,17 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
             # print(f'\n{end}: {sub[:-1]}')
             lines[end].append(sub[:-1] + '\n')
 
+    if not os.path.exists(path):
+        os.mkdir(path)
+
     for end, label in zip(lines, labels):
-        with open(path + label + '_' + stype + '_statistics.csv', 'w') as fl:
+        with open(path + 'serv_all_' + label + '_' + stype + '.csv', 'w') as fl:
             fl.writelines(lines[end])
 
 def write_session_cmp_csv(path, all_stats):
     lines = {'client': [], 'server': []}
     line = 'ciphersuite,'
-    elem = next(iter(all_stats.values()))
+    elem = deepcopy(next(iter(all_stats.values())))
 
     for key in list(elem.keys())[1:]:
         line += key + ','
@@ -609,7 +617,7 @@ def write_config_values_csv(path, hdr, all_values):
     tags = {'hs': 'security bits', 'rec': 'message size (bits)'}
     lines = {}
     keys = {}
-    tmp = next(iter(all_values))
+    tmp = deepcopy(next(iter(all_values)))
 
     for serv in all_values[tmp]:
         lines[serv] = {}
@@ -647,9 +655,12 @@ def write_config_values_csv(path, hdr, all_values):
 
                     lines[serv][end].append(new[:-1] + '\n')
 
+    if not os.path.exists(path):
+        os.mkdir(path)
+
     for serv, label in zip(lines, labels):
         for end in labels[label]:
-            with open(path + label + '_' + end + '.csv', 'w') as fl:
+            with open(path + 'serv_config_' + label + '_' + end + '.csv', 'w') as fl:
                 fl.writelines(lines[serv][end])
 
 def get_ke_algs(ciphersuites):
@@ -856,7 +867,7 @@ def calc_statistics(data, stats_type):
         'mean': np.mean,
         'stddev': np.std,
         'median':np.median,
-        'mode': statistics.mode
+        'mode': mode
     }
 
     for key in stats['keys']:
@@ -874,7 +885,7 @@ def calc_statistics(data, stats_type):
         for sub in sub_keys:
             for stat in stats_type:
                 try:
-                    stats[stat + '_' + sub].append(ops[stat](data[key][sub]))
+                    stats[stat + '_' + sub].append(round(ops[stat](data[key][sub]), 3))
 
                 except KeyError:
                     stats[stat + '_' + sub].append(0)
@@ -899,7 +910,8 @@ def check_endpoint_ret(return_code, endpoint, ciphersuite, stdout, stderr, strle
     print(f'    Checking {endpoint} return code'.ljust(strlen, '.'), end=' ', flush=True)
 
     if return_code != 0:
-        print(f'error\n    Got an unexpected return code!!!\n    Details: {return_code}')
+        print(f'error\n    Got an unexpected return code!!!\n    Details: -{return_code:#0{6}x}')
+
         return return_code
 
     if last_err[0] != '':

@@ -1,33 +1,32 @@
-import os
-import sys, getopt
-import matplotlib
+import os, sys, getopt
+from copy import deepcopy
+from matplotlib import use
 import matplotlib.pyplot as plt
 import utils, settings
 
 
-def make_record_alg_cmp_bar(serv, operations, ylabel, stats, stats_type):
+def make_record_alg_cmp_bar(path, serv, operations, ylabel, stats):
     labels = list(stats.keys())
-    xtickslabels = stats[next(iter(stats))]['keys']
-    
+    xtickslabels = deepcopy(stats[next(iter(stats))]['keys'])
+
     if serv != 'conf' and serv != 'int':
         for i, val in enumerate(xtickslabels):
             xtickslabels[i] = settings.sec_str[int(val)]
 
-    for stype in stats_type:
-        for op in operations:
-            fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-            y = []
-            yerr = []
-        
-            for key in stats:
-                y.append(stats[key][stype + '_' + ylabel + '_' + op])
-                yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
+    for op in operations:
+        fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+        y = []
+        yerr = []
+    
+        for key in stats:
+            y.append(stats[key]['mean_' + ylabel + '_' + op])
+            yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
 
-            ax = utils.multiple_custom_bar(y, yerr, ax, title=op + ' (' + stype + ')',
-                                        labels=labels, xtickslabels=xtickslabels, xlabel='security strength (in bits)', ylabel=ylabel)
-            utils.save_fig(fig, 'statistics/serv_' + serv + '_' + op + '_' + stype + '_' + ylabel + '.png')
+        ax = utils.multiple_custom_bar(y, yerr, ax, title=op + ' (mean)',
+                                    labels=labels, xtickslabels=xtickslabels, xlabel='security strength (in bits)', ylabel=ylabel)
+        utils.save_fig(fig, 'statistics/' + path + '/serv_' + serv + '_' + op + '_' + ylabel + '.png')
 
-def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -48,7 +47,8 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
         data_ops_params['alg'] = key
 
         for suite in grouped_suites[key]:
-            data_ops_params['filename'] = '../docs/' + suite + '/'
+            data_ops_params['filename'] = '../docs/' + path + '/' + suite + '/'
+
             data, hdr = data_ops_func[serv](**data_ops_params)
 
             if data == {}:
@@ -116,22 +116,22 @@ def make_serv_cmp_figs(grouped_suites, serv, labels, weight=1.5, strlen=40, spac
     print('ok')
 
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_serv_cmp_csv('statistics/serv_' + serv + '_', 'algorithms', serv, all_stats)
+    utils.write_serv_cmp_csv('statistics/' + path + '/', 'algorithms', serv, all_stats)
     print('ok')
 
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(serv, labels, hdr, all_stats, stats_type[:-1])
+        make_record_alg_cmp_bar(path, serv, labels, hdr, all_stats)
 
     print('ok')
 
-def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+def make_figs(path, servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
 
-    matplotlib.use('Agg')
+    use('Agg')
     labels = settings.serv_labels
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
 
@@ -143,7 +143,7 @@ def make_figs(servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spa
 
     for serv in serv_set:
         print(f'\n{serv.upper()} data:')
-        make_serv_cmp_figs(servs[serv], serv, labels[serv], weight=weight, strlen=strlen, spacing=spacing)
+        make_serv_cmp_figs(path, servs[serv], serv, labels[serv], weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
@@ -167,9 +167,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <services_list> <ciphersuite_list>')
+            print('services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <path_to_data> <services_list>')
             print('services_comparator.py [--weight=<filter_weight>] [--conf] [--int] [--auth] [--ke] ' +
-                    '[--pfs] <services_list> <ciphersuite_list>')
+                    '[--pfs] <path_to_data> <services_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -196,9 +196,9 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    suites = utils.parse_ciphersuites(args[1])
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_file()]
     
-    make_figs(args[0], suites, serv_set=servs, weight=weight)
+    make_figs(args[0], args[1], suites, serv_set=servs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

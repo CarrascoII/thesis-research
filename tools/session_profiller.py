@@ -22,7 +22,7 @@ def run_srv(input_size, n_tests, ciphersuite):
 
     return utils.check_endpoint_ret(ret, 'server', ciphersuite, stdout, stderr, settings.strlen)
 
-def exec_tls(filename, target, timeout, input_size, n_tests, weight):
+def exec_tls(filename, target, input_size, n_tests, weight):
     # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {filename}'.ljust(settings.strlen, '.'), end=' ', flush=True)    
@@ -36,20 +36,18 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
     
     print(f'ok\nGot {n_total} ciphersuites')
     print('\nRunning with options:')
-    print(f'    -Timeout: {timeout} sec\n    -Data size: {input_size}\n    -Number of tests: {n_tests}')
+    print(f'    -Data size: {input_size}' +
+        f'\n    -Number of tests: {n_tests}')
 
     # Step 2: Compile libs and programs
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
     print(f'\nPrepararing libraries and programs'.ljust(settings.strlen, '.'), end=' ', flush=True)
-
-    pool = ThreadPool(processes=1)
+    pool = ThreadPool(processes=2)
     async_result_make = pool.apply_async(utils.make_progs, (target,))
     make_ret = async_result_make.get()
     
     if make_ret != 0:
         sys.exit(2)
-    
-    pool = ThreadPool(processes=2)
 
     for suite in total_ciphersuites:
         print(f'\nStarting analysis for: {suite} ({current}/{n_total})')
@@ -59,7 +57,6 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
         print('    Starting server'.ljust(settings.strlen, '.'), end=' ', flush=True)
         async_result_srv = pool.apply_async(run_srv, (input_size, n_tests, suite))
         print('ok')
-        time.sleep(timeout)
 
         # Step 4: Start client in thread 2
         print('    Starting client'.ljust(settings.strlen, '.'), end=' ', flush=True)
@@ -80,6 +77,8 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
             print('\n    Data successfully obtained!!!')
             success_ciphersuites.append(suite)
 
+    pool.close()
+    pool.join()
     n_success = len(success_ciphersuites)
     n_not = len(not_ciphersuites)
     n_error = len(error_ciphersuites)
@@ -119,7 +118,7 @@ def exec_tls(filename, target, timeout, input_size, n_tests, weight):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hc:t:i:n:w:', ['help', 'compile=', 'timeout=', 'weight=', 'input_size=', 'n_tests='])
+        opts, args = getopt.getopt(argv, 'hc:i:n:w:', ['help', 'compile=', 'weight=', 'input_size=', 'n_tests='])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "session_profiller.py -h" for help')
@@ -134,24 +133,20 @@ def main(argv):
         sys.exit(2)
 
     target = 'session'
-    timeout = 2
     n_tests = '500'
     input_size = str(1024*1024)
     weight = 1.5
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('session_profiller.py [-c <compilation_target>] [-t <timeout>] [-w <filter_weight>] ' +
+            print('session_profiller.py [-c <compilation_target>] [-w <filter_weight>] ' +
                 '[-i <msglen>] [-n <n_tests>] <algorithms_list>')
-            print('session_profiller.py [--compile=<compilation_target>] [--timeout=<timeout>] [--weight=<filter_weight>] ' +
+            print('session_profiller.py [--compile=<compilation_target>] [--weight=<filter_weight>] ' +
                 '[--input_size=<msglen>] [--n_tests=<n_tests>] <algorithms_list>')
             sys.exit(0)
 
         elif opt in ('-c', '--compile'):
             target = arg
-
-        elif opt in ('-t', '--timeout'):
-            timeout = int(arg)
 
         elif opt in ('-i', '--input_size'):
             input_size = arg
@@ -164,7 +159,7 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    exec_tls(args[0], target, timeout, input_size, n_tests, weight)
+    exec_tls(args[0], target, input_size, n_tests, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

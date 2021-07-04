@@ -2469,7 +2469,7 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
     unsigned char *buf, *p;
 #if defined(MEASURE_KE)
     char buff[PATH_SIZE];
-    char path[PATH_SIZE] = FILE_PATH;
+    char path[PATH_SIZE];
 #endif
 
     MBEDTLS_SSL_DEBUG_MSG( 2, ( "=> write server hello" ) );
@@ -2621,6 +2621,8 @@ static int ssl_write_server_hello( mbedtls_ssl_context *ssl )
     sprintf(buff, "%d,0", ssl->starting_lvl);
 
     if(strcmp(buff, ssl->test_and_sec_lvl) == 0) {
+        strcpy(path, data_path);
+        mkdir(path, 0777);
         strcat(path, mbedtls_ssl_get_ciphersuite_name(ssl->session_negotiate->ciphersuite));
         mkdir(path, 0777);
 

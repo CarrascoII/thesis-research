@@ -16,7 +16,7 @@ class Worker(QtCore.QThread):
     def run(self):
         self.func(**self.kwargs)
 
-class MyTableWidgetItem(QtWidgets.QTableWidgetItem):
+class TableWidgetItem(QtWidgets.QTableWidgetItem):
     def __lt__(self, other):
         if isinstance(other, QtWidgets.QTableWidgetItem):
             my_value = self.data(QtCore.Qt.ItemDataRole.EditRole)
@@ -26,9 +26,9 @@ class MyTableWidgetItem(QtWidgets.QTableWidgetItem):
                 return float(my_value) < float(other_value)
             
             except ValueError:
-                return super(MyTableWidgetItem, self).__lt__(other)
+                return super(TableWidgetItem, self).__lt__(other)
 
-        return super(MyTableWidgetItem, self).__lt__(other)
+        return super(TableWidgetItem, self).__lt__(other)
 
 class TableWidget(QtWidgets.QTableWidget):
     def __init__(self, fname):
@@ -48,7 +48,7 @@ class TableWidget(QtWidgets.QTableWidget):
 
         for row in range(self.nRows):
             for col in range(self.nCols):
-                item = MyTableWidgetItem()
+                item = TableWidgetItem()
                 item.setData(QtCore.Qt.ItemDataRole.EditRole, QtCore.QVariant(self.content[row + 1][col]))
                 self.setItem(row, col, item)
 
@@ -108,8 +108,6 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
         val = self.listView.currentIndex()
 
         if val.row() != -1:
-            # print('comboBox: %s' % key)
-            # print('listView: %s' % val.data())
             self.servs[key].remove(val.data())
             self.updateList(key)
 
@@ -118,15 +116,11 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
         val = self.lineEdit.text().strip()
 
         if val != '':
-            # print('comboBox: %s' % key)
-            # print('listView: %s' % val)
             self.servs[key].append(val)
             self.lineEdit.setText('')
             self.updateList(key)
 
     def acceptedBox(self, button):
-        # print('pressed the %s button' % button.text())
-
         if button.text() == 'OK':
             self.save()
 
@@ -141,15 +135,11 @@ class ProfileDialog(QtWidgets.QDialog, Ui_DialogProfile):
         self.setupUi(self)
         anyInt = QtGui.QIntValidator(0, 1000)
         anyDouble = QtGui.QDoubleValidator(0.0, 5.0, 2)
-        sizeInt = QtGui.QIntValidator(32, 1048576)
-        secInt = QtGui.QIntValidator(0, 4)
+        sizeInt = QtGui.QIntValidator(256, 1048576)
 
-        self.lineTimeout.setValidator(anyInt)
         self.lineFilter.setValidator(anyDouble)
         self.lineMinSize.setValidator(sizeInt)
         self.lineMaxSize.setValidator(sizeInt)
-        self.lineMinLvl.setValidator(secInt)
-        self.lineMaxLvl.setValidator(secInt)
         self.lineTests.setValidator(anyInt)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -185,7 +175,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog.show()
 
             self.thread = Worker(func, **args)
-            self.thread.finished.connect(lambda: self.makeTable(fname, gen_table=args['gen_stats']))
+            self.thread.finished.connect(lambda: self.makeTable(fname))
             self.thread.start()
 
     def calcStatistics(self, args_func, prof_func):
@@ -216,15 +206,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             args['target'] = self.dialog.lineTarget.placeholderText().strip()
 
-        if self.dialog.lineTimeout.text().strip() != '':
-            args['timeout'] = int(self.dialog.lineTimeout.text())
+        if self.dialog.lineTests.text().strip() != '':
+            args['tls_opts']['n_tests'] = self.dialog.lineTests.text().strip()
         else:
-            args['timeout'] = int(self.dialog.lineTimeout.placeholderText())
+            args['tls_opts']['n_tests'] = self.dialog.lineTests.placeholderText().strip()
 
-        if self.dialog.lineFilter.text().strip() != '':
-            args['weight'] = float(self.dialog.lineFilter.text())
-        else:
-            args['weight'] = float(self.dialog.lineFilter.placeholderText())
+        args['tls_opts']['sec_lvl'] = self.dialog.comboMinLvl.currentText()
+        args['tls_opts']['max_sec_lvl'] = self.dialog.comboMaxLvl.currentText()
 
         if self.dialog.lineMinSize.text().strip() != '':
             args['tls_opts']['input_size'] = self.dialog.lineMinSize.text().strip()
@@ -235,26 +223,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             args['tls_opts']['max_input_size'] = self.dialog.lineMaxSize.text().strip()
         else:
             args['tls_opts']['max_input_size'] = self.dialog.lineMaxSize.placeholderText().strip()
-
-        if self.dialog.lineMinLvl.text().strip() != '':
-            args['tls_opts']['sec_lvl'] = self.dialog.lineMinLvl.text().strip()
-        else:
-            args['tls_opts']['sec_lvl'] = self.dialog.lineMinLvl.placeholderText().strip()
-
-        if self.dialog.lineMaxLvl.text().strip() != '':
-            args['tls_opts']['max_sec_lvl'] = self.dialog.lineMaxLvl.text().strip()
-        else:
-            args['tls_opts']['max_sec_lvl'] = self.dialog.lineMaxLvl.placeholderText().strip()
-
-        if self.dialog.lineTests.text().strip() != '':
-            args['tls_opts']['n_tests'] = self.dialog.lineTests.text().strip()
-        else:
-            args['tls_opts']['n_tests'] = self.dialog.lineTests.placeholderText().strip()
-
-        if self.dialog.checkBox.isChecked():
-            args['gen_stats'] = True
-        else:
-            args['gen_stats'] = False
 
         return args
 
@@ -302,10 +270,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return args
 
-    def makeTable(self, fname, gen_table=True):
+    def makeTable(self, fname):
         self.dialog.close()
 
-        if gen_table == True and fname.find('services') != -1:
+        if fname.find('services') != -1:
             files = [f.name for f in os.scandir('results/') if f.is_file()]
 
             for id, file in enumerate(files):
