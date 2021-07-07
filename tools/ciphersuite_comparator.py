@@ -81,7 +81,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
         print('ok')
 
         print(f'{spacing}  Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-        utils.write_alg_cmp_csv('statistics/cmp_'  + alg + '_', 'ciphersuite', alg, all_stats)
+        utils.write_alg_cmp_csv('statistics/', 'cmp', 'ciphersuite', alg, all_stats)
         print('ok')
         
         print(f'{spacing}  Generating figures'.ljust(strlen, '.'), end=' ', flush=True)

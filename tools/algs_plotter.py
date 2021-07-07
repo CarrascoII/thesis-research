@@ -50,7 +50,7 @@ def make_scatter(ylabel, operations, file_path, data):
 
 def make_alg_suite_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
     path = fname.replace('../docs/', 'statistics/')
-    stats_type = ['mean', 'stddev', 'median', 'mode']
+    stats_type = ['mean', 'median', 'mode', 'stddev']
     labels = settings.alg_labels[alg]
     data_ops_func = {
         'cipher': utils.parse_record_data,
@@ -72,23 +72,19 @@ def make_alg_suite_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
     print('ok')
     
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    
-    if not os.path.exists(path):
-        os.mkdir(path)
-
-    utils.write_alg_csv(path + alg + '_statistics.csv', labels, stats)
+    utils.write_alg_csv(path, alg, labels, stats)
     print('ok')
 
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
         make_scatter(hdr, labels, path + alg + '_', data)
-        make_plot(hdr, labels, path + alg + '_', stats, [stats_type[0]] + stats_type[2:])
-        make_errorbar(hdr, labels, path + alg + '_', stats, stats_type[:2])    
+        make_plot(hdr, labels, path + alg + '_', stats, stats_type[:-1])
+        make_errorbar(hdr, labels, path + alg + '_', stats, [stats_type[0], stats_type[-1]])
     
     print('ok')
 
-def make_figs(ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing='  '):
+def make_figs(path, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing='  '):
     if alg_set == []:
         print('\nError!! No algorithms were selected to analyse!!!')
         return None
@@ -101,7 +97,7 @@ def make_figs(ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing='  '):
         current +=1
         
         for alg in alg_set:
-            fname = '../docs/' + suite + '/'
+            fname = '../docs/' + path + '/' + suite + '/'
 
             print('\n' + alg.upper() + ' algorithm:')
             make_alg_suite_figs(fname, alg, weight=weight, strlen=strlen, spacing=spacing)
@@ -127,8 +123,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_plotter.py [-w <filter_weight>] [-c] [-m] [-k] <ciphersuite_list>')
-            print('algs_plotter.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <ciphersuite_list>')
+            print('algs_plotter.py [-w <filter_weight>] [-c] [-m] [-k] <path_to_data>')
+            print('algs_plotter.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <path_to_data>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -149,8 +145,9 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    ciphersuites = utils.parse_ciphersuites(args[0])
-    make_figs(ciphersuites, algs, weight=weight)
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
+    
+    make_figs(arg[0], suites, algs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

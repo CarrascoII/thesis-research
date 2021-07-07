@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>530</width>
-    <height>270</height>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>115</x>
-     <y>210</y>
+     <y>260</y>
      <width>300</width>
      <height>50</height>
     </rect>
@@ -40,7 +40,7 @@
      <x>10</x>
      <y>10</y>
      <width>510</width>
-     <height>200</height>
+     <height>250</height>
     </rect>
    </property>
    <property name="font">
@@ -95,7 +95,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>160</y>
+      <y>210</y>
       <width>260</width>
       <height>30</height>
      </rect>
@@ -113,7 +113,7 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>160</y>
+      <y>210</y>
       <width>90</width>
       <height>30</height>
      </rect>
@@ -132,7 +132,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>160</y>
+      <y>210</y>
       <width>90</width>
       <height>30</height>
      </rect>
@@ -151,7 +151,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>110</y>
+      <y>160</y>
       <width>200</width>
       <height>30</height>
      </rect>
@@ -169,7 +169,7 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>60</y>
+      <y>110</y>
       <width>190</width>
       <height>30</height>
      </rect>
@@ -188,7 +188,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>110</y>
       <width>160</width>
       <height>30</height>
      </rect>
@@ -206,7 +206,7 @@
     <property name="geometry">
      <rect>
       <x>310</x>
-      <y>110</y>
+      <y>160</y>
       <width>90</width>
       <height>30</height>
      </rect>
@@ -255,7 +255,7 @@
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>110</y>
+      <y>160</y>
       <width>90</width>
       <height>30</height>
      </rect>
@@ -303,11 +303,51 @@
      </property>
     </item>
    </widget>
+   <widget class="QLabel" name="path">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>300</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Write Data to Directory (in docs):</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="linePath">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>60</y>
+      <width>190</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="placeholderText">
+     <string/>
+    </property>
+    <property name="clearButtonEnabled">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
  </widget>
  <tabstops>
   <tabstop>lineTarget</tabstop>
+  <tabstop>linePath</tabstop>
   <tabstop>lineTests</tabstop>
+  <tabstop>comboMinLvl</tabstop>
+  <tabstop>comboMaxLvl</tabstop>
   <tabstop>lineMinSize</tabstop>
   <tabstop>lineMaxSize</tabstop>
  </tabstops>

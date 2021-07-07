@@ -435,7 +435,16 @@ def parse_session_data(filename):
         
     return data, headers
 
-def write_alg_csv(filename, labels, stats):
+def make_path(path):    
+    tmp = ''
+
+    for val in path.split('/'):
+        tmp += val + '/'
+
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+
+def write_alg_csv(path, alg, labels, stats):
     hdrs = list(stats.keys())
     keys = stats['keys']
     lines = []
@@ -457,10 +466,12 @@ def write_alg_csv(filename, labels, stats):
 
         lines.append(line[:-1] + '\n')
 
-    with open(filename, 'w') as fl:
+    make_path(path)
+
+    with open(path + alg + '.csv', 'w') as fl:
         fl.writelines(lines)
 
-def write_alg_cmp_csv(path, hdr, alg, all_stats):
+def write_alg_cmp_csv(path, sub, hdr, alg, all_stats):
     labels = settings.alg_labels[alg]
     lines = {}
     keys = []
@@ -491,8 +502,10 @@ def write_alg_cmp_csv(path, hdr, alg, all_stats):
 
                 lines[end].append(sub[:-1] + '\n')
 
+    make_path(path)
+
     for end, label in zip(lines, labels):
-        with open(path + label + '_statistics.csv', 'w') as fl:
+        with open(path + sub + '_' + alg + '_' + label + '.csv', 'w') as fl:
             fl.writelines(lines[end])
 
 def write_serv_cmp_csv(path, hdr, serv, all_stats):
@@ -527,8 +540,7 @@ def write_serv_cmp_csv(path, hdr, serv, all_stats):
 
                 lines[end].append(sub[:-1] + '\n')
 
-    if not os.path.exists(path):
-        os.mkdir(path)
+    make_path(path)
 
     for end, label in zip(lines, labels):
         with open(path + 'serv_' + serv + '_' + label + '.csv', 'w') as fl:
@@ -581,8 +593,7 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
             # print(f'\n{end}: {sub[:-1]}')
             lines[end].append(sub[:-1] + '\n')
 
-    if not os.path.exists(path):
-        os.mkdir(path)
+    make_path(path)
 
     for end, label in zip(lines, labels):
         with open(path + 'serv_all_' + label + '_' + stype + '.csv', 'w') as fl:
@@ -655,8 +666,7 @@ def write_config_values_csv(path, hdr, all_values):
 
                     lines[serv][end].append(new[:-1] + '\n')
 
-    if not os.path.exists(path):
-        os.mkdir(path)
+    make_path(path)
 
     for serv, label in zip(lines, labels):
         for end in labels[label]:
@@ -759,7 +769,7 @@ def stacked_custom_bar(y_list, ax, width=0.5, title=None, scale='linear', xlabel
     x = np.arange(len(xtickslabels))
     bottom = []
 
-    ax.bar(x, y_list['ALL'], width=width, label='Handshake', color='black')
+    ax.bar(x, y_list['ALL'], width=width, label='Handshake', color='lightgrey')
     
     while len(bottom) < len(y_list['ALL']):
         bottom.append(0)

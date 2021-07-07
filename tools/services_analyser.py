@@ -73,7 +73,7 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=4
             data, hdr = utils.parse_servs_data(filename, algs, servs)
             hs_data, hs_headers = utils.parse_handshake_data(filename, 'handshake')
 
-            if headers == hs_headers:
+            if hdr == hs_headers:
                 for sec_lvl in hs_data.keys():
                     data['ALL_' + sec_lvl] = hs_data[sec_lvl]
 
@@ -129,6 +129,13 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=4
             data = utils.filter_iqr(all_data[key], weight=weight)
             all_data[key] = data
         
+            # if key == 'DHE-PSK':
+            #     for b in all_data["DHE-PSK"]:
+            #         print(f'  {b}:')
+            #         for c in all_data["DHE-PSK"][b]:
+            #             print(f'    {c}: {all_data["DHE-PSK"][b][c]} : {len(all_data["DHE-PSK"][b][c])}')
+            #     print('')                
+
         print('ok')
 
     print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
@@ -224,8 +231,8 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_file()]
-    
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
+
     make_figs(args[0], suites, serv_set=servs, weight=weight)
 
 if __name__ == '__main__':

@@ -30,16 +30,16 @@ def run_srv(target, tls_opts):
 
     return utils.check_endpoint_ret(ret, 'server', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
 
-def make_figs(suites_file, success_ciphersuites, weight, alg_set=[]):
+def make_figs(path, suites_file, success_ciphersuites, weight, alg_set=[]):
     # Step 7.1: Create individual data plots
     print(f'\nCreating data graphs for all ciphersuites:')
-    algs_plotter.make_figs(success_ciphersuites, alg_set=alg_set, weight=weight, strlen=settings.strlen, spacing='  ')
+    algs_plotter.make_figs(path, success_ciphersuites, alg_set=alg_set, weight=weight, strlen=settings.strlen, spacing='  ')
 
     # Step 7.2: Create comparison plots
     print(f'\nCreating comparison graphs from all ciphersuites:')
-    algs_comparator.make_figs(suites_file, success_ciphersuites, alg_set=alg_set, weight=weight, strlen=settings.strlen, spacing='  ')
+    algs_comparator.make_figs(path, suites_file, success_ciphersuites, alg_set=alg_set, weight=weight, strlen=settings.strlen, spacing='  ')
 
-def exec_tls(suites_file, target, tls_opts, weight):
+def exec_tls(suites_file, target, tls_opts, alg_set, weight=False):
     # Step 1: Parse ciphersuite list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {suites_file}'.ljust(settings.strlen, '.'), end=' ', flush=True)    
@@ -58,7 +58,8 @@ def exec_tls(suites_file, target, tls_opts, weight):
         f'\n    -Starting input size: {tls_opts["input_size"]} bytes' +
         f'\n    -Ending input size: {tls_opts["max_input_size"]} bytes' +
         f'\n    -Number of tests: {tls_opts["n_tests"]}' +
-        f'\n    -Data\'s directory: {tls_opts["path"]}')
+        f'\n    -Data\'s directory: {tls_opts["path"]}'
+        f'\n    -Generate statistics: {"No" if weight == False else "Yes"}')
     print('\n--- STARTING DATA ACQUISITION PROCESS ---')
 
     # Step 3: Compile libs and programs
@@ -105,12 +106,14 @@ def exec_tls(suites_file, target, tls_opts, weight):
     n_not = len(not_ciphersuites)
     n_error = len(error_ciphersuites)
 
-    # Step 7: Analyse data and create plots for ciphersuites that ended successfully
-    print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
-    make_figs(suites_file, success_ciphersuites, weight, alg_set=settings.alg_types)
 
-    # Step 8: For each target, save successful ciphersuites in a file
-    # utils.write_ciphersuites(target, success_ciphersuites)
+    if weight != False:
+        # Step 7: Analyse data and create plots for ciphersuites that ended successfully
+        print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
+        make_figs(tls_opts['path'], suites_file, success_ciphersuites, weight, alg_set=alg_set)
+
+        # Step 8: For each target, save successful ciphersuites in a file
+        # utils.write_ciphersuites(target, success_ciphersuites)
 
     # Step 9: Report final status
     print('\n--- FINAL STATUS ---')
@@ -132,17 +135,23 @@ def exec_tls(suites_file, target, tls_opts, weight):
         for suite in error_ciphersuites:
             print(f'        {suite}')
 
-    print('\nPlots generation:')
-    print(f'    -Number of ciphersuites: {n_success}')
+    if weight != False:
+        print('\nPlots generation:')
+        print(f'    -Number of ciphersuites: {n_success}')
 
     print('\nData aquisition and analysis has ended.')
-    print('You can check all the csv data and png figure files in the docs/<ciphersuite_name>' +
-            ' and tools/statistics directories, respectively.')
+    print(f'You can check all the csv data in the docs/{tls_opts["path"]} directory', end='')
+    
+    if weight != False:
+        print(f' and the generated plots and statistics in the tools/statistics/{tls_opts["path"]} ' +
+            f'and tools/results/{tls_opts["path"]} directories, respectively', end='')
+
+    print('.')
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hc:w:i:s:n:p:', ['help', 'compile=', 'weight=', 'input_size=',
-                                                        'sec_lvl=', 'n_tests=', 'path='])
+        opts, args = getopt.getopt(argv, 'ht:w:i:s:n:d:cmk', ['help', 'target=', 'weight=', 'input_size=',
+                                'sec_lvl=', 'n_tests=', 'data_path=', 'cipher', 'md', 'ke'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "algs_profiller.py -h" for help')
@@ -161,19 +170,21 @@ def main(argv):
     tls_opts = {
         'sec_lvl': '0', 'max_sec_lvl': '4',
         'input_size': '256', 'max_input_size': '16384',
-        'n_tests': '500', 'path': str(time())
+        'n_tests': '20', 'path': str(time())
     }
+    alg_set = []
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_profiller.py [-c <compilation_target>] [-w <filter_weight>] ' +
-                '[-s <initial_lvl>,<final_lvl>] [-i <initial_size>,<final_size>] [-n <n_tests>] [-p <data_directory>] <services_list>')
-            print('algs_profiller.py [--compile=<compilation_target>] [--weight=<filter_weight>] ' +
+            print('algs_profiller.py [-t <compilation_target>] [-w <filter_weight>] ' +
+                '[-s <initial_lvl>,<final_lvl>] [-i <initial_size>,<final_size>] [-n <n_tests>] ' +
+                '[-d <data_directory>] [-c] [-m] [-k] <services_list>')
+            print('algs_profiller.py [--target=<compilation_target>] [--weight=<filter_weight>] ' +
                 '[--sec_lvl=<initial_lvl>,<final_lvl] [--input_size=<initial_size>,<final_size>] ' +
-                '[--n_tests=<n_tests>] [--path=<data_directory>] <services_list>')
+                '[--n_tests=<n_tests>] [--data_path=<data_directory>] [--cipher] [--md] [--ke] <services_list>')
             sys.exit(0)
 
-        elif opt in ('-c', '--compile'):
+        elif opt in ('-t', '--target'):
             target = arg
 
         elif opt in ('-w', '--weight'):
@@ -200,12 +211,21 @@ def main(argv):
         elif opt in ('-n', '--n_tests'):
             tls_opts['n_tests'] = arg
 
-        elif opt in ('-p', '--path'):
+        elif opt in ('-d', '--data_path'):
             tls_opts['path'] = arg
+
+        elif opt in ('-c', '--cipher'):
+            alg_set.append('cipher')
+
+        elif opt in ('-m', '--md'):
+            alg_set.append('md')
+
+        elif opt in ('-k', '--ke'):
+            alg_set.append('ke')
 
     system('clear')
     settings.init()
-    exec_tls(args[0], target, tls_opts, weight)
+    exec_tls(args[0], target, tls_opts, alg_set, weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

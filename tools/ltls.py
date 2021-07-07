@@ -1,5 +1,5 @@
-import os
-import sys
+import os, sys
+from time import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ui.main import Ui_MainWindow
 from ui.edit import Ui_DialogEdit
@@ -133,14 +133,13 @@ class ProfileDialog(QtWidgets.QDialog, Ui_DialogProfile):
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
-        anyInt = QtGui.QIntValidator(0, 1000)
-        anyDouble = QtGui.QDoubleValidator(0.0, 5.0, 2)
         sizeInt = QtGui.QIntValidator(256, 1048576)
+        anyInt = QtGui.QIntValidator(0, 1000)
 
-        self.lineFilter.setValidator(anyDouble)
+        self.lineTests.setValidator(anyInt)
         self.lineMinSize.setValidator(sizeInt)
         self.lineMaxSize.setValidator(sizeInt)
-        self.lineTests.setValidator(anyInt)
+        self.linePath.setPlaceholderText(str(time()))
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
@@ -150,23 +149,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.setupUi(self)
         self.buttonEditServs.clicked.connect(lambda: self.showEditDialog('config/services', 'Services:'))
-        self.buttonProfServs.clicked.connect(lambda: self.showProfileWindow(services_profiller.exec_tls, 'config/services'))
-        self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServComparatorArgs, services_profiller.make_figs))
+        self.buttonProfServs.clicked.connect(lambda: self.showProfileWindow(services_profiller.exec_tls, 'config/services', self.getServs))
+        self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServs, 'config/services', services_profiller.make_figs))
 
         self.buttonEditAlgs.clicked.connect(lambda: self.showEditDialog('config/algorithms', 'Category:'))
-        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiller.exec_tls, 'config/algorithms'))
-        self.buttonAnalAlgs.clicked.connect(lambda: self.calcStatistics(self.getAlgComparatorArgs, algs_profiller.make_figs))
+        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiller.exec_tls, 'config/algorithms', self.getArgs))
+        self.buttonAnalAlgs.clicked.connect(lambda: self.calcStatistics(self.getAlgs, 'config/algorithms', algs_profiller.make_figs))
 
     def showEditDialog(self, fname, label):
         self.dialog = EditDialog(fname, label)
         self.dialog.exec()
     
-    def showProfileWindow(self, func, fname):
+    def showProfileWindow(self, tls_func, fname, args_func):
         self.dialog = ProfileDialog()
         ret = self.dialog.exec()
 
         if ret == self.dialog.Accepted:
             args = self.getProfileArgs(fname)
+            args = args_func(args)
 
             self.dialog = QtWidgets.QMessageBox()
             self.dialog.setIcon(QtWidgets.QMessageBox.Information)
@@ -174,19 +174,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog.setWindowTitle('Profile Info')
             self.dialog.show()
 
-            self.thread = Worker(func, **args)
-            self.thread.finished.connect(lambda: self.makeTable(fname))
+            self.thread = Worker(tls_func, **args)
+            self.thread.finished.connect(lambda: self.makeTable(args['tls_opts']['path'], fname))
             self.thread.start()
 
-    def calcStatistics(self, args_func, prof_func):
-        file = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
+    def calcStatistics(self, args_func, file, prof_func):
+        path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
 
-        if file != '':
-            suites = [f.name for f in os.scandir(file) if f.is_dir()]
+        if path != '':
+            suites = [f.name for f in os.scandir(path) if f.is_dir()]
             weight, done = QtWidgets.QInputDialog.getDouble(self, 'Input Dialog', 'Enter filter weight:')
             
             if done:
-                args = args_func(suites, weight)
+                args = self.getComparatorArgs(path, file, suites, weight, args_func)
 
                 self.dialog = QtWidgets.QMessageBox()
                 self.dialog.setIcon(QtWidgets.QMessageBox.Information)
@@ -195,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.dialog.show()
 
                 self.thread = Worker(prof_func, **args)
-                self.thread.finished.connect(lambda: self.makeTable(args['suites_file']))
+                self.thread.finished.connect(lambda: self.makeTable(args['path'], args['suites_file']))
                 self.thread.start()
 
     def getProfileArgs(self, fname):
@@ -205,6 +205,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             args['target'] = self.dialog.lineTarget.text().strip()
         else:
             args['target'] = self.dialog.lineTarget.placeholderText().strip()
+
+        if self.dialog.linePath.text().strip() != '':
+            args['tls_opts']['path'] = self.dialog.linePath.text().strip()
+        else:
+            args['tls_opts']['path'] = self.dialog.linePath.placeholderText().strip()
 
         if self.dialog.lineTests.text().strip() != '':
             args['tls_opts']['n_tests'] = self.dialog.lineTests.text().strip()
@@ -226,13 +231,38 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return args
 
-    def getServComparatorArgs(self, suites, weight):
+    def getComparatorArgs(self, path, file, suites, weight, args_func):
         args = {
-            'suites_file': 'config/services',
+            'path': os.path.relpath(path, start='../docs/'),
+            'suites_file': file,
             'success_ciphersuites': suites,
-            'weight': weight,
-            'serv_set': []
+            'weight': weight
         }
+
+        return args_func(args)
+
+    # def getServComparatorArgs(self, abs_path, suites, weight):
+    #     args = {
+    #         'path': os.path.relpath(abs_path, start='../docs/'),
+    #         'suites_file': 'config/services',
+    #         'success_ciphersuites': suites,
+    #         'weight': weight
+    #     }
+
+    #     return self.getServs(args)
+
+    # def getAlgComparatorArgs(self, abs_path, suites, weight):
+    #     args = {
+    #         'path': os.path.relpath(abs_path, start='../docs/'),
+    #         'suites_file': 'config/algorithms',
+    #         'success_ciphersuites': suites,
+    #         'weight': weight
+    #     }
+
+    #     return self.getAlgs(args)
+
+    def getServs(self, args):
+        args['serv_set'] = []
 
         if self.checkConf.isChecked():
             args['serv_set'].append('conf')
@@ -251,13 +281,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return args
 
-    def getAlgComparatorArgs(self, suites, weight):
-        args = {
-            'suites_file': 'config/algorithms',
-            'success_ciphersuites': suites,
-            'weight': weight,
-            'alg_set': [] 
-        }
+    def getAlgs(self, args):
+        args['alg_set'] = []
 
         if self.checkCipher.isChecked():
             args['alg_set'].append('cipher')
@@ -270,27 +295,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return args
 
-    def makeTable(self, fname):
+    def makeTable(self, path, fname):
         self.dialog.close()
 
         if fname.find('services') != -1:
-            files = [f.name for f in os.scandir('results/') if f.is_file()]
+            files = [f.name for f in os.scandir('results/' + path) if f.is_file()]
 
             for id, file in enumerate(files):
                 if id == 0:
-                    self.dialog1 = TableWidget('results/' + file)
+                    self.dialog1 = TableWidget('results/' + path + '/' + file)
                     self.dialog1.show()
 
                 elif id == 1:
-                    self.dialog2 = TableWidget('results/' + file)
+                    self.dialog2 = TableWidget('results/' + path + '/' + file)
                     self.dialog2.show()
 
                 if id == 2:
-                    self.dialog3 = TableWidget('results/' + file)
+                    self.dialog3 = TableWidget('results/' + path + '/' + file)
                     self.dialog3.show()
 
                 if id == 3:
-                    self.dialog4 = TableWidget('results/' + file)
+                    self.dialog4 = TableWidget('results/' + path + '/' + file)
                     self.dialog4.show()
 
 if __name__ == '__main__':

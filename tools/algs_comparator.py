@@ -1,12 +1,11 @@
-import sys, getopt
-from os import system
+import os, sys, getopt
 from copy import deepcopy
 from matplotlib import use
 import matplotlib.pyplot as plt
 import utils, settings
 
 
-def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
+def make_alg_cmp_bar(path, alg, operations, ylabel, stats):
     labels = list(stats.keys())
     xtickslabels = deepcopy(stats[next(iter(stats))]['keys'])
     
@@ -14,21 +13,20 @@ def make_alg_cmp_bar(alg, operations, ylabel, stats, stats_type):
         for i, val in enumerate(xtickslabels):
             xtickslabels[i] = settings.sec_str[int(val)]
 
-    for stype in stats_type:
-        for op in operations:
-            fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-            y = []
-            yerr = []
-        
-            for key in stats:
-                y.append(stats[key][stype + '_' + ylabel + '_' + op])
-                yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
+    for op in operations:
+        fig, ax = plt.subplots(1, 1, figsize=(30, 10))
+        y = []
+        yerr = []
+    
+        for key in stats:
+            y.append(stats[key]['mean_' + ylabel + '_' + op])
+            yerr.append(stats[key]['stddev_' + ylabel + '_' + op])
 
-            ax = utils.multiple_custom_bar(y, yerr, ax, title=op + ' (' + stype + ')',
-                                        labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
-            utils.save_fig(fig, 'statistics/alg_' + alg + '_' + op + '_' + stype + '_' + ylabel + '.png')
+        ax = utils.multiple_custom_bar(y, yerr, ax, title=op + ' (mean)',
+                                    labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
+        utils.save_fig(fig, 'statistics/' + path + '/alg_' + alg + '_' + op + '_' + ylabel + '.png')
 
-def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacing=''):
+def make_alg_cmp_figs(path, grouped_suites, alg, labels, weight=1.5, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -45,8 +43,8 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
         all_data[key] = {}
 
         for suite in grouped_suites[key]:
-            path = '../docs/' + suite + '/'
-            data, hdr = data_ops_func[alg](path, alg)
+            fname = '../docs/' + path + '/' + suite + '/'
+            data, hdr = data_ops_func[alg](fname, alg)
 
             # print(f'\n{suite}:')
             # for a in data:
@@ -95,17 +93,17 @@ def make_alg_cmp_figs(grouped_suites, alg, labels, weight=1.5, strlen=40, spacin
     print('ok')
 
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
-    utils.write_alg_cmp_csv('statistics/alg_' + alg + '_', 'algorithm', alg, all_stats)
+    utils.write_alg_cmp_csv('statistics/' + path + '/', 'alg', 'algorithm', alg, all_stats)
     print('ok')
     
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_alg_cmp_bar(alg, labels, hdr, all_stats, stats_type[:-1])
+        make_alg_cmp_bar(path, alg, labels, hdr, all_stats)
 
     print('ok')
 
-def make_figs(algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing=''):
+def make_figs(path, algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing=''):
     if alg_set == []:
         print('\nError!! No algorithms were selected to analyse!!!')
         return None
@@ -117,7 +115,7 @@ def make_figs(algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spaci
     for alg in algs:
         print(f'{spacing}\n{alg.upper()} data:')
 
-        make_alg_cmp_figs(algs[alg], alg, labels[alg], weight=weight, strlen=strlen, spacing=spacing)
+        make_alg_cmp_figs(path, algs[alg], alg, labels[alg], weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
@@ -141,8 +139,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('algs_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <algorithm_list> <ciphersuite_list>')
-            print('algs_comparator.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <algorithm_list> <ciphersuite_list>')
+            print('algs_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <path_to_data> <algorithm_list>')
+            print('algs_comparator.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <path_to_data> <algorithm_list>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
@@ -161,11 +159,11 @@ def main(argv):
             print(f'Option "{opt}" does not exist')
             sys.exit(2)
 
-    system('clear')
+    os.system('clear')
     settings.init()
-    suites = utils.parse_ciphersuites(args[1])
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
     
-    make_figs(args[0], suites, weight=weight, alg_set=algs)
+    make_figs(args[0], args[1], suites, weight=weight, alg_set=algs)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

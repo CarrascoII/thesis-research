@@ -247,7 +247,7 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_file()]
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
     
     make_calcs(args[0], suites, serv_set=servs, weight=weight)
 
