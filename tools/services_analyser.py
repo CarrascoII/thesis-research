@@ -15,16 +15,16 @@ def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels):
         if val[1] not in sec_lvl:
             sec_lvl.append(val[1])
 
-    for alg in stats:
+    for key in stats:
         tmp = ''
 
-        for id in extra_labels[alg]:
+        for id in extra_labels[key]:
             tmp += id
 
         if tmp == '':
-            xtickslabels.append(alg)
+            xtickslabels.append(key)
         else:
-            xtickslabels.append(alg + '\n(' + tmp + ')')
+            xtickslabels.append(key + '\n(' + tmp + ')')
 
     for op in operations:
         for lvl in sec_lvl:
@@ -32,21 +32,21 @@ def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels):
                 fig, ax = plt.subplots(1, 1, figsize=(30, 10))
                 y = {}
 
-                for alg in stats:
-                    for key in stats[alg]['keys']:
+                for key in stats:
+                    for key in stats[key]['keys']:
                         elem = key.split('_')
 
                         if elem[0] not in y:
                             y[elem[0]] = []
 
-                for serv in y:
-                    for alg in stats:
+                for alg in y:
+                    for key in stats:
                         try:
-                            idx = stats[alg]['keys'].index(serv + '_' + lvl)
-                            y[serv].append(stats[alg]['mean_' + ylabel + '_' + op][idx])
+                            idx = stats[key]['keys'].index(alg + '_' + lvl)
+                            y[alg].append(stats[key]['mean_' + ylabel + '_' + op][idx])
                         
                         except ValueError:
-                            y[serv].append(0)
+                            y[alg].append(0)
 
                 # print('')
                 # for a in y:
@@ -56,7 +56,7 @@ def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels):
                                             xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
                 utils.save_fig(fig, 'statistics/' + path + '/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
-def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=2, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_labels = {}
@@ -105,7 +105,7 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=4
         if all_data[algs] == {}:
             all_data.pop(algs)
 
-    all_data = utils.sort_keys(all_data)
+    all_data = utils.sort_keys(all_data, settings.hs_alg_prio)
 
     # print('')
     # for a in all_data:
@@ -126,7 +126,7 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=4
         print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
-            data = utils.filter_iqr(all_data[key], weight=weight)
+            data = utils.filter_z_score(all_data[key], weight=weight)
             all_data[key] = data
         
             # if key == 'DHE-PSK':
@@ -176,7 +176,7 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=1.5, strlen=4
 
     print('ok')
 
-def make_figs(path, suites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+def make_figs(path, suites, serv_set=[], weight=2, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
@@ -205,7 +205,7 @@ def main(argv):
         sys.exit(2)
 
     servs = []
-    weight = 1.5
+    weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):

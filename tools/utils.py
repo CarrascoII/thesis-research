@@ -120,13 +120,6 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
     for serv in serv_set:
         serv_dict[serv] = {}
 
-        # if serv == 'auth':
-        #     serv_dict[serv]['RSA-SHA256'] = []
-        #     serv_dict[serv]['RSA-SHA512'] = []
-        #     serv_dict[serv]['ECDSA-SHA256'] = []
-        #     serv_dict[serv]['ECDSA-SHA512'] = []
-
-        # elif serv == 'ke':
         if serv == 'ke':
             serv_dict[serv]['SHA256'] = []
             serv_dict[serv]['SHA384'] = []
@@ -149,17 +142,11 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
         for suite in ciphersuites:
             for serv in alg_conv:
                 for alg in alg_conv[serv]:
-                    # if serv == 'AUTH' and alg != 'PSK' and suite.find('-' + alg + '-') != -1:
                     if suite.find('-' + alg + '-') != -1:
                         serv_dict[serv.lower()][alg].append(suite)
-                        # serv_dict[serv.lower()][alg + '-SHA256'].append(suite)
-                        # serv_dict[serv.lower()][alg + '-SHA512'].append(suite)
 
                     elif serv == 'INT' and suite.find(alg, len(suite) - len(alg)) != -1:
                         serv_dict[serv.lower()][alg].append(suite)
-
-                    # elif suite.find('-' + alg + '-') != -1:
-                    #     serv_dict[serv.lower()][alg].append(suite)
 
                 if serv == 'KE': 
                     if suite.find('SHA384', len(suite) - 6) != -1:
@@ -167,9 +154,6 @@ def parse_services_grouped(filename, serv_set, ciphersuites):
 
                     else:
                         serv_dict[serv.lower()]['SHA256'].append(suite)
-
-        # if 'auth' in serv_dict.keys():
-        #     serv_dict['auth'].pop('ECDSA')
 
         return serv_dict
 
@@ -280,15 +264,6 @@ def parse_servs_data(filename, algs, servs):
     else:
         alg_lst.append('SHA256')
 
-    # if 'RSA' in alg_lst:
-    #     alg_lst.append('RSA-SHA256')
-    #     alg_lst.append('RSA-SHA512')
-
-    # elif 'ECDSA' in alg_lst:
-    #     alg_lst.remove('ECDSA')
-    #     alg_lst.append('ECDSA-SHA256')
-    #     alg_lst.append('ECDSA-SHA512')
-
     for ext, endpoint in zip(['srv_', 'cli_'], ['server', 'client']):
         fname = filename + ext + 'ke_data.csv'
         sub_keys = []
@@ -361,17 +336,6 @@ def get_extra_labels(filename, algs, servs):
         alg_lst.append('SHA384')
     else:
         alg_lst.append('SHA256')
-
-    # if 'RSA' in alg_lst:
-    #     alg_lst.remove('RSA')
-    #     alg_lst.append('RSA-SHA256')
-    #     alg_lst.append('RSA-SHA512')
-
-    # elif 'ECDSA' in alg_lst:
-    #     alg_lst.remove('ECDSA')
-    #     alg_lst.append('ECDSA-SHA256')
-    #     alg_lst.append('ECDSA-SHA512')
-
 
     with open(fname, mode='r') as fl:
         csv_reader = DictReader(fl)
@@ -566,7 +530,6 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
         line += serv + ','
 
     for end in lines:
-        # print(f'\n{end}: {line[:-1]}')
         lines[end].append(line[:-1] + '\n')
 
     for alg in all_stats:
@@ -590,7 +553,6 @@ def write_suite_servs_cmp_csv(path, hdr, all_stats, stype):
                 except KeyError:
                     sub += '0,'
 
-            # print(f'\n{end}: {sub[:-1]}')
             lines[end].append(sub[:-1] + '\n')
 
     make_path(path)
@@ -711,19 +673,6 @@ def multiple_custom_plots(x, y_lst, ax, title=None, xlabel='msglen', ylabel=None
     ax.legend()
     return(ax)
 
-# def custom_bar(y_list, yerr, ax, title=None, xlabel='msglen', xtickslabels=None, ylabel=None):
-#     x_list = []
-
-#     for i in range(len(y_list)):
-#         x = (i + (1 - len(y_list)))
-#         x_list.append(x)
-#         ax.bar(x, y_list[i], alpha=0.7, align='center', yerr=yerr[i], capsize=5)
-
-#     ax.set_xticks(x_list)
-#     ax.set_xticklabels(xtickslabels, rotation=60, ha='right', va='top')
-#     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-#     return(ax)
-
 def grouped_custom_bar(y_list, yerr, ax, title=None, labels=[], label_lim=0, xlabel='msglen', xtickslabels=None, ylabel=None):
     x_list = [0]
 
@@ -805,62 +754,36 @@ def custom_scatter(x, y, ax, title=None, xlabel='msglen', xtickslabels=None, yla
     return(ax)
 
 ########## DATA ANALYSIS UTILS ##########
-def sort_keys(all_data):
+def sort_keys(all_data, sort_dict):
     srt_keys = []
     new_data = {}
 
     for key in all_data:
         srt_keys.append(key)
 
-    srt_keys.sort()
+    srt_keys.sort(key=lambda alg: sort_dict[alg])
 
     for key in srt_keys:
         new_data[key] = all_data[key]
 
     return new_data
 
-# def filter_z_score(data, weight=2):
-#     for key in data:
-#         sub_dict = data[key]
-        
-#         for sub in sub_dict:
-#             tmp = []
-#             mean = np.mean(sub_dict[sub])
-#             stdev = np.std(sub_dict[sub])
-
-#             for val in sub_dict[sub]:
-#                 stdw = weight * stdev
-
-#                 if val > (mean + stdw):
-#                     continue
-
-#                 elif val < (mean - stdw):
-#                     continue
-
-#                 else:
-#                     tmp.append(val)
-            
-#             data[key][sub] = tmp
-
-#     return data
-
-def filter_iqr(data, weight=1.5):
+def filter_z_score(data, weight=2):
     for key in data:
         sub_dict = data[key]
-
+        
         for sub in sub_dict:
             tmp = []
-            q1 = np.quantile(sub_dict[sub], 0.25)
-            q3 = np.quantile(sub_dict[sub], 0.75)
-            iqr = q3 - q1
+            mean = np.mean(sub_dict[sub])
+            stdev = np.std(sub_dict[sub])
 
             for val in sub_dict[sub]:
-                iqrw = weight * iqr
+                stdw = weight * stdev
 
-                if val > (q3 + iqrw):
+                if val > (mean + stdw):
                     continue
 
-                elif val < (q1 - iqrw):
+                elif val < (mean - stdw):
                     continue
 
                 else:
@@ -869,6 +792,32 @@ def filter_iqr(data, weight=1.5):
             data[key][sub] = tmp
 
     return data
+
+# def filter_iqr(data, weight=2):
+#     for key in data:
+#         sub_dict = data[key]
+
+#         for sub in sub_dict:
+#             tmp = []
+#             q1 = np.quantile(sub_dict[sub], 0.25)
+#             q3 = np.quantile(sub_dict[sub], 0.75)
+#             iqr = q3 - q1
+
+#             for val in sub_dict[sub]:
+#                 iqrw = weight * iqr
+
+#                 if val > (q3 + iqrw):
+#                     continue
+
+#                 elif val < (q1 - iqrw):
+#                     continue
+
+#                 else:
+#                     tmp.append(val)
+            
+#             data[key][sub] = tmp
+
+#     return data
 
 def calc_statistics(data, stats_type):
     stats = {'keys': list(data.keys())}

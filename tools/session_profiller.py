@@ -135,7 +135,7 @@ def main(argv):
     target = 'session'
     n_tests = '500'
     input_size = str(1024*1024)
-    weight = 1.5
+    weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):

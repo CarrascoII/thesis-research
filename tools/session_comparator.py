@@ -45,7 +45,7 @@ def make_session_cmp_bar_by_ke(ylabel, stats, labels, stats_type):
                                         xlabel='ciphersuites', xtickslabels=ke, ylabel=ylabel)
             utils.save_fig(fig, 'statistics/session_' + endpoints[i] + '_' + stype + '_' + ylabel + '.png')
 
-def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
+def make_figs(ciphersuites, weight=2, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -71,7 +71,7 @@ def make_figs(ciphersuites, weight=1.5, strlen=40, spacing=''):
         print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for suite in ciphersuites:
-            data = utils.filter_iqr(all_data[suite], weight=weight)
+            data = utils.filter_z_score(all_data[suite], weight=weight)
             all_data[suite] = data
         
         print('ok')
@@ -116,7 +116,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    weight = 1.5
+    weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):

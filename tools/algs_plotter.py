@@ -48,7 +48,7 @@ def make_scatter(ylabel, operations, file_path, data):
                                     xtickslabels=xtickslabels, ylabel=ylabel, kwargs=kwargs[i])
         utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
-def make_alg_suite_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
+def make_alg_suite_figs(fname, alg, weight=2, strlen=40, spacing=''):
     path = fname.replace('../docs/', 'statistics/')
     stats_type = ['mean', 'median', 'mode', 'stddev']
     labels = settings.alg_labels[alg]
@@ -64,7 +64,7 @@ def make_alg_suite_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
 
     if weight != 0:
         print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
-        data = utils.filter_iqr(data, weight=weight)
+        data = utils.filter_z_score(data, weight=weight)
         print('ok')
 
     print(f'{spacing}Calculating statistics'.ljust(strlen, '.'), end=' ', flush=True)
@@ -84,7 +84,7 @@ def make_alg_suite_figs(fname, alg, weight=1.5, strlen=40, spacing=''):
     
     print('ok')
 
-def make_figs(path, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing='  '):
+def make_figs(path, ciphersuites, alg_set=[], weight=2, strlen=40, spacing='  '):
     if alg_set == []:
         print('\nError!! No algorithms were selected to analyse!!!')
         return None
@@ -118,7 +118,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    weight = 1.5
+    weight = 2
     algs = []
 
     for opt, arg in opts:

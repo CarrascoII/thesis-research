@@ -26,7 +26,7 @@ def make_alg_cmp_bar(path, alg, operations, ylabel, stats):
                                     labels=labels, xtickslabels=xtickslabels, ylabel=ylabel)
         utils.save_fig(fig, 'statistics/' + path + '/alg_' + alg + '_' + op + '_' + ylabel + '.png')
 
-def make_alg_cmp_figs(path, grouped_suites, alg, labels, weight=1.5, strlen=40, spacing=''):
+def make_alg_cmp_figs(path, grouped_suites, alg, labels, weight=2, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -75,7 +75,7 @@ def make_alg_cmp_figs(path, grouped_suites, alg, labels, weight=1.5, strlen=40, 
         print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
-            data = utils.filter_iqr(all_data[key], weight=weight)
+            data = utils.filter_z_score(all_data[key], weight=weight)
             all_data[key] = data
         
         print('ok')
@@ -103,7 +103,7 @@ def make_alg_cmp_figs(path, grouped_suites, alg, labels, weight=1.5, strlen=40, 
 
     print('ok')
 
-def make_figs(path, algs_fname, ciphersuites, alg_set=[], weight=1.5, strlen=40, spacing=''):
+def make_figs(path, algs_fname, ciphersuites, alg_set=[], weight=2, strlen=40, spacing=''):
     if alg_set == []:
         print('\nError!! No algorithms were selected to analyse!!!')
         return None
@@ -133,7 +133,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    weight = 1.5
+    weight = 2
     suites = []
     algs = []
 

@@ -81,7 +81,7 @@ def sum_hs_vals(stats):
 
 #     return values
 
-def make_serv_calcs(path, ciphersuites, serv_set, weight=1.5, strlen=40, spacing=''):
+def make_serv_calcs(path, ciphersuites, serv_set, weight=2, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -143,7 +143,7 @@ def make_serv_calcs(path, ciphersuites, serv_set, weight=1.5, strlen=40, spacing
         
         for suite in all_data:
             for serv in all_data[suite]:
-                all_data[suite][serv] = utils.filter_iqr(all_data[suite][serv], weight=weight)
+                all_data[suite][serv] = utils.filter_z_score(all_data[suite][serv], weight=weight)
         
         print('ok')
 
@@ -190,7 +190,7 @@ def make_serv_calcs(path, ciphersuites, serv_set, weight=1.5, strlen=40, spacing
     utils.write_config_values_csv('results/' + path + '/', 'ciphersuite', all_stats)
     print('ok')
 
-def make_calcs(path, ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+def make_calcs(path, ciphersuites, serv_set=[], weight=2, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
@@ -214,7 +214,7 @@ def main(argv):
         sys.exit(2)
 
     servs = []
-    weight = 1.5
+    weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):

@@ -25,7 +25,7 @@ def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
 
         utils.save_fig(fig, 'statistics/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
-def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
+def make_cmp_figs(ciphersuites, algs, weight=2, strlen=40, spacing=''):
     all_data = {}
     all_headers = []
     data_ops_func = {
@@ -63,7 +63,7 @@ def make_cmp_figs(ciphersuites, algs, weight=1.5, strlen=40, spacing=''):
             print(f'{spacing}  Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
             
             for suite in ciphersuites:
-                data = utils.filter_iqr(all_data[suite], weight=weight)
+                data = utils.filter_z_score(all_data[suite], weight=weight)
                 all_data[suite] = data
 
             print('ok')
@@ -107,7 +107,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    weight = 1.5
+    weight = 2
     algs = []
 
     for opt, arg in opts:

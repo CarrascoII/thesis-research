@@ -26,7 +26,7 @@ def make_record_alg_cmp_bar(path, serv, operations, ylabel, stats):
                                     labels=labels, xtickslabels=xtickslabels, xlabel='security strength (in bits)', ylabel=ylabel)
         utils.save_fig(fig, 'statistics/' + path + '/serv_' + serv + '_' + op + '_' + ylabel + '.png')
 
-def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=1.5, strlen=40, spacing=''):
+def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=2, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_stats = {}
@@ -89,14 +89,14 @@ def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=1.5, strlen=40
     #             print(f'    {c}: {all_data[a][b][c]} : {len(all_data[a][b][c])}')
     #     print('')
 
-    all_data = utils.sort_keys(all_data)
+    all_data = utils.sort_keys(all_data, settings.hs_alg_prio)
     print('ok')
 
     if weight != 0:
         print(f'{spacing}Removing outliers from data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for key in all_data:
-            data = utils.filter_iqr(all_data[key], weight=weight)
+            data = utils.filter_z_score(all_data[key], weight=weight)
             all_data[key] = data
         
         print('ok')
@@ -126,7 +126,7 @@ def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=1.5, strlen=40
 
     print('ok')
 
-def make_figs(path, servs_fname, ciphersuites, serv_set=[], weight=1.5, strlen=40, spacing=''):
+def make_figs(path, servs_fname, ciphersuites, serv_set=[], weight=2, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
@@ -161,7 +161,7 @@ def main(argv):
         print('Too many arguments')
         sys.exit(2)
 
-    weight = 1.5
+    weight = 2
     suites = []
     servs = []
 

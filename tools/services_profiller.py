@@ -164,7 +164,7 @@ def main(argv):
         sys.exit(2)
 
     target = 'tls_algs'
-    weight = 1.5
+    weight = False
     tls_opts = {
         'sec_lvl': '0', 'max_sec_lvl': '4',
         'input_size': '256', 'max_input_size': '16384',
