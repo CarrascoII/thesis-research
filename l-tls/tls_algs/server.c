@@ -216,9 +216,9 @@ int main(int argc, char **argv) {
 #endif
 
     int ret, i,
-        input_size = MIN_INPUT_SIZE,
+        msg_size = MIN_INPUT_SIZE,
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-        max_input_size = MAX_INPUT_SIZE,
+        max_msg_size = MAX_INPUT_SIZE,
 #endif
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         starting_lvl,
@@ -275,6 +275,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     data_path = (char*) malloc(sizeof(char)*PATH_SIZE);
 #endif
 
+    // Step 1: Parse the user input
     for(i = 1; i < argc; i++) {
         p = argv[i];
 
@@ -326,21 +327,21 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 #endif
 		}
-        else if(strcmp(p, "input_size") == 0) {
-            input_size = atoi(q);
+        else if(strcmp(p, "msg_size") == 0) {
+            msg_size = atoi(q);
 
-            if(input_size < MIN_INPUT_SIZE || input_size > MAX_INPUT_SIZE) {
+            if(msg_size < MIN_INPUT_SIZE || msg_size > MAX_INPUT_SIZE) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Input size must be between %d and %d\n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif
                 return(1);
             }
         }
-        else if(strcmp(p, "max_input_size") == 0) {
+        else if(strcmp(p, "max_msg_size") == 0) {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-            max_input_size = atoi(q);
+            max_msg_size = atoi(q);
 
-            if(max_input_size < MIN_INPUT_SIZE || max_input_size > MAX_INPUT_SIZE) {
+            if(max_msg_size < MIN_INPUT_SIZE || max_msg_size > MAX_INPUT_SIZE) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf("Maximum input size must be between %d and %d\n", MIN_INPUT_SIZE, MAX_INPUT_SIZE);
 #endif
@@ -382,7 +383,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
         }
 #if defined(MBEDTLS_DEBUG_C)
-        else if(strcmp(p, "debug_level") == 0) {
+        else if(strcmp(p, "debug_lvl") == 0) {
             debug = atoi(q);
             
             if(debug < 0 || debug > 5) {
@@ -397,14 +398,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             printf(" ,sec_lvl, max_sec_lvl");
 #endif
-            printf(", input_size");
+            printf(", msg_size");
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-            printf(", max_input_size");
+            printf(", max_msg_size");
 #endif
 #if defined(MEASUREMENT_MEASURE_C)
             printf(", n_tests, path");
 #endif
-            printf(" and debug_level\n");
+            printf(" and debug_lvl\n");
             fflush(stdout);
 #endif /* MBEDTLS_DEBUG_C */
             return(1);
@@ -436,7 +437,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         sprintf(data_path, "%s", FILE_PATH);
         time(&rawtime);
         timeinfo = localtime(&rawtime);
-        sprintf(data_path, "%s%02d%02d%02d_%02d%02d/", FILE_PATH, timeinfo->tm_mday, timeinfo->tm_mon + 1,
+        sprintf(data_path, "%s%02d%02d%02d.%02d%02d/", FILE_PATH, timeinfo->tm_mday, timeinfo->tm_mon + 1,
                                         timeinfo->tm_year + 1900, timeinfo->tm_hour, timeinfo->tm_min);
     }
 #endif
@@ -445,7 +446,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     mbedtls_debug_set_threshold(debug);
 #endif
 
-    // Seed the RNG
+    // Step 2: Seed the RNG
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nSeeding the random number generator.......");
     fflush(stdout);
@@ -461,7 +462,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 
-    // Create and bind socket
+    // Step 3: Create and bind socket to pretended IP and port
     printf("\nBinding server to tcp/%s/%s......", SERVER_IP, SERVER_PORT);
     fflush(stdout);
 #endif
@@ -477,7 +478,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     printf(" ok");
 #endif
 
-    // Load CA certificates
+    // Step 4: Load CA certificate(s)
 #if (defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)) && \
     defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the ca certificate(s).............");
@@ -552,7 +553,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         fflush(stdout);
 #endif
 
-        // Load the required keys and certs
+    // Step 5: Load the required key(s) and certificate(s)
 #if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
 #if defined(USE_PSK_C)
         if((psk_info = psk_parse(test_psk, sizeof(test_psk))) == NULL) {
@@ -665,7 +666,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         printf(" ok");
 #endif
 
-        // Setup ssl session
+    // Step 6: Setup TLS session configurations
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nSetting up TLS session....................");
         fflush(stdout);
@@ -764,9 +765,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
         printf(" ok");
 #endif
 
+    // Step 7: Perform the TLS handshake multiple times
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         for(i = 0; i < n_tests; i++) {
-            // Reset the connection
+        // Step 7.1: Reset the session state
 #if defined(MBEDTLS_DEBUG_C)
             printf("\nResetting the connection..................");
 #endif
@@ -783,7 +785,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 #endif  /* MEASURE_KE || MEASURE_HANDSHAKE */
 
-            // Listen and accept client
+        // Step 7.2: Wait for and accept client connection
 #if defined(MBEDTLS_DEBUG_C)
             printf("\nWaiting for client to connect.............");
             fflush(stdout);
@@ -799,7 +801,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" ok");
 
-            // Handshake
+        // Step 7.3: Perform the handshake protocol
             printf("\nPerforming TLS handshake..................");
             fflush(stdout);
 #endif
@@ -824,7 +826,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             printf(" ok");
 #endif
 
-            // Verify client certificate
+        // Step 7.4: Verify client certificate, if using client auth
 #if defined(MUTUAL_AUTH)
 #if defined(MBEDTLS_DEBUG_C)
             printf("\nVerifying client certificate..............");
@@ -848,20 +850,21 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     }
 #endif
 
+    // Step 8: Perform the record protocol multiple times
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nPerforming TLS record:");
 #endif
 
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
-    for(; input_size <= max_input_size; input_size *= 2) {
+    for(; msg_size <= max_msg_size; msg_size *= 2) {
 #endif
-        request = (unsigned char*) malloc(input_size*sizeof(unsigned char));
-        response = (unsigned char*) malloc(input_size*sizeof(unsigned char));
+        request = (unsigned char*) malloc(msg_size*sizeof(unsigned char));
+        response = (unsigned char*) malloc(msg_size*sizeof(unsigned char));
 
-        // Generate the response
-        memset(response, 0, input_size);
+        // Step 8.1: Generate server response
+        memset(response, 0, msg_size);
 
-        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, response, input_size)) != 0) {
+        if((ret = mbedtls_ctr_drbg_random(&ctr_drbg, response, msg_size)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed\n ! mbedtls_ctr_drbg_random returned -0x%04x\n", -ret);
 #endif
@@ -871,14 +874,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
         for(i = 0; i < n_tests; i++) {
 #endif
-            // Receive request
+        // Step 8.2: Receive client request
 #if defined(MBEDTLS_DEBUG_C)
             printf("\n  > Read from client:");
             fflush(stdout);
 #endif
-            memset(request, 0, input_size);
+            memset(request, 0, msg_size);
 
-            if((ret = mbedtls_ssl_read(&tls, request, input_size)) < 0) {
+            if((ret = mbedtls_ssl_read(&tls, request, msg_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_ssl_read returned -0x%04x\n", -ret);
 #endif
@@ -888,16 +891,16 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" %d bytes\n", ret);
 #if defined(PRINT_MSG_HEX)
-            print_hex(request, input_size);
+            print_hex(request, msg_size);
 #endif
             fflush(stdout);
 
-            // Send response
+        // Step 8.3: Send server response
             printf("\n  < Write to client:");
             fflush(stdout);
 #endif /* MBEDTLS_DEBUG_C */
 
-            if((ret = mbedtls_ssl_write(&tls, response, input_size)) < 0) {
+            if((ret = mbedtls_ssl_write(&tls, response, msg_size)) < 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_ssl_write returned -0x%04x\n", -ret);
 #endif
@@ -907,7 +910,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" %d bytes\n", ret);
 #if defined(PRINT_MSG_HEX)
-            print_hex(response, input_size);
+            print_hex(response, msg_size);
 #endif
             fflush(stdout);
 #endif /* MBEDTLS_DEBUG_C */
@@ -921,7 +924,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     }
 #endif
 
-    // Close connection
+    // Step 9: Close the connection
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nClosing the connection....................");
 #endif
@@ -937,7 +940,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     printf(" ok");
 #endif
 
-    // Final connection status
+    // Step 10: Show final connection status
     printf("\n\nFinal status:");    
 #if !defined(MBEDTLS_DEBUG_C)
     if(ret == 0) {

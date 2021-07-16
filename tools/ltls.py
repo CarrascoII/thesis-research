@@ -220,14 +220,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         args['tls_opts']['max_sec_lvl'] = self.dialog.comboMaxLvl.currentText()
 
         if self.dialog.lineMinSize.text().strip() != '':
-            args['tls_opts']['input_size'] = self.dialog.lineMinSize.text().strip()
+            args['tls_opts']['msg_size'] = self.dialog.lineMinSize.text().strip()
         else:
-            args['tls_opts']['input_size'] = self.dialog.lineMinSize.placeholderText().strip()
+            args['tls_opts']['msg_size'] = self.dialog.lineMinSize.placeholderText().strip()
 
         if self.dialog.lineMaxSize.text().strip() != '':
-            args['tls_opts']['max_input_size'] = self.dialog.lineMaxSize.text().strip()
+            args['tls_opts']['max_msg_size'] = self.dialog.lineMaxSize.text().strip()
         else:
-            args['tls_opts']['max_input_size'] = self.dialog.lineMaxSize.placeholderText().strip()
+            args['tls_opts']['max_msg_size'] = self.dialog.lineMaxSize.placeholderText().strip()
 
         return args
 
