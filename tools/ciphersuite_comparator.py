@@ -25,7 +25,7 @@ def make_cmp_plot(alg, op, ylabel, all_stats, labels, hdrs):
 
         utils.save_fig(fig, 'statistics/cmp_' + alg + '_' + ylabel + '_' + hdr + '.png')
 
-def make_cmp_figs(ciphersuites, algs, weight=2, strlen=40, spacing=''):
+def make_cmp_figs(path, ciphersuites, algs, weight=2, strlen=40, spacing=''):
     all_data = {}
     all_headers = []
     data_ops_func = {
@@ -45,8 +45,8 @@ def make_cmp_figs(ciphersuites, algs, weight=2, strlen=40, spacing=''):
         print(f'{spacing}  Parsing data'.ljust(strlen, '.'), end=' ', flush=True)
         
         for suite in ciphersuites:
-            path = '../docs/' + suite + '/'
-            data, hdr = data_ops_func[alg](path, alg)
+            fname = '../docs/' + path + '/' + suite + '/'
+            data, hdr = data_ops_func[alg](fname, alg)
        
             all_data[suite] = data
             all_headers.append(hdr)
@@ -112,8 +112,8 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('ciphersuite_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <ciphersuite_list>')
-            print('ciphersuite_comparator.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <ciphersuite_list>')
+            print('ciphersuite_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <path_to_data>')
+            print('ciphersuite_comparator.py [--weight=<filter_weight>] [--cipher] [--md] [--ke] <path_to_data>')
             sys.exit(0)
 
         if opt in ('-w', '--weight'):
@@ -134,8 +134,9 @@ def main(argv):
 
     os.system('clear')
     settings.init()
-    ciphersuites = utils.parse_ciphersuites(args[0])
-    make_cmp_figs(ciphersuites, algs, weight=weight)
+    suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
+
+    make_cmp_figs(args[0], suites, algs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

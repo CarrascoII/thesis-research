@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 import utils, settings
 
 
-def make_errorbar(ylabel, operations, file_path, stats, types):
+def make_errorbar(ylabel, operations, file_path, stats, types, xlabel):
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     params = [{'color': 'red'}, {'color': 'blue'}]
 
     for i in range(len(axes)):
         axes[i] = utils.custom_errorbar(stats['keys'], stats[types[0] + '_' + ylabel + '_' + operations[i]],
                                     stats[types[1] + '_' + ylabel + '_' + operations[i]], axes[i], title=operations[i],
-                                    ylabel=ylabel, kwargs=params[i])
+                                    xlabel=xlabel, ylabel=ylabel, kwargs=params[i])
 
     utils.save_fig(fig, file_path + ylabel + '_deviation.png')
 
-def make_plot(ylabel, operations, file_path, stats, types):
+def make_plot(ylabel, operations, file_path, stats, types, xlabel):
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     params1 = {'color': 'red', 'linestyle': '-', 'label': operations[0]}
     params2 = {'color': 'blue', 'linestyle': '--', 'label': operations[1]}
@@ -24,11 +24,11 @@ def make_plot(ylabel, operations, file_path, stats, types):
     for ax, tp in zip(axes, types):
         ax = utils.custom_plots(stats['keys'], stats[tp + '_' + ylabel + '_' + operations[0]],
                             stats[tp + '_' + ylabel + '_' + operations[1]], ax,
-                            title=tp.capitalize(), ylabel=ylabel, kwargs1=params1, kwargs2=params2)
+                            title=tp.capitalize(), xlabel=xlabel, ylabel=ylabel, kwargs1=params1, kwargs2=params2)
 
     utils.save_fig(fig, file_path + ylabel + '_statistics.png')
 
-def make_scatter(ylabel, operations, file_path, data):
+def make_scatter(ylabel, operations, file_path, data, xlabel):
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     x = {}
     y = {}
@@ -45,7 +45,7 @@ def make_scatter(ylabel, operations, file_path, data):
         
     for i in range(len(axes)):
         axes[i] = utils.custom_scatter(x[operations[i]], y[operations[i]], axes[i], title=operations[i],
-                                    xtickslabels=xtickslabels, ylabel=ylabel, kwargs=kwargs[i])
+                                    xtickslabels=xtickslabels, xlabel=xlabel, ylabel=ylabel, kwargs=kwargs[i])
         utils.save_fig(fig, file_path + ylabel + '_distribution.png')
 
 def make_alg_suite_figs(fname, alg, weight=2, strlen=40, spacing=''):
@@ -56,6 +56,11 @@ def make_alg_suite_figs(fname, alg, weight=2, strlen=40, spacing=''):
         'cipher': utils.parse_record_data,
         'md': utils.parse_record_data,
         'ke': utils.parse_handshake_data
+    }
+    xlabels = {
+        'cipher': 'message size',
+        'md': 'message size',
+        'ke': 'security level'
     }
 
     print(f'{spacing}Parsing obtained data'.ljust(strlen, '.'), end=' ', flush=True)
@@ -78,9 +83,9 @@ def make_alg_suite_figs(fname, alg, weight=2, strlen=40, spacing=''):
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
 
     for hdr in headers:
-        make_scatter(hdr, labels, path + alg + '_', data)
-        make_plot(hdr, labels, path + alg + '_', stats, stats_type[:-1])
-        make_errorbar(hdr, labels, path + alg + '_', stats, [stats_type[0], stats_type[-1]])
+        make_scatter(hdr, labels, path + alg + '_', data, xlabels[alg])
+        make_plot(hdr, labels, path + alg + '_', stats, stats_type[:-1], xlabels[alg])
+        make_errorbar(hdr, labels, path + alg + '_', stats, [stats_type[0], stats_type[-1]], xlabels[alg])
     
     print('ok')
 
@@ -146,8 +151,8 @@ def main(argv):
     os.system('clear')
     settings.init()
     suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
-    
-    make_figs(arg[0], suites, algs, weight=weight)
+
+    make_figs(args[0], suites, alg_set=algs, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

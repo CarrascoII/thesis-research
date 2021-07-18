@@ -466,7 +466,7 @@ def write_alg_csv(path, alg, labels, stats):
     with open(path + alg + '.csv', 'w') as fl:
         fl.writelines(lines)
 
-def write_alg_cmp_csv(path, sub, hdr, alg, all_stats):
+def write_alg_cmp_csv(path, type, hdr, alg, all_stats):
     labels = settings.alg_labels[alg]
     lines = {}
     keys = []
@@ -500,7 +500,7 @@ def write_alg_cmp_csv(path, sub, hdr, alg, all_stats):
     make_path(path)
 
     for end, label in zip(lines, labels):
-        with open(path + sub + '_' + alg + '_' + label + '.csv', 'w') as fl:
+        with open(path + type + '_' + alg + '_' + label + '.csv', 'w') as fl:
             fl.writelines(lines[end])
 
 def write_serv_cmp_csv(path, hdr, serv, all_stats):
