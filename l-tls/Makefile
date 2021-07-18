@@ -87,6 +87,9 @@ progs: clean lib_mbedtls
 	$(MBEDTLS_PROGS_MAKE) CFLAGS="-I$(MY_AES_MODULE_DIR) $(PERSONAL_DIR)/$(MY_AES).o \
 									$(PERSONAL_DIR)/$(MY_AES_MODULE).o $(PERSONAL_DIR)/$(MY_SHA256).o"
 
+gen_certs: clean
+	$(TLS_ALGS_MAKE) progs
+
 ### MAKE TLS ALGS ###
 tls_algs_server:
 ifndef PAPI_DIR

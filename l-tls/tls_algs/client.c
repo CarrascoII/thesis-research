@@ -100,9 +100,9 @@ int main(int argc, char **argv) {
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg; // Deterministic Random Bit Generator using block ciphers in counter mode
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
-    mbedtls_x509_crt ca_cert;
+    mbedtls_x509_crt srv_cert;
 #endif
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_RSA_C)
     mbedtls_x509_crt rsa_cert;
     mbedtls_pk_context rsa_key;
@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
         , ca_cert_path[CERT_KEY_PATH_LEN]
 #endif
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_RSA_C)
         , rsa_path[CERT_KEY_PATH_LEN]
 #endif
@@ -314,10 +314,10 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
-    mbedtls_x509_crt_init(&ca_cert);
+    mbedtls_x509_crt_init(&srv_cert);
 #endif
 #if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_RSA_C)
     mbedtls_x509_crt_init(&rsa_cert);
     mbedtls_pk_init(&rsa_key);
@@ -326,7 +326,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     mbedtls_x509_crt_init(&ec_cert);
     mbedtls_pk_init(&ec_key);
 #endif
-#endif /* MUTUAL_AUTH */
+#endif /* CLIENT_AUTHENTICATION */
     mbedtls_ssl_config_init(&tls_conf);
 #endif
 
@@ -371,7 +371,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if !defined(MEASURE_KE) && !defined(MEASURE_HANDSHAKE)
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
     for(i = 0; mbedtls_test_cas[i] != NULL; i++) {
-        if((ret = mbedtls_x509_crt_parse(&ca_cert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
+        if((ret = mbedtls_x509_crt_parse(&srv_cert, (const unsigned char *) mbedtls_test_cas[i], mbedtls_test_cas_len[i])) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
             printf(" failed! mbedtls_x509_crt_parse_ca returned -0x%04x\n", -ret);
 #endif
@@ -383,9 +383,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     for(i = sec_lvl; i <= max_sec_lvl; i++) {
 #if defined(MBEDTLS_RSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL) {
-            sprintf(ca_cert_path, "%sca_rsa_%d.crt", CERTS_PATH, asm_key_sizes[i]);
+            sprintf(ca_cert_path, "%ssrv_rsa_%d.crt", CERTS_PATH, asm_key_sizes[i]);
 
-            if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
+            if((ret = mbedtls_x509_crt_parse_file(&srv_cert, ca_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_x509_crt_parse_file returned -0x%04x\n", -ret);
 #endif
@@ -396,9 +396,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 #if defined(MBEDTLS_ECDSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "ECDSA") != NULL) {
-            sprintf(ca_cert_path, "%sca_ec_%d.crt", CERTS_PATH, ecc_key_sizes[i]);
+            sprintf(ca_cert_path, "%ssrv_ec_%d.crt", CERTS_PATH, ecc_key_sizes[i]);
 
-            if((ret = mbedtls_x509_crt_parse_file(&ca_cert, ca_cert_path))) {
+            if((ret = mbedtls_x509_crt_parse_file(&srv_cert, ca_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_x509_crt_parse_file returned -0x%04x\n", -ret);
 #endif
@@ -418,7 +418,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     starting_lvl = sec_lvl;
 
     for(; sec_lvl <= max_sec_lvl; sec_lvl++) {
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_RSA_C)
         mbedtls_x509_crt_init(&rsa_cert);
         mbedtls_pk_init(&rsa_key);
@@ -434,7 +434,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif /* MEASURE_KE || MEASURE_HANDSHAKE */
 
     // Step 4: Load the required key(s) and certificate(s), if using client auth
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nLoading required certs and keys...........");
         fflush(stdout);
@@ -521,7 +521,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" ok");
 #endif
-#endif /* MUTUAL_AUTH */
+#endif /* CLIENT_AUTHENTICATION */
 
     // Step 5: Setup TLS session configurations
 #if defined(MBEDTLS_DEBUG_C)
@@ -571,14 +571,14 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL ||
             strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "ECDSA") != NULL) {
-            mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
+            mbedtls_ssl_conf_ca_chain(&tls_conf, &srv_cert, NULL);
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
             mbedtls_ssl_conf_cert_profile(&tls_conf, &mbedtls_x509_crt_profile_custom);
 #endif
         }
 #endif
 
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_RSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL) {
             if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
@@ -600,7 +600,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
             }
         }
 #endif
-#endif /* MUTUAL_AUTH */
+#endif /* CLIENT_AUTHENTICATION */
 
 #if defined(MBEDTLS_ECP_C) && \
     (defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE))
@@ -831,7 +831,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 exit:
     mbedtls_ssl_config_free(&tls_conf);
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_ECDSA_C)
     mbedtls_pk_free(&ec_key);
     mbedtls_x509_crt_free(&ec_cert);
@@ -840,9 +840,9 @@ exit:
     mbedtls_pk_free(&rsa_key);
     mbedtls_x509_crt_free(&rsa_cert);
 #endif
-#endif /* MUTUAL_AUTH */
+#endif /* CLIENT_AUTHENTICATION */
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
-    mbedtls_x509_crt_free(&ca_cert);
+    mbedtls_x509_crt_free(&srv_cert);
 #endif
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);

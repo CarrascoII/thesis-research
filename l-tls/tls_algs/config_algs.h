@@ -53,7 +53,7 @@ int hs_is_count;
 #endif
 
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
-#define CERTS_PATH                  "../l-tls/examples/"
+#define CERTS_PATH                  "../l-tls/material/"
 #define CERT_KEY_PATH_LEN           40
 #define BUFFER_LEN                  15
 
@@ -91,7 +91,8 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED)
+    defined(MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED)
 #define MBEDTLS_RSA_C
 
 #define MBEDTLS_PKCS1_V15
@@ -531,7 +532,7 @@ static const unsigned char test_psk[] = {
 };
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-#define MUTUAL_AUTH
+#define CLIENT_AUTHENTICATION
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

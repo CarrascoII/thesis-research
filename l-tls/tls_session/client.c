@@ -64,11 +64,11 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt ca_cert;
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(CLIENT_AUTHENTICATION)
     mbedtls_x509_crt rsa_cert;
     mbedtls_pk_context rsa_key;
 #endif
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(CLIENT_AUTHENTICATION)
     mbedtls_x509_crt ec_cert;
     mbedtls_pk_context ec_key;
 #endif
@@ -178,11 +178,11 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
     mbedtls_x509_crt_init(&ca_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(CLIENT_AUTHENTICATION)
     mbedtls_x509_crt_init(&rsa_cert);
     mbedtls_pk_init(&rsa_key);
 #endif
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(CLIENT_AUTHENTICATION)
     mbedtls_x509_crt_init(&ec_cert);
     mbedtls_pk_init(&ec_key);
 #endif
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
 #endif
 
     // Load client RSA certificate and key
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the client rsa certificate........");
     fflush(stdout);
@@ -254,10 +254,10 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* MBEDTLS_RSA_C && MUTUAL_AUTH */
+#endif /* MBEDTLS_RSA_C && CLIENT_AUTHENTICATION */
 
     // Load client EC certificate and key
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_DEBUG_C)
     printf("\nLoading the client ec certificate.........");
     fflush(stdout);
@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
 #if defined(MBEDTLS_DEBUG_C)
     printf(" ok");
 #endif
-#endif /* MBEDTLS_ECDSA_C && MUTUAL_AUTH */
+#endif /* MBEDTLS_ECDSA_C && CLIENT_AUTHENTICATION */
 
     // Seed the RNG
 #if defined(MBEDTLS_DEBUG_C)
@@ -342,7 +342,7 @@ int main(int argc, char **argv) {
     mbedtls_ssl_conf_ca_chain(&tls_conf, &ca_cert, NULL);
 #endif
 
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(CLIENT_AUTHENTICATION)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
@@ -351,7 +351,7 @@ int main(int argc, char **argv) {
     }
 #endif
 
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(CLIENT_AUTHENTICATION)
     if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
         printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
@@ -607,11 +607,11 @@ exit:
     mbedtls_ssl_config_free(&tls_conf);
     mbedtls_entropy_free(&entropy);
     mbedtls_ctr_drbg_free(&ctr_drbg);
-#if defined(MBEDTLS_ECDSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_ECDSA_C) && defined(CLIENT_AUTHENTICATION)
     mbedtls_pk_free(&ec_key);
     mbedtls_x509_crt_free(&ec_cert);
 #endif
-#if defined(MBEDTLS_RSA_C) && defined(MUTUAL_AUTH)
+#if defined(MBEDTLS_RSA_C) && defined(CLIENT_AUTHENTICATION)
     mbedtls_pk_free(&rsa_key);
     mbedtls_x509_crt_free(&rsa_cert);
 #endif

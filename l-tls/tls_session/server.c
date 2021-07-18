@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
 #endif
     };
 #endif
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
     uint32_t flags;
 #endif
 
@@ -438,7 +438,7 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
     mbedtls_ssl_conf_authmode(&tls_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
 #endif
     mbedtls_ssl_conf_rng(&tls_conf, mbedtls_ctr_drbg_random, &ctr_drbg);
@@ -573,7 +573,7 @@ int main(int argc, char **argv) {
 #endif
 
         // Verify client certificate
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
 #if defined(MBEDTLS_DEBUG_C)
         printf("\nVerifying client certificate..............");
 #endif
@@ -696,7 +696,7 @@ int main(int argc, char **argv) {
     printf("\n  -Max record size:           %d", mbedtls_ssl_get_max_out_record_payload(&tls));
     printf("\n  -Max record expansion:      %d", mbedtls_ssl_get_record_expansion(&tls));
 
-#if defined(MUTUAL_AUTH)
+#if defined(CLIENT_AUTHENTICATION)
     if((ret = mbedtls_ssl_get_verify_result(&tls)) == 0) {
         char crt_buf[512];
         mbedtls_x509_crt_info(crt_buf, sizeof(crt_buf), "       ", mbedtls_ssl_get_peer_cert(&tls));

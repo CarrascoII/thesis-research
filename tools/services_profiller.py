@@ -55,7 +55,7 @@ def exec_tls(suites_file, target, tls_opts, serv_set, weight=False):
     print(f'    -Starting security level: {tls_opts["sec_lvl"]}' +
         f'\n    -Ending security level: {tls_opts["max_sec_lvl"]}' +
         f'\n    -Starting input size: {tls_opts["msg_size"]} bytes' +
-        f'\n    -Ending input size: {tls_opts["max_input_size"]} bytes' +
+        f'\n    -Ending input size: {tls_opts["max_msg_size"]} bytes' +
         f'\n    -Number of tests: {tls_opts["n_tests"]}' +
         f'\n    -Data\'s directory: {tls_opts["path"]}'
         f'\n    -Generate statistics: {"No" if weight == False else "Yes"}')
@@ -167,7 +167,7 @@ def main(argv):
     weight = False
     tls_opts = {
         'sec_lvl': '0', 'max_sec_lvl': '4',
-        'msg_size': '256', 'max_input_size': '16384',
+        'msg_size': '256', 'max_msg_size': '16384',
         'n_tests': '20', 'path': str(time())
     }
     serv_set = []
@@ -204,7 +204,7 @@ def main(argv):
                 tls_opts['msg_size'] = lst[0]
 
             if lst[1] != '':
-                tls_opts['max_input_size'] = lst[1]
+                tls_opts['max_msg_size'] = lst[1]
 
         elif opt in ('-n', '--n_tests'):
             tls_opts['n_tests'] = arg

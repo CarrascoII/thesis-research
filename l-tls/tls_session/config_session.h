@@ -420,7 +420,7 @@
 #define MAX_INPUT_SIZE                  2*1024*1024
 #define N_TESTS                         10000
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-// #define MUTUAL_AUTH
+// #define CLIENT_AUTHENTICATION
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1
