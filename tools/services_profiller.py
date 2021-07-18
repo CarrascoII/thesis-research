@@ -30,15 +30,19 @@ def run_srv(target, tls_opts):
 
     return utils.check_endpoint_ret(ret, 'server', tls_opts['ciphersuite'], stdout, stderr, settings.strlen)
 
-def make_figs(path, suites_file, success_ciphersuites, weight, serv_set=[]):
+def make_figs(path, suites_file, success_ciphersuites, weight, handshake=False, serv_set=[]):
     print('\nCreating comparison graphs from all ciphersuites:')
-    services_comparator.make_figs(path, suites_file, success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
-    services_analyser.make_figs(path, success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
+    services_comparator.make_figs(path, suites_file, success_ciphersuites, serv_set=serv_set,
+                                weight=weight, strlen=settings.strlen, spacing='  ')
+
+    tmp = [serv for serv in serv_set if serv in settings.ke_operations_per_service.keys()]
+    services_analyser.make_figs(path, success_ciphersuites, serv_set=tmp,
+                            handshake=handshake, weight=weight, strlen=settings.strlen, spacing='  ')
 
     print('\nFinding best configuration:')
     services_calculator.make_calcs(path, success_ciphersuites, serv_set=serv_set, weight=weight, strlen=settings.strlen, spacing='  ')
 
-def exec_tls(suites_file, target, tls_opts, serv_set, weight=False):
+def exec_tls(suites_file, target, tls_opts, serv_set, handshake=False, weight=False):
     # Step 1: Parse service list
     print('--- STARTING CIPHERSUITE SELECTION PROCESS ---')
     print(f'\nParsing ciphersuites from {suites_file}'.ljust(settings.strlen, '.'), end=' ', flush=True)    
@@ -108,7 +112,7 @@ def exec_tls(suites_file, target, tls_opts, serv_set, weight=False):
     if weight != False:
         # Step 6: Analyse data and create comparison plots for all ciphersuites that ended successfully
         print('\n--- STARTING DATA PLOTS GENERATION PROCESS ---')
-        make_figs(tls_opts['path'], suites_file, success_ciphersuites, weight, serv_set=serv_set)
+        make_figs(tls_opts['path'], suites_file, success_ciphersuites, weight, handshake=handshake, serv_set=serv_set)
 
         # Step 7: For each target, save successful ciphersuites in a file
         # utils.write_ciphersuites('services', success_ciphersuites)
@@ -148,8 +152,8 @@ def exec_tls(suites_file, target, tls_opts, serv_set, weight=False):
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'ht:w:m:s:n:d:ciakp', ['help', 'target=', 'weight=',
-                                'message_size=', 'sec_lvl=', 'n_tests=', 'data_path=', 'conf', 'int', 'auth', 'ke', 'pfs'])
+        opts, args = getopt.getopt(argv, 'ht:w:m:s:n:d:Hciakp', ['help', 'target=', 'weight=', 'message_size=',
+                                'sec_lvl=', 'n_tests=', 'data_path=', 'handshake', 'conf', 'int', 'auth', 'ke', 'pfs'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "services_profiller.py -h" for help')
@@ -170,16 +174,17 @@ def main(argv):
         'msg_size': '256', 'max_msg_size': '16384',
         'n_tests': '20', 'path': str(time())
     }
+    handshake = False
     serv_set = []
     
     for opt, arg in opts:
         if opt in ('-h', '--help'):
             print('services_profiller.py [-t <compilation_target>] [-w <filter_weight>] ' +
                 '[-s <initial_lvl>,<final_lvl>] [-m <initial_size>,<final_size>] [-n <n_tests>] ' +
-                '[-d <data_directory>] [-c] [-i] [-a] [-k] [-p] <services_list>')
+                '[-d <data_directory>] [-H] [-c] [-i] [-a] [-k] [-p] <services_list>')
             print('services_profiller.py [--target=<compilation_target>] [--weight=<filter_weight>]  ' +
-                '[--sec_lvl=<initial_lvl>,<final_lvl] [--message_size=<initial_size>,<final_size>] ' +
-                '[--n_tests=<n_tests>] [--data_path=<data_directory>] [--conf] [--int] [--auth] [--ke] [--pfs] <services_list>')
+                '[--sec_lvl=<initial_lvl>,<final_lvl] [--message_size=<initial_size>,<final_size>] [--n_tests=<n_tests>] ' +
+                '[--data_path=<data_directory>] [--handshake] [--conf] [--int] [--auth] [--ke] [--pfs] <services_list>')
             sys.exit(0)
 
         elif opt in ('-t', '--target'):
@@ -212,6 +217,9 @@ def main(argv):
         elif opt in ('-d', '--data_path'):
             tls_opts['path'] = arg
 
+        elif opt in ('-H', '--handshake'):
+            handshake = True
+
         elif opt in ('-c', '--conf'):
             serv_set.append('conf')
 
@@ -229,7 +237,7 @@ def main(argv):
 
     system('clear')
     settings.init()
-    exec_tls(args[0], target, tls_opts, serv_set, weight=weight)
+    exec_tls(args[0], target, tls_opts, serv_set, handshake=handshake, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

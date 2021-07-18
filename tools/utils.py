@@ -12,8 +12,17 @@ def parse_ciphersuites(filename):
     with open(filename, 'r') as fl:
         return [line.strip() for line in fl.readlines()]
 
-def group_ciphersuites(suites):
+def group_ciphersuites(suites, serv_set):
     groups = {}
+    tmp = []
+    rem = []
+
+    for serv in serv_set:
+        for alg in settings.ke_operations_per_service[serv]:
+            if alg not in tmp:
+                tmp.append(alg)
+
+    # print(f'{tmp}')
 
     for suite in suites:
         alg = suite[4:suite.find('-WITH')]
@@ -22,6 +31,28 @@ def group_ciphersuites(suites):
             groups[alg] = []
         
         groups[alg].append(suite)
+
+    # print(f'before: {list(groups.keys())}')
+
+    for key in groups:
+        keep = False
+        algs = key.split('-')
+
+        for alg in algs:
+            # if alg not in tmp:
+            #     rem.append(key)
+            if alg in tmp:
+                keep = True
+                keep = True
+                break
+
+        if keep == False:
+            rem.append(key)
+
+    for key in rem:
+        groups.pop(key)
+
+    # print(f'after:  {list(groups.keys())}')
 
     return groups
 
@@ -714,13 +745,15 @@ def multiple_custom_bar(y_list, yerr, ax, width=0.5, title=None, labels=[], xlab
 
     return(ax)
 
-def stacked_custom_bar(y_list, ax, width=0.5, title=None, scale='linear', xlabel='msglen', xtickslabels=None, ylabel=None):
+def stacked_custom_bar(y_list, ax, handshake=False, width=0.5, title=None, scale='linear', xlabel='msglen', xtickslabels=None, ylabel=None):
     x = np.arange(len(xtickslabels))
     bottom = []
+    size = len(y_list[list(y_list.keys())[0]])
 
-    ax.bar(x, y_list['ALL'], width=width, label='Handshake', color='lightgrey')
+    if handshake:
+        ax.bar(x, y_list['ALL'], width=width, label='Handshake', color='lightgrey')
     
-    while len(bottom) < len(y_list['ALL']):
+    while len(bottom) < size:
         bottom.append(0)
 
     for alg in settings.ke_operations:

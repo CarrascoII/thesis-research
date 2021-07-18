@@ -279,6 +279,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.checkPfs.isChecked():
             args['serv_set'].append('pfs')
 
+        reply = QtWidgets.QMessageBox().question(self, 'Handshake Data',
+                        'Do you want to include the total handshake time in the analysis?',
+                        QtWidgets.QMessageBox().Yes | QtWidgets.QMessageBox().No)
+
+        if reply == QtWidgets.QMessageBox().Yes:
+            args['handshake'] = True
+        
+        else:
+            args['handshake'] = False
+
         return args
 
     def getAlgs(self, args):

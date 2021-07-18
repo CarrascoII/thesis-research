@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import utils, settings
 
 
-def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels):
+def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels, handshake=False):
     xtickslabels = []
     sec_lvl = []
     scale_type = ['linear', 'log']
@@ -28,35 +28,37 @@ def make_record_alg_cmp_bar(path, operations, ylabel, stats, extra_labels):
 
     for op in operations:
         for lvl in sec_lvl:
+            y = {}
+
+            for key in stats:
+                for key in stats[key]['keys']:
+                    elem = key.split('_')
+
+                    if elem[0] not in y:
+                        y[elem[0]] = []
+            
+            for alg in y:
+                for key in stats:
+                    try:
+                        idx = stats[key]['keys'].index(alg + '_' + lvl)
+                        y[alg].append(stats[key]['mean_' + ylabel + '_' + op][idx])
+                    
+                    except (ValueError, KeyError):
+                        y[alg].append(0)
+
+            # print('')
+            # for a in y:
+            #     print(f'{a}: {y[a]} : {len(y[a])}')
+
             for scale in scale_type:
                 fig, ax = plt.subplots(1, 1, figsize=(30, 10))
-                y = {}
 
-                for key in stats:
-                    for key in stats[key]['keys']:
-                        elem = key.split('_')
-
-                        if elem[0] not in y:
-                            y[elem[0]] = []
-
-                for alg in y:
-                    for key in stats:
-                        try:
-                            idx = stats[key]['keys'].index(alg + '_' + lvl)
-                            y[alg].append(stats[key]['mean_' + ylabel + '_' + op][idx])
-                        
-                        except ValueError:
-                            y[alg].append(0)
-
-                # print('')
-                # for a in y:
-                #     print(f'{a}: {y[a]} : {len(y[a])}')
-
-                ax = utils.stacked_custom_bar(y, ax, title=op + ' (mean)', scale=scale,
+                ax = utils.stacked_custom_bar(y, ax, handshake=handshake, title=op + ' (mean)', scale=scale,
                                             xlabel='algorithms', xtickslabels=xtickslabels, ylabel=ylabel)
-                utils.save_fig(fig, 'statistics/' + path + '/serv_all_' + op + '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
+                utils.save_fig(fig, 'statistics/' + path + '/serv_all_' + op +
+                                            '_' + settings.sec_str[int(lvl)] + '_' + ylabel + '_' + scale + '.png')
 
-def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=2, strlen=40, spacing=''):
+def make_serv_cmp_figs(path, grouped_suites, labels, servs, handshake=False, weight=2, strlen=40, spacing=''):
     all_data = {}
     headers = []
     all_labels = {}
@@ -71,11 +73,13 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=2, strlen=40,
         for suite in grouped_suites[algs]:
             filename = '../docs/' + path + '/' + suite + '/'
             data, hdr = utils.parse_servs_data(filename, algs, servs)
-            hs_data, hs_headers = utils.parse_handshake_data(filename, 'handshake')
 
-            if hdr == hs_headers:
-                for sec_lvl in hs_data.keys():
-                    data['ALL_' + sec_lvl] = hs_data[sec_lvl]
+            if handshake:
+                hs_data, hs_headers = utils.parse_handshake_data(filename, 'handshake')
+
+                if hdr == hs_headers:
+                    for sec_lvl in hs_data.keys():
+                        data['ALL_' + sec_lvl] = hs_data[sec_lvl]
 
             # print(f'\n{suite} ({algs}):')
             # for a in data:
@@ -172,25 +176,25 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, weight=2, strlen=40,
     print(f'{spacing}Generating figures'.ljust(strlen, '.'), end=' ', flush=True)
     
     for hdr in headers:
-        make_record_alg_cmp_bar(path, labels, hdr, all_stats, all_labels)
+        make_record_alg_cmp_bar(path, labels, hdr, all_stats, all_labels, handshake=handshake)
 
     print('ok')
 
-def make_figs(path, suites, serv_set=[], weight=2, strlen=40, spacing=''):
+def make_figs(path, suites, serv_set=[], handshake=False, weight=2, strlen=40, spacing=''):
     if serv_set == []:
         print('\nError!! No services were selected to analyse!!!')
         return None
 
     use('Agg')
-    grouped_suites = utils.group_ciphersuites(suites)
+    grouped_suites = utils.group_ciphersuites(suites, serv_set)
     labels = settings.serv_labels['ke']
 
     print(f'\nSERVICES data:')
-    make_serv_cmp_figs(path, grouped_suites, labels, serv_set, weight=weight, strlen=strlen, spacing=spacing)
+    make_serv_cmp_figs(path, grouped_suites, labels, serv_set, handshake=handshake, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
     try:
-        opts, args = getopt.getopt(argv, 'hw:akp', ['help', 'weight=', 'auth', 'ke', 'pfs'])
+        opts, args = getopt.getopt(argv, 'hw:Hakp', ['help', 'weight=', 'handshake', 'auth', 'ke', 'pfs'])
 
     except getopt.GetoptError:
         print('One of the options does not exit.\nUse: "services_analysers.py -h" for help')
@@ -205,16 +209,20 @@ def main(argv):
         sys.exit(2)
 
     servs = []
+    handshake = False
     weight = 2
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('services_analyser.py [-w <filter_weight>] [-a] [-k] [-p] <path_to_data>')
-            print('services_analyser.py [--weight=<filter_weight>] [--auth] [--ke] [--pfs] <path_to_data>')
+            print('services_analyser.py [-w <filter_weight>] [-H] [-a] [-k] [-p] <path_to_data>')
+            print('services_analyser.py [--weight=<filter_weight>] [--handshake] [--auth] [--ke] [--pfs] <path_to_data>')
             sys.exit(0)
 
         elif opt in ('-w', '--weight'):
             weight = float(arg)
+
+        elif opt in ('-H', '--handshake'):
+            handshake = True
 
         elif opt in ('-a', '--auth'):
             servs.append('auth')
@@ -233,7 +241,7 @@ def main(argv):
     settings.init()
     suites = [f.name for f in os.scandir('../docs/' + args[0]) if f.is_dir()]
 
-    make_figs(args[0], suites, serv_set=servs, weight=weight)
+    make_figs(args[0], suites, serv_set=servs, handshake=handshake, weight=weight)
 
 if __name__ == '__main__':
    main(sys.argv[1:])

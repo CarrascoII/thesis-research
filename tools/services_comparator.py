@@ -48,7 +48,6 @@ def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=2, strlen=40, 
 
         for suite in grouped_suites[key]:
             data_ops_params['filename'] = '../docs/' + path + '/' + suite + '/'
-
             data, hdr = data_ops_func[serv](**data_ops_params)
 
             if data == {}:
@@ -89,7 +88,7 @@ def make_serv_cmp_figs(path, grouped_suites, serv, labels, weight=2, strlen=40, 
     #             print(f'    {c}: {all_data[a][b][c]} : {len(all_data[a][b][c])}')
     #     print('')
 
-    all_data = utils.sort_keys(all_data, settings.hs_alg_prio)
+    # all_data = utils.sort_keys(all_data, settings.hs_alg_prio)
     print('ok')
 
     if weight != 0:
