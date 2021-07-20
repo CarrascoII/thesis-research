@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from ui.main import Ui_MainWindow
 from ui.edit import Ui_DialogEdit
 from ui.profile import Ui_DialogProfile
-import settings, services_profiller, algs_profiller
+import settings, services_profiler, algs_profiler
 
 
 class Worker(QtCore.QThread):
@@ -149,12 +149,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.setupUi(self)
         self.buttonEditServs.clicked.connect(lambda: self.showEditDialog('config/services', 'Services:'))
-        self.buttonProfServs.clicked.connect(lambda: self.showProfileWindow(services_profiller.exec_tls, 'config/services', self.getServs))
-        self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServs, 'config/services', services_profiller.make_figs))
+        self.buttonProfServs.clicked.connect(lambda: self.showProfileWindow(services_profiler.exec_tls, 'config/services', self.getServs))
+        self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServs, 'config/services', services_profiler.make_figs))
 
         self.buttonEditAlgs.clicked.connect(lambda: self.showEditDialog('config/algorithms', 'Category:'))
-        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiller.exec_tls, 'config/algorithms', self.getArgs))
-        self.buttonAnalAlgs.clicked.connect(lambda: self.calcStatistics(self.getAlgs, 'config/algorithms', algs_profiller.make_figs))
+        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiler.exec_tls, 'config/algorithms', self.getArgs))
+        self.buttonAnalAlgs.clicked.connect(lambda: self.calcStatistics(self.getAlgs, 'config/algorithms', algs_profiler.make_figs))
 
     def showEditDialog(self, fname, label):
         self.dialog = EditDialog(fname, label)

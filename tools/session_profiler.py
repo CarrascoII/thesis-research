@@ -121,7 +121,7 @@ def main(argv):
         opts, args = getopt.getopt(argv, 'hc:i:n:w:', ['help', 'compile=', 'weight=', 'input_size=', 'n_tests='])
 
     except getopt.GetoptError:
-        print('One of the options does not exit.\nUse: "session_profiller.py -h" for help')
+        print('One of the options does not exit.\nUse: "session_profiler.py -h" for help')
         sys.exit(2)
 
     if not args and not opts:
@@ -139,9 +139,9 @@ def main(argv):
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print('session_profiller.py [-c <compilation_target>] [-w <filter_weight>] ' +
+            print('session_profiler.py [-c <compilation_target>] [-w <filter_weight>] ' +
                 '[-i <msglen>] [-n <n_tests>] <algorithms_list>')
-            print('session_profiller.py [--compile=<compilation_target>] [--weight=<filter_weight>] ' +
+            print('session_profiler.py [--compile=<compilation_target>] [--weight=<filter_weight>] ' +
                 '[--input_size=<msglen>] [--n_tests=<n_tests>] <algorithms_list>')
             sys.exit(0)
 
