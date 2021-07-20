@@ -86,6 +86,8 @@ def make_serv_calcs(path, ciphersuites, serv_set, weight=2, strlen=40, spacing='
     headers = []
     all_stats = {}
     stats_type = ['mean']
+    hs_serv = [serv for serv in serv_set if serv in settings.hs_servs]
+    rec_serv = [serv for serv in serv_set if serv in settings.rec_servs]
 
     for suite in ciphersuites:
         all_data[suite] = {}
@@ -115,9 +117,9 @@ def make_serv_calcs(path, ciphersuites, serv_set, weight=2, strlen=40, spacing='
                 print(f'error\n{spacing}Data has different headers. Cannot be compared!!!\n{spacing}Details: {headers} != {hdr}\n')
                 return None
 
-        if any(serv in serv_set for serv in ['auth', 'ke', 'pfs']):
+        if hs_serv != []:
             algs = suite[4:suite.find('-WITH-')]
-            all_data[suite]['hs'], hdr = utils.parse_servs_data(filename, algs, ['auth', 'ke', 'pfs'])
+            all_data[suite]['hs'], hdr = utils.parse_servs_data(filename, algs, hs_serv)
             
             if headers == []:
                 headers = hdr
@@ -161,12 +163,10 @@ def make_serv_calcs(path, ciphersuites, serv_set, weight=2, strlen=40, spacing='
             all_stats[suite][serv] = stats
 
     for suite in all_stats:
-        rec_servs = [serv for serv in list(all_stats[suite].keys()) if serv in ['conf', 'int']]
+        if rec_serv != []:
+            all_stats[suite]['rec'] = sum_rec_vals(all_stats[suite], rec_serv)
 
-        if rec_servs != []:
-            all_stats[suite]['rec'] = sum_rec_vals(all_stats[suite], rec_servs)
-
-            for serv in rec_servs:
+            for serv in rec_serv:
                 all_stats[suite].pop(serv)
 
         if 'hs' in list(all_stats[suite].keys()):

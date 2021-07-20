@@ -646,24 +646,34 @@ def write_config_values_csv(path, hdr, all_values):
         for end in lines[serv]:
             lines[serv][end].append(line[:-1] + '\n')
 
+    # print('')
     for serv in keys:
+        # print(f'{serv}:')
         for suite in all_values:
+            # print(f'  {suite}:')
             for end in labels[serv]:
+                # print(f'    {end}:')
                 line = suite + ','
 
                 for id in range(len(all_values[suite][serv]['keys'])):
+                    # print(f'      {id}:')
                     new = line + all_values[suite][serv]['keys'][id] + ','
 
                     for key in keys[serv]:
-                        new += str(all_values[suite][serv][key + '_' + end][id]) + ','
+                        try:
+                            # print(f'        {key}: {all_values[suite][serv][key + "_" + end][id]}')
+                            new += str(all_values[suite][serv][key + '_' + end][id]) + ','
+                        
+                        except KeyError:
+                            new += '0,'
 
                     lines[serv][end].append(new[:-1] + '\n')
 
     make_path(path)
 
-    for serv, label in zip(lines, labels):
-        for end in labels[label]:
-            with open(path + 'serv_config_' + label + '_' + end + '.csv', 'w') as fl:
+    for serv in lines:
+        for end in labels[serv]:
+            with open(path + 'serv_config_' + serv + '_' + end + '.csv', 'w') as fl:
                 fl.writelines(lines[serv][end])
 
 def get_ke_algs(ciphersuites):

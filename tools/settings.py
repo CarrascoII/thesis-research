@@ -27,6 +27,9 @@ def init():
     global hs_servs
     hs_servs = ['auth', 'ke', 'pfs']
 
+    global rec_servs
+    rec_servs = ['conf', 'int']
+
     global serv_fullname
     serv_fullname = {
         'conf': 'Confidentiality',
