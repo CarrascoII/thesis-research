@@ -122,7 +122,7 @@
      <string/>
     </property>
     <property name="placeholderText">
-     <string>256</string>
+     <string>32</string>
     </property>
     <property name="clearButtonEnabled">
      <bool>true</bool>
@@ -141,7 +141,7 @@
      <string/>
     </property>
     <property name="placeholderText">
-     <string>1048576</string>
+     <string>16384</string>
     </property>
     <property name="clearButtonEnabled">
      <bool>true</bool>

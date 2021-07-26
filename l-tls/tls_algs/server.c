@@ -248,17 +248,19 @@ int main(int argc, char **argv) {
 #endif
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
     char out_buf[BUFFER_LEN]
-#if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C)
-        , ca_cert_path[CERT_KEY_PATH_LEN]
-#endif
 #if defined(MBEDTLS_RSA_C)
         , rsa_path[CERT_KEY_PATH_LEN]
 #endif
 #if defined(MBEDTLS_ECDSA_C)
         , ec_path[CERT_KEY_PATH_LEN]
 #endif
+#if defined(CLIENT_AUTHENTICATION) && \
+    (defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECDSA_C))
+        , cli_cert_path[CERT_KEY_PATH_LEN]
+#endif
     ;
 
+#if defined(CLIENT_AUTHENTICATION)
 const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     /* Only SHA-2 hashes */
     MBEDTLS_X509_ID_FLAG( MBEDTLS_MD_SHA224 ) |
@@ -269,6 +271,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     0xFFFFFFF,  /* Any curve      */
     1024        /* Min RSA keylen */
 };
+#endif
 #endif /* MEASURE_KE || MEASURE_HANDSHAKE */
 
 #if defined(MEASUREMENT_MEASURE_C)
@@ -501,9 +504,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
     for(i = sec_lvl; i <= max_sec_lvl; i++) {
 #if defined(MBEDTLS_RSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL) {
-            sprintf(ca_cert_path, "%scli_rsa_%d.crt", CERTS_PATH, asm_key_sizes[i]);
+            sprintf(cli_cert_path, "%scli_rsa_%d.crt", CERTS_PATH, asm_key_sizes[i]);
 
-            if((ret = mbedtls_x509_crt_parse_file(&cli_cert, ca_cert_path))) {
+            if((ret = mbedtls_x509_crt_parse_file(&cli_cert, cli_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_x509_crt_parse_file returned -0x%04x\n", -ret);
 #endif
@@ -514,9 +517,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 
 #if defined(MBEDTLS_ECDSA_C)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "ECDSA") != NULL) {
-            sprintf(ca_cert_path, "%scli_ec_%d.crt", CERTS_PATH, ecc_key_sizes[i]);
+            sprintf(cli_cert_path, "%scli_ec_%d.crt", CERTS_PATH, ecc_key_sizes[i]);
 
-            if((ret = mbedtls_x509_crt_parse_file(&cli_cert, ca_cert_path))) {
+            if((ret = mbedtls_x509_crt_parse_file(&cli_cert, cli_cert_path))) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_x509_crt_parse_file returned -0x%04x\n", -ret);
 #endif
@@ -713,25 +716,33 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #endif
 
 #if defined(MBEDTLS_RSA_C)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "RSA") != NULL) {
+#endif
             if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &rsa_cert, &rsa_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
 #endif
                 goto exit;
             }
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         }
+#endif
 #endif
 
 #if defined(MBEDTLS_ECDSA_C)
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         if(strstr(mbedtls_ssl_get_ciphersuite_name(suite_id), "ECDSA") != NULL) {
+#endif
             if((ret = mbedtls_ssl_conf_own_cert(&tls_conf, &ec_cert, &ec_key)) != 0) {
 #if defined(MBEDTLS_DEBUG_C)
                 printf(" failed! mbedtls_ssl_conf_own_cert returned -0x%04x\n", -ret);
 #endif
                 goto exit;
             }
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
         }
+#endif
 #endif
 
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
