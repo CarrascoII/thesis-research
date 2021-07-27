@@ -15,7 +15,8 @@ print:
 
 aes:
 	echo "  gcc   aes"
-	gcc $(ALL_CFLAGS) $(CONFIG) -c aes/aes_alt.c -o aes/aes_alt.o
+	gcc $(ALL_CFLAGS) -maes -msse4 $(CONFIG) -c aes/aes_alt.c -o aes/aes_alt.o
+	# gcc $(ALL_CFLAGS) -O0 -msse2 -msse -march=native -maes $(CONFIG) -c aes/aes_alt.c -o aes/aes_alt.o
 
 aes_module:
 	echo "  gcc   aes_module"

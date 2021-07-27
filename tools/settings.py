@@ -30,6 +30,13 @@ def init():
     global rec_servs
     rec_servs = ['conf', 'int']
 
+    global alg_fullname
+    alg_fullname = {
+        'cipher': 'Encryption',
+        'md': 'Message Digest',
+        'ke': 'Key Exchange'
+    }
+
     global serv_fullname
     serv_fullname = {
         'conf': 'Confidentiality',

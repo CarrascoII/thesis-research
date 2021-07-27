@@ -7,10 +7,10 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
-#define MEASURE_KE
-#define MEASURE_HANDSHAKE
+#define MEASURE_CIPHER
+#define MEASURE_MD
+// #define MEASURE_KE
+// #define MEASURE_HANDSHAKE
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
@@ -107,13 +107,12 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
     defined(MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED)
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECP_C
-#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
-#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
+
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
-#endif
-#define MBEDTLS_ECP_DP_SECP256R1_ENABLED    /* srv/cli curve */
-#define MBEDTLS_ECP_DP_SECP384R1_ENABLED    /* ca curve */
+#define MBEDTLS_ECP_DP_SECP384R1_ENABLED
+#define MBEDTLS_ECP_DP_SECP256R1_ENABLED
+#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
+#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED) || \
@@ -218,13 +217,13 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 /**
  *  Options to reduce footprint
  */
+#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
+#define MBEDTLS_MPI_MAX_SIZE            1920     /**< Maximum number of bytes for usable MPIs. */
+#endif
 #if defined(MEASURE_CIPHER) || defined(MEASURE_MD)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MAX_INPUT_SIZE
 #elif defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MBEDTLS_CTR_DRBG_MAX_REQUEST    MBEDTLS_MPI_MAX_SIZE
-#endif
-#if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
-#define MBEDTLS_MPI_MAX_SIZE            1920     /**< Maximum number of bytes for usable MPIs. */
 #endif
 
 /**
@@ -514,13 +513,13 @@ static const int ecc_key_sizes[5] = {192, 224, 256, 384, 521};          /* in bi
 #define SERVER_IP                       "localhost"
 #define SERVER_PORT                     "8080"
 #define MIN_INPUT_SIZE                  32
-#define MAX_INPUT_SIZE                  1048576         /* 1 GB */
+#define MAX_INPUT_SIZE                  16384         /* 16 KB */
 #if defined(MEASURE_KE) || defined(MEASURE_HANDSHAKE)
 #define MIN_SEC_LVL                     0
 #define MAX_SEC_LVL                     4
 #endif
 #if defined(MEASUREMENT_MEASURE_C)
-#define N_TESTS                         20000
+#define N_TESTS                         20
 #endif
 #if defined(USE_PSK_C)
 #define CLI_ID                          "Client_identity"
@@ -532,7 +531,7 @@ static const unsigned char test_psk[] = {
 };
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-#define CLIENT_AUTHENTICATION
+// #define CLIENT_AUTHENTICATION
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

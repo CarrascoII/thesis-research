@@ -1,7 +1,7 @@
 import sys, getopt
 import subprocess
 from os import system
-from time import time
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
 import algs_comparator, algs_plotter, utils, settings
 
@@ -169,8 +169,8 @@ def main(argv):
     weight = False
     tls_opts = {
         'sec_lvl': '0', 'max_sec_lvl': '4',
-        'msg_size': '256', 'max_msg_size': '16384',
-        'n_tests': '20', 'path': str(time())
+        'msg_size': '32', 'max_msg_size': '16384',
+        'n_tests': '20', 'path': datetime.now().strftime('%d%m%Y.%H%M')
     }
     alg_set = []
 

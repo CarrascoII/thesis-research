@@ -1,5 +1,5 @@
 import os, sys
-from time import time
+from datetime import datetime
 from PyQt5 import QtCore, QtGui, QtWidgets
 from ui.main import Ui_MainWindow
 from ui.edit import Ui_DialogEdit
@@ -70,6 +70,21 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
         self.comboBox.currentTextChanged.connect(self.updateList)
         self.populate()
 
+    def get_key(self, val):
+        conv = {}
+
+        if self.label.text() == "Service:":
+            conv = settings.serv_fullname
+
+        elif self.label.text() == "Category:":
+            conv = settings.alg_fullname
+
+        for key, value in conv.items():
+            if val == value:
+                return key.upper()
+        
+        return None
+
     def load(self, filename):
         self.servs = {}
         
@@ -77,6 +92,12 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
             for line in fl.readlines():
                 line = line.split(',')
 
+                if self.label.text() == "Service:":
+                    line[0] = settings.serv_fullname[line[0].lower()]
+
+                elif self.label.text() == "Category:":
+                    line[0] = settings.alg_fullname[line[0].lower()]
+        
                 if line[0] not in self.servs:
                     self.servs[line[0]] = []
 
@@ -85,7 +106,7 @@ class EditDialog(QtWidgets.QDialog, Ui_DialogEdit):
     def save(self):
         with open(self.file, 'w') as fl:
             for key in self.servs:
-                fl.writelines([f'{key}, {val}\n' for val in self.servs[key]])
+                fl.writelines([f'{self.get_key(key)}, {val}\n' for val in self.servs[key]])
 
     def updateList(self, value):
         model = QtGui.QStandardItemModel()
@@ -139,7 +160,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_DialogProfile):
         self.lineTests.setValidator(anyInt)
         self.lineMinSize.setValidator(sizeInt)
         self.lineMaxSize.setValidator(sizeInt)
-        self.linePath.setPlaceholderText(str(time()))
+        self.linePath.setPlaceholderText(datetime.now().strftime('%d%m%Y.%H%M'))
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
@@ -148,7 +169,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
         self.setupUi(self)
-        self.buttonEditServs.clicked.connect(lambda: self.showEditDialog('config/services', 'Services:'))
+        self.buttonEditServs.clicked.connect(lambda: self.showEditDialog('config/services', 'Service:'))
         self.buttonProfServs.clicked.connect(lambda: self.showProfileWindow(services_profiler.exec_tls, 'config/services', self.getServs))
         self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServs, 'config/services', services_profiler.make_figs))
 
