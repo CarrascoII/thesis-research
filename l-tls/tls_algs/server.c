@@ -360,9 +360,9 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_custom = {
 #if defined(MEASUREMENT_MEASURE_C)
             n_tests = atoi(q);
 
-            if(n_tests < 1 || n_tests > N_TESTS) {
+            if(n_tests < 1) {
 #if defined(MBEDTLS_DEBUG_C)
-                printf("Number of tests must be between 1 and %d\n", N_TESTS);
+                printf("Number of tests must be bigger than 1\n");
 #endif
                 return(1);
             }

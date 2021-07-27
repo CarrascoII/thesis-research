@@ -7,10 +7,10 @@
 #include "measurement/config.h"
 
 #if defined(MEASUREMENT_MEASURE_C)
-// #define MEASURE_CIPHER
-// #define MEASURE_MD
-#define MEASURE_KE
-#define MEASURE_HANDSHAKE
+#define MEASURE_CIPHER
+#define MEASURE_MD
+// #define MEASURE_KE
+// #define MEASURE_HANDSHAKE
 #endif
 
 #if defined(MEASUREMENT_MEASURE_C)
@@ -531,7 +531,7 @@ static const unsigned char test_psk[] = {
 };
 #endif
 #if defined(MBEDTLS_RSA_C) || defined(MBEDTLS_ECP_C)
-#define CLIENT_AUTHENTICATION
+// #define CLIENT_AUTHENTICATION
 #endif
 #if defined(MBEDTLS_DEBUG_C)
 #define DEBUG_LEVEL                     1

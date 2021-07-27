@@ -181,6 +181,7 @@ int mbedtls_aes_setkey_enc( mbedtls_aes_context *ctx, const unsigned char *key,
 
 #if defined(NEW_AES_SETKEY_ENC_ALT)
 int aes_setkey_enc_og(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
+int aes_setkey_enc_alt_1(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
 #endif
 
 /**
@@ -203,6 +204,7 @@ int mbedtls_aes_setkey_dec( mbedtls_aes_context *ctx, const unsigned char *key,
 
 #if defined(NEW_AES_SETKEY_DEC_ALT)
 int aes_setkey_dec_og(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
+int aes_setkey_dec_alt_1(mbedtls_aes_context *ctx, const unsigned char *key, unsigned int keybits);
 #endif
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
@@ -623,6 +625,7 @@ int mbedtls_internal_aes_encrypt( mbedtls_aes_context *ctx,
 
 #if defined(NEW_AES_ENCRYPT_ALT)
 int internal_aes_encrypt_og(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]);
+int internal_aes_encrypt_alt_1(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]);
 #endif
 
 /**
@@ -642,6 +645,7 @@ int mbedtls_internal_aes_decrypt( mbedtls_aes_context *ctx,
 
 #if defined(NEW_AES_DECRYPT_ALT)
 int internal_aes_decrypt_og(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]);
+int internal_aes_decrypt_alt_1(mbedtls_aes_context *ctx, const unsigned char input[16], unsigned char output[16]);
 #endif
 
 #if !defined(MBEDTLS_DEPRECATED_REMOVED)
