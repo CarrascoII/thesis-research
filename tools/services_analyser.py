@@ -132,13 +132,6 @@ def make_serv_cmp_figs(path, grouped_suites, labels, servs, handshake=False, wei
         for key in all_data:
             data = utils.filter_z_score(all_data[key], weight=weight)
             all_data[key] = data
-        
-            # if key == 'DHE-PSK':
-            #     for b in all_data["DHE-PSK"]:
-            #         print(f'  {b}:')
-            #         for c in all_data["DHE-PSK"][b]:
-            #             print(f'    {c}: {all_data["DHE-PSK"][b][c]} : {len(all_data["DHE-PSK"][b][c])}')
-            #     print('')                
 
         print('ok')
 

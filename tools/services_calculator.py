@@ -1,7 +1,82 @@
-import os
-import sys, getopt
+import os, sys, getopt
+from copy import deepcopy
+from matplotlib import use
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import utils, settings
 
+
+def make_tables(all_stats, hdr, path):
+    labels = {'hs': settings.serv_labels['ke'], 'rec': ['out', 'in']}
+    tags = {'hs': 'security bits', 'rec': 'message size (bits)'}
+    tables = {}
+    keys = {}
+    edges = {}
+    tmp = deepcopy(next(iter(all_stats)))
+    
+    for serv in all_stats[tmp]:
+        for end in labels[serv]:
+            tables[end] = {}
+            tables[end][hdr] = []
+            tables[end][tags[serv]] = []
+            keys[end] = []
+            edges[end] = {}
+
+            for key in all_stats[tmp][serv].keys():
+                if key.find(end) != -1:
+                    idx = len(end) + 1
+
+                    tables[end][key[:-idx]] = []
+                    keys[end].append(key[:-idx])
+                    edges[end][key[:-idx]] = {}
+
+    # print('')
+    # for a in tables:
+    #     print(f'{a}: {tables[a]} | {keys[a]}')
+
+    for suite in all_stats:
+        for serv in all_stats[suite]:
+            for idx, val in enumerate(all_stats[suite][serv]['keys']):
+                for end in labels[serv]:
+                    tables[end][hdr].append(suite)
+                    tables[end][tags[serv]].append(val)
+                    
+                    for key in keys[end]:
+                        tables[end][key].append(all_stats[suite][serv][key + '_' + end][idx])
+                        
+                        if val not in edges[end][key].keys():
+                            edges[end][key][val] = {'min': tables[end][key][-1], 'max': tables[end][key][-1]}
+
+                        if edges[end][key][val]['min'] > tables[end][key][-1]:
+                            edges[end][key][val]['min'] = tables[end][key][-1]
+                        
+                        elif edges[end][key][val]['max'] < tables[end][key][-1]:
+                            edges[end][key][val]['max'] = tables[end][key][-1]
+
+    # print('')
+    # for a in tables:
+    #     print(f'{a}: {tables[a]} | {keys[a]}')
+    
+    # print('')
+    # for a in edges:
+    #     print(f'{a}:')
+    #     for b in edges[a]:
+    #         print(f'  {b}:')
+    #         for c in edges[a][b]:
+    #             print(f'   {c}: {edges[a][b][c]}')
+
+    for serv in all_stats[tmp]:
+        for end in labels[serv]:
+            df = pd.DataFrame(tables[end])
+            df = df.sort_values(by=[tags[serv]])
+            size = (np.array(df.shape[::-1]) + np.array([0, 1])) * np.array([5.0, 0.625])
+            
+            fig, ax = plt.subplots(figsize=size)
+            ax.axis('off')
+            
+            ax = utils.custom_table(df, ax, edges[end], header_columns=0)
+            utils.save_fig(fig, 'results/' + path + '/serv_config_' + serv + '_' + end + '.png')
 
 def sum_rec_vals(all_stats, servs):
     values = {'keys': all_stats[servs[0]]['keys']}
@@ -71,15 +146,6 @@ def sum_hs_vals(stats):
             values[key].append(total)
 
     return values
-
-# def sort_vals(all_stats):
-#     values = {}
-#     servs = list(all_stats[next(iter(all_stats))].keys())
-
-#     for serv in servs:
-#         values[serv] = {}
-
-#     return values
 
 def make_serv_calcs(path, ciphersuites, serv_set, weight=2, strlen=40, spacing=''):
     all_data = {}
@@ -182,12 +248,12 @@ def make_serv_calcs(path, ciphersuites, serv_set, weight=2, strlen=40, spacing='
     #             print(f'    {b}: {all_stats[suite][a][b]} : {len(all_stats[suite][a][b])}')
     #         print('')
 
-    # print(f'{spacing}Calculating best configuration'.ljust(strlen, '.'), end=' ', flush=True)
-    # all_stats = sort_vals(all_stats)
-    # print('ok')
-
     print(f'{spacing}Saving statistics'.ljust(strlen, '.'), end=' ', flush=True)
     utils.write_config_values_csv('results/' + path + '/', 'ciphersuite', all_stats)
+    print('ok')
+
+    print(f'{spacing}Saving tables'.ljust(strlen, '.'), end=' ', flush=True)
+    make_tables(all_stats, 'ciphersuite', path)
     print('ok')
 
 def make_calcs(path, ciphersuites, serv_set=[], weight=2, strlen=40, spacing=''):
@@ -195,6 +261,7 @@ def make_calcs(path, ciphersuites, serv_set=[], weight=2, strlen=40, spacing='')
         print('\nError!! No services were selected to analyse!!!')
         return None
 
+    use('Agg')
     make_serv_calcs(path, ciphersuites, serv_set, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):
