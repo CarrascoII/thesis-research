@@ -38,9 +38,15 @@ class TableWidget(QtWidgets.QTableWidget):
             self.nCols = len(self.content[0])
 
         super().__init__(self.nRows, self.nCols)
-        self.setWindowTitle('Display: ' + fname.split('/')[1])
+        self.setWindowTitle(self.gen_window_title(fname))
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.populate()
+
+    def gen_window_title(self, fname):
+        title = fname.split('/')[2][12:-4]
+        title = title.split('_')
+
+        return title[1].capitalize() + ' ' + settings.serv_fullname[title[0]]
 
     def populate(self):
         self.setSortingEnabled(False)
@@ -204,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if path != '':
             suites = [f.name for f in os.scandir(path) if f.is_dir()]
-            weight, done = QtWidgets.QInputDialog.getDouble(self, 'Input Dialog', 'Enter filter weight:')
+            weight, done = QtWidgets.QInputDialog.getDouble(self, 'Filter Weight Dialog', 'Enter filter weight:', 2.0)
             
             if done:
                 args = self.getComparatorArgs(path, file, suites, weight, args_func)
@@ -330,24 +336,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog.close()
 
         if fname.find('services') != -1:
-            files = [f.name for f in os.scandir('results/' + path) if f.is_file()]
+            files = [f.name for f in os.scandir('results/' + path) if f.is_file() and f.name.find('.csv') != -1]
+            self.dialog = QtWidgets.QDialogButtonBox()
+            self.dialog.setWindowTitle('Tables Widget')
+            self.dialog.path = path
 
-            for id, file in enumerate(files):
-                if id == 0:
-                    self.dialog1 = TableWidget('results/' + path + '/' + file)
-                    self.dialog1.show()
+            for file in files:
+                self.dialog.addButton(QtWidgets.QPushButton(self.gen_window_title(file), self), QtWidgets.QDialogButtonBox.ActionRole)
+            
+            self.dialog.clicked.connect(self.show_table)
+            self.dialog.show()
 
-                elif id == 1:
-                    self.dialog2 = TableWidget('results/' + path + '/' + file)
-                    self.dialog2.show()
 
-                if id == 2:
-                    self.dialog3 = TableWidget('results/' + path + '/' + file)
-                    self.dialog3.show()
+    def gen_window_title(self, fname):
+        title = fname[12:-4].split('_')
 
-                if id == 3:
-                    self.dialog4 = TableWidget('results/' + path + '/' + file)
-                    self.dialog4.show()
+        return title[1].capitalize() + ' ' + settings.serv_fullname[title[0]]
+
+    def show_table(self, button):
+        text = button.text().split(' ')
+
+        for key in settings.serv_fullname:
+            if settings.serv_fullname[key] == text[1]:
+                text[1] = key
+                break
+
+        file = 'serv_config_' + text[1] + '_' + text[0].lower() + '.csv'
+        self.table = TableWidget('results/' + self.dialog.path + '/' + file)
+        self.table.show()
 
 if __name__ == '__main__':
     settings.init()

@@ -44,7 +44,8 @@ def init():
         'auth': 'Authentication',
         'ke': 'Key Establishment',
         'pfs': 'Perfect Forward Secrecy',
-        'hs': 'Handshake'
+        'hs': 'Handshake',
+        'rec': 'Record'
     }
 
     global serv_labels
