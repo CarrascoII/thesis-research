@@ -40,6 +40,7 @@ class TableWidget(QtWidgets.QTableWidget):
         super().__init__(self.nRows, self.nCols)
         self.setWindowTitle(self.gen_window_title(fname))
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.get_edges()
         self.populate()
 
     def gen_window_title(self, fname):
@@ -47,6 +48,29 @@ class TableWidget(QtWidgets.QTableWidget):
         title = title.split('_')
 
         return title[1].capitalize() + ' ' + settings.serv_fullname[title[0]]
+
+    def get_edges(self):
+        keys = self.content[0][2:]
+        self.edges = {}
+
+        for key in keys:
+            self.edges[key] = {}
+
+        for line in self.content[1:]:
+            id = line[1]
+
+            for key, val in zip(keys, line[2:]):
+                val = float(val)
+                
+                if id not in self.edges[key]:
+                    self.edges[key][id] = {'min': val, 'max': val}
+
+                if self.edges[key][id]['min'] > val:
+                    self.edges[key][id]['min'] = val
+                        
+                elif self.edges[key][id]['max'] < val:
+                    self.edges[key][id]['max'] = val
+
 
     def populate(self):
         self.setSortingEnabled(False)
@@ -56,6 +80,14 @@ class TableWidget(QtWidgets.QTableWidget):
             for col in range(self.nCols):
                 item = TableWidgetItem()
                 item.setData(QtCore.Qt.ItemDataRole.EditRole, QtCore.QVariant(self.content[row + 1][col]))
+
+                if self.content[0][col] in self.edges.keys():
+                    if self.edges[self.content[0][col]][self.content[row + 1][1]]['min'] == float(self.content[row + 1][col]):
+                        item.setForeground(QtCore.Qt.blue)
+
+                    elif self.edges[self.content[0][col]][self.content[row + 1][1]]['max'] == float(self.content[row + 1][col]):
+                        item.setForeground(QtCore.Qt.red)
+
                 self.setItem(row, col, item)
 
         self.setSortingEnabled(True)
