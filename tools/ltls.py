@@ -212,7 +212,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.buttonAnalServs.clicked.connect(lambda: self.calcStatistics(self.getServs, 'config/services', services_profiler.make_figs))
 
         self.buttonEditAlgs.clicked.connect(lambda: self.showEditDialog('config/algorithms', 'Category:'))
-        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiler.exec_tls, 'config/algorithms', self.getArgs))
+        self.buttonProfAlgs.clicked.connect(lambda: self.showProfileWindow(algs_profiler.exec_tls, 'config/algorithms', self.getAlgs))
         self.buttonAnalAlgs.clicked.connect(lambda: self.calcStatistics(self.getAlgs, 'config/algorithms', algs_profiler.make_figs))
 
     def showEditDialog(self, fname, label):
@@ -226,6 +226,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if ret == self.dialog.Accepted:
             args = self.getProfileArgs(fname)
             args = args_func(args)
+            figs_func = None
+
+            if fname.find('services') != -1:
+                figs_func = services_profiler.make_figs
+            elif fname.find('algorithms') != -1:
+                figs_func = algs_profiler.make_figs
 
             self.dialog = QtWidgets.QMessageBox()
             self.dialog.setIcon(QtWidgets.QMessageBox.Information)
@@ -234,11 +240,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog.show()
 
             self.thread = Worker(tls_func, **args)
-            self.thread.finished.connect(lambda: self.makeTable(args['tls_opts']['path'], fname))
+            # def makeTable(self, path, fname):
+            # self.thread.finished.connect(lambda: self.makeTable(args['tls_opts']['path'], fname))
+            self.thread.finished.connect(lambda: self.calcStatistics(args_func, fname, figs_func, path='../docs/' + args['tls_opts']['path']))
             self.thread.start()
 
-    def calcStatistics(self, args_func, file, prof_func):
-        path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
+    def calcStatistics(self, args_func, file, figs_func, path=''):
+        if path == '':
+            path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory"))
 
         if path != '':
             suites = [f.name for f in os.scandir(path) if f.is_dir()]
@@ -253,7 +262,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.dialog.setWindowTitle('Profile Info')
                 self.dialog.show()
 
-                self.thread = Worker(prof_func, **args)
+                self.thread = Worker(figs_func, **args)
                 self.thread.finished.connect(lambda: self.makeTable(args['path'], args['suites_file']))
                 self.thread.start()
 

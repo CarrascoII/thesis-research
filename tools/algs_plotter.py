@@ -95,6 +95,7 @@ def make_figs(path, ciphersuites, alg_set=[], weight=2, strlen=40, spacing='  ')
         return None
     
     matplotlib.use('Agg')
+    plt.rcParams.update({'font.size': settings.fontsize/2})
     current = 1
 
     for suite in ciphersuites:

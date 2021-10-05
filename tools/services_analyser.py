@@ -179,6 +179,8 @@ def make_figs(path, suites, serv_set=[], handshake=False, weight=2, strlen=40, s
         return None
 
     use('Agg')
+    plt.rcParams.update({'font.size': settings.fontsize})
+
     grouped_suites = utils.group_ciphersuites(suites, serv_set)
     labels = settings.serv_labels['ke']
 

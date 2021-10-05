@@ -109,6 +109,8 @@ def make_figs(path, algs_fname, ciphersuites, alg_set=[], weight=2, strlen=40, s
         return None
 
     use('Agg')
+    plt.rcParams.update({'font.size': settings.fontsize})
+    
     labels = settings.alg_labels
     algs = utils.parse_algorithms_grouped(algs_fname, alg_set, ciphersuites)
     

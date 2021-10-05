@@ -698,13 +698,17 @@ def save_fig(fig, fname):
 def custom_errorbar(x, y, e, ax, title=None, xlabel='msglen', ylabel=None, kwargs={}):
     ax.errorbar(x, y, yerr=e, fmt='.', capsize=5, barsabove=True, **kwargs)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+    ax.set_yscale('log', base=2)
+
     return(ax)
 
 def custom_plots(x, y1, y2, ax, title=None, xlabel='msglen', ylabel=None, kwargs1={}, kwargs2={}):
     ax.plot(x, y1, **kwargs1)
     ax.plot(x, y2, **kwargs2)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+    ax.set_yscale('log', base=2)
     ax.legend()
+
     return(ax)
 
 def multiple_custom_plots(x, y_lst, ax, title=None, xlabel='msglen', ylabel=None, kwargs_lst=None):
@@ -745,14 +749,14 @@ def multiple_custom_bar(y_list, yerr, ax, width=0.5, title=None, labels=[], xlab
         ax.bar(x1, y_list[i], width=width, label=labels[i], yerr=yerr[i], capsize=6*width)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(xtickslabels, fontsize=20)
+    ax.set_xticklabels(xtickslabels, fontsize=settings.fontsize)
     ax.set_yscale('log')
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    ax.title.set_size(20)
-    ax.xaxis.label.set_size(20)
-    ax.yaxis.label.set_size(20)
-    ax.tick_params(axis='y', labelsize=20)
-    ax.legend(loc='upper right', ncol=2, frameon=False, prop={"size": 20})
+    ax.title.set_size(settings.fontsize)
+    ax.xaxis.label.set_size(settings.fontsize)
+    ax.yaxis.label.set_size(settings.fontsize)
+    ax.tick_params(axis='y', labelsize=settings.fontsize)
+    ax.legend(loc='upper left', ncol=2, frameon=False, prop={"size": settings.fontsize})
 
     return(ax)
 
@@ -778,16 +782,16 @@ def stacked_custom_bar(y_list, ax, handshake=False, width=0.5, title=None, scale
             continue
 
     ax.set_xticks(x)
-    ax.set_xticklabels(xtickslabels, fontsize=20)
+    ax.set_xticklabels(xtickslabels, fontsize=settings.fontsize)
     ax.set_yscale(scale)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
-    ax.title.set_size(20)
-    ax.xaxis.label.set_size(20)
-    ax.yaxis.label.set_size(20)
-    ax.tick_params(axis='y', labelsize=20)
+    ax.title.set_size(settings.fontsize)
+    ax.xaxis.label.set_size(settings.fontsize)
+    ax.yaxis.label.set_size(settings.fontsize)
+    ax.tick_params(axis='y', labelsize=settings.fontsize)
     ax.text(0.05, 0.95, 'A - Authentication\nB - Key Establishment\nC - Perfect Forward Secrecy\nD - Encrypted Client Key Exchange' +
-            '\nE - Signed Server Key Exchange', transform=ax.transAxes, fontsize=20, verticalalignment='top')
-    ax.legend(loc='upper right', ncol=2, frameon=False, prop={"size": 20})
+            '\nE - Signed Server Key Exchange', transform=ax.transAxes, fontsize=settings.fontsize, verticalalignment='top')
+    ax.legend(loc='upper right', ncol=2, frameon=False, prop={"size": settings.fontsize})
     return(ax)
 
 def custom_scatter(x, y, ax, title=None, xlabel='msglen', xtickslabels=None, ylabel=None, kwargs={}):
@@ -795,6 +799,8 @@ def custom_scatter(x, y, ax, title=None, xlabel='msglen', xtickslabels=None, yla
     ax.set_xticks(np.arange(len(xtickslabels)))
     ax.set_xticklabels(xtickslabels)
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
+    ax.set_yscale('log', base=2)
+    
     return(ax)
 
 def custom_table(data, ax, edges, font_size=14, header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',

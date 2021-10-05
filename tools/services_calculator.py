@@ -262,6 +262,8 @@ def make_calcs(path, ciphersuites, serv_set=[], weight=2, strlen=40, spacing='')
         return None
 
     use('Agg')
+    plt.rcParams.update({'font.size': settings.fontsize})
+    
     make_serv_calcs(path, ciphersuites, serv_set, weight=weight, strlen=strlen, spacing=spacing)
 
 def main(argv):

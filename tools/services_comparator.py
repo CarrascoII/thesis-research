@@ -131,6 +131,8 @@ def make_figs(path, servs_fname, ciphersuites, serv_set=[], weight=2, strlen=40,
         return None
 
     use('Agg')
+    plt.rcParams.update({'font.size': settings.fontsize})
+    
     labels = settings.serv_labels
     servs = utils.parse_services_grouped(servs_fname, serv_set, ciphersuites)
 
