@@ -87,32 +87,36 @@ To use this module, you must first compile the C code by running:
 
 ```
 make tls_als
-
 ```
 
 The `Makefile` also contains other compilation commands. After the compilation is done, run the client and the server. They need 
 to be used in two seperate command prompts. To execute them, run the following commands in each comand prompt:
 
 ```
-./tls_algs/server.out ciphersuite=<ciphersuite_name> [sec_lvl=<initial_lvl>] [max_sec_lvl=<final_lvl>] [msg_size=<initial_size>] 
-[max_msg_size=<final_size>] [n_tests=<n_tests>] [path=<data_directory>] [debug_lvl=<debug_lvl>]
+./tls_algs/server.out ciphersuite=<ciphersuite_name> [sec_lvl=<initial_lvl>] [max_sec_lvl=<final_lvl>]
+                      [msg_size=<initial_size>] [max_msg_size=<final_size>] [n_tests=<n_tests>]
+                      [path=<data_directory>] [debug_lvl=<debug_lvl>]
 
-./tls_algs/client.out ciphersuite=<ciphersuite_name> [sec_lvl=<initial_lvl>] [max_sec_lvl=<final_lvl>] [msg_size=<initial_size>] 
-[max_msg_size=<final_size>] [n_tests=<n_tests>] [path=<data_directory>] [debug_lvl=<debug_lvl>]
+./tls_algs/client.out ciphersuite=<ciphersuite_name> [sec_lvl=<initial_lvl>] [max_sec_lvl=<final_lvl>]
+                      [msg_size=<initial_size>] [max_msg_size=<final_size>] [n_tests=<n_tests>]
+                      [path=<data_directory>] [debug_lvl=<debug_lvl>]
 
 
 positional arguments:
   ciphersuite=<ciphersuite_name>    Name of the ciphersuite to be used
 
 optional arguments:
-  sec_lvl=<initial_lvl>             Minimum security level to be used (From 0 to 4, 0 is not considered secure)
-  max_sec_lvl=<final_lvl>           Maximum security level to be used (From 0 to 4, 0 is not considered secure)
+  sec_lvl=<initial_lvl>             Minimum security level to be used (From 0 to 4, 0 is not
+                                    considered secure)
+  max_sec_lvl=<final_lvl>           Maximum security level to be used (From 0 to 4, 0 is not
+                                    considered secure)
   msg_size=<initial_size>           Minimum message size to be used, in bytes (From 32 to 16384 = 16KB)
   max_msg_size=<final_size>         Maximum message size to be used, in bytes (From 32 to 16384 = 16KB)
   n_tests=<n_tests>                 Number of iterations for each security level or message size
-  path=<data_directory>             Name of the directory where the data will be stored. Root directory is docs/
-  debug_lvl=<debug_lvl>             Mbed TLS level of debug (From 0 to 5, where 0 is none and 5 is the maximum)
-
+  path=<data_directory>             Name of the directory where the data will be stored. Root
+                                    directory is docs/
+  debug_lvl=<debug_lvl>             Mbed TLS level of debug (From 0 to 5, where 0 is none and 5 is the
+                                    maximum)
 ```
 
 The endpoints will generate data acording to the enabled MEASURE_XXXXX macros. The endpoints will execute the Handshake protocol
@@ -133,34 +137,39 @@ services_calculator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <path_to_da
 services_comparator.py [-w <filter_weight>] [-c] [-i] [-a] [-k] [-p] <path_to_data> <services_list>
 
 services_profiler.py [-t <compilation_target>] [-w <filter_weight>] [-s <initial_lvl>,<final_lvl>]
-                     [-m <initial_size>,<final_size>] [-n <n_tests>] [-d <data_directory>] [-H] [-c] [-i] [-a] [-k] [-p] <services_list>
+                     [-m <initial_size>,<final_size>] [-n <n_tests>] [-d <data_directory>] [-H] [-c]
+                     [-i] [-a] [-k] [-p] <services_list>
+
 
 positional arguments:
   path_to_data              Relative path from the ./docs directory where the data is stored
-  services_list             File with list of security services and algorithms that provide them. Example found in
-                            examples/ke_servs.txt
+  services_list             File with list of security services and algorithms that provide them.
+                            Example found in examples/ke_servs.txt
 
 optional arguments:
   -h, --help                show help message and exit
   -t <compilation_target>, --target=<compilation_target>
-                            Path to endpoint implementation relative to l-tls/ directory. Default is tls_algs
+                            Path to endpoint implementation relative to l-tls/ directory. Default is
+                            tls_algs
   -w <filter_weight>, --weight=<filter_weight>
-                            Weight of the z-score filter parameter. The default is 2. filter_weight=0 means no data is filtered
+                            Weight of the z-score filter parameter. The default is 2. filter_weight=0
+                            means no data is filtered
   -s <initial_lvl>,<final_lvl>, --sec_lvl=<initial_lvl>,<final_lvl>
-                            Range of security levels to be considered. From 0 to 4, where 0 is considered insecure and 4 is maximum security
+                            Range of security levels to be considered. From 0 to 4, where 0 is
+                            considered insecure and 4 is maximum security
   -m <initial_size>,<final_size>, --message_size=<initial_size>,<final_size>
                             Range of message sizes to be considered, in bytes. From 32 to 16384 (16KB)
   -n <n_tests>, --n_tests=<n_tests>
                             Number of iterations
   -d <data_directory>, --data_path=<data_directory>
-                            Name of the directory where the data will be stored and used. Root directory is docs/
+                            Name of the directory where the data will be stored and used. Root
+                            directory is docs/
   -H, --handshake           Analyse overall handshake performance
   -c, --conf                Analyse performance of the confidentiality security service
   -i, --int                 Analyse performance of the integrity security service
   -a, --auth                Analyse performance of the authentication security service
   -k, --ke                  Analyse performance of the key establishment security service
   -p, --pfs                 Analyse performance of the perfect forward secrecy security service
-
 ```
 
 Algorithms Tools:
@@ -170,32 +179,37 @@ algs_comparator.py [-w <filter_weight>] [-c] [-m] [-k] <path_to_data> <algorithm
 
 algs_plotter.py [-w <filter_weight>] [-c] [-m] [-k] <path_to_data>
 
-algs_profiler.py [-t <compilation_target>] [-w <filter_weight>] [-s <initial_lvl>,<final_lvl>] [-i <initial_size>,<final_size>] 
-                 [-n <n_tests>] [-d <data_directory>] [-c] [-m] [-k] <services_list>
+algs_profiler.py [-t <compilation_target>] [-w <filter_weight>] [-s <initial_lvl>,<final_lvl>]
+                 [-i <initial_size>,<final_size>] [-n <n_tests>] [-d <data_directory>] [-c] [-m] [-k]
+                 <services_list>
+
 
 positional arguments:
   path_to_data              Relative path from the ./docs directory where the data is stored
-  algorithm_list            File with list of algorithm types and algorithms that belong in them. Example found in
-                            examples/ke_algs.txt
+  algorithm_list            File with list of algorithm types and algorithms that belong in them.
+                            Example found in examples/ke_algs.txt
 
 optional arguments:
   -h, --help                show help message and exit
   -t <compilation_target>, --target=<compilation_target>
-                            Path to endpoint implementation relative to l-tls/ directory. Default is tls_algs
+                            Path to endpoint implementation relative to l-tls/ directory. Default is
+                            tls_algs
   -w <filter_weight>, --weight=<filter_weight>
-                            Weight of the z-score filter parameter. The default is 2. filter_weight=0 means no data is filtered
+                            Weight of the z-score filter parameter. The default is 2. filter_weight=0
+                            means no data is filtered
   -c, --cipher              Analyse performance of cipher algorithms
   -m, --md                  Analyse performance of message digest algorithms
   -k, --ke                  Analyse performance of key extablishment algorithms
   -s <initial_lvl>,<final_lvl>, --sec_lvl=<initial_lvl>,<final_lvl>
-                            Range of security levels to be considered. From 0 to 4, where 0 is considered insecure and 4 is maximum security
+                            Range of security levels to be considered. From 0 to 4, where 0 is
+                            considered insecure and 4 is maximum security
   -m <initial_size>,<final_size>, --message_size=<initial_size>,<final_size>
                             Range of message sizes to be considered, in bytes. From 32 to 16384 (16KB)
   -n <n_tests>, --n_tests=<n_tests>
                             Number of iterations
   -d <data_directory>, --data_path=<data_directory>
-                            Name of the directory where the data will be stored and used. Root directory is docs/
-                            
+                            Name of the directory where the data will be stored and used. Root
+                            directory is docs/
 ```
 
 The GUI does not have any arguments. You only need to run `python3 l-tls.py` to execute it.
