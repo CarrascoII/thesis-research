@@ -17,7 +17,6 @@ MBEDCORE_LIB_MAKE = $(MAKE) -C $(MBEDCORE_LIB_DIR)
 MY_MBEDTLS_MAKE = $(MAKE) -C $(MY_MBEDTLS_DIR)
 MBEDTLS_LIB_MAKE = $(MAKE) -C $(MBEDTLS_LIB_DIR)
 MBEDTLS_PROGS_MAKE = $(MAKE) -C $(MBEDTLS_PROG_DIR)
-CIPHER_MAKE = $(MAKE) -C cipher
 TLS_ALGS_MAKE = $(MAKE) -C tls_algs
 TLS_SESSION_MAKE = $(MAKE) -C tls_session
 
@@ -25,11 +24,11 @@ PAPI_CFLAGS = -I$(PAPI_INC_DIR) -L$(PAPI_LIB_DIR) -lpapi
 
 .SILENT:
 
-.PHONY: lib_measurement alt_algs alt_session alt_core alt_cipher \
-		lib_mbedtls lib_algs lib_session lib_core lib_cipher progs \
+.PHONY: lib_measurement alt_algs alt_session alt_core \
+		lib_mbedtls lib_algs lib_session lib_core progs \
 		tls_algs_server tls_algs_client tls_algs tls_algs_core \
 		session_server session_client session \
-		cipher clean_local clean
+		clean_local clean
 
 ### MAKE MEASUREMENT LIBRARY ###
 lib_measurement:
@@ -48,9 +47,6 @@ alt_session:
 
 alt_core:
 	$(TLS_CORE_MAKE) alt_lib
-
-alt_cipher:
-	$(CIPHER_MAKE) alt_lib
 
 ### MAKE MBEDTLS LIBRARY ###
 lib_mbedtls:
@@ -78,9 +74,6 @@ ifndef PAPI_DIR
 else
 	$(TLS_CORE_MAKE) lib_papi
 endif
-
-lib_cipher:
-	$(CIPHER_MAKE) lib
 
 ### MAKE MBEDTLS PROGRAMS ###
 progs: clean lib_mbedtls
@@ -141,13 +134,8 @@ else
 	$(TLS_SESSION_MAKE) local_papi
 endif
 
-### MAKE TEST CIPHER ###
-cipher:
-	$(CIPHER_MAKE) local
-
 ### CLEAN ###
 clean_local:
-	$(CIPHER_MAKE) clean_local
 	$(TLS_ALGS_MAKE) clean_local
 	$(TLS_SESSION_MAKE) clean_local
 	
