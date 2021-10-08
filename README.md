@@ -218,6 +218,9 @@ Graphical User Interface:
 The GUI does not have any arguments. You only need to run `python3 ltls.py` to execute it.
 
 The GUI is divided in two sections: the services section and the algorithms section. Each section has a set of checkboxes and buttons.
-The checkboxes are used to select which algorithms will be analysed. There are 3 buttons in each section: `Edit Services/Algorithms`, `Acquire Data` and `Generate Statistics`.
+The checkboxes are used to select which algorithms will be analysed. There are 3 buttons in each section: `Edit Services/Algorithms`,
+`Acquire Data` and `Generate Statistics`.
 
-The `Edit Services/Algorithms` button allows you to add or remove algorithms from a service/algortihm type category. The `Acquire Data` allows you to generate new data while the `Generate Statistics` allows you to generate statistics from previously generated data. Both these functionalities execute the respective `profiler.py` tool.
+The `Edit Services/Algorithms` button allows you to add or remove algorithms from a service/algortihm type category. The `Acquire Data`
+allows you to generate new data while the `Generate Statistics` allows you to generate statistics from previously generated data. Both
+these functionalities execute the respective `profiler.py` tool.
