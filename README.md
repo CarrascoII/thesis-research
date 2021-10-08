@@ -182,7 +182,7 @@ algs_plotter.py [-w <filter_weight>] [-c] [-m] [-k] <path_to_data>
 
 algs_profiler.py [-t <compilation_target>] [-w <filter_weight>] [-s <initial_lvl>,<final_lvl>]
                  [-i <initial_size>,<final_size>] [-n <n_tests>] [-d <data_directory>] [-c] [-m] [-k]
-                 <services_list>
+                 <algorithm_list>
 
 
 positional arguments:
@@ -200,7 +200,7 @@ optional arguments:
                             means no data is filtered
   -c, --cipher              Analyse performance of cipher algorithms
   -m, --md                  Analyse performance of message digest algorithms
-  -k, --ke                  Analyse performance of key extablishment algorithms
+  -k, --ke                  Analyse performance of key exchange algorithms
   -s <initial_lvl>,<final_lvl>, --sec_lvl=<initial_lvl>,<final_lvl>
                             Range of security levels to be considered. From 0 to 4, where 0 is
                             considered insecure and 4 is maximum security
